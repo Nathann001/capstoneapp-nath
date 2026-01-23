@@ -26,19 +26,22 @@ export class LoginComponent {
     email: ['', [Validators.required, Validators.email]],
     password: ['', Validators.required]
   });
-
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Redirect if already logged in
   const storedUser = localStorage.getItem('user');
-  if (storedUser) {
-    const user = JSON.parse(storedUser);
-    if (user.role === 1) {
-      this.router.navigate(['/admin']);
-    } else if (user.role === 3 && !user.detailsCompleted) {
-      this.router.navigate(['/edit-profile']);
-    } else {
-      this.router.navigate(['/']);
-    }
+if (storedUser) {
+  const user = JSON.parse(storedUser);
+  if (user.role === 1) {
+    this.router.navigate(['/admin']);
+  } else if (user.role === 2) {
+    this.router.navigate(['/home-staff']);
+  } else if (user.role === 3 && !user.detailsCompleted) {
+    this.router.navigate(['/edit-profile']);
+  } else {
+    this.router.navigate(['/']);
   }
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
 
@@ -75,18 +78,26 @@ onSubmit(): void {
       if (res.user) localStorage.setItem('user', JSON.stringify(res.user));
 
       alert(res.message || 'Login successful!');
-
-      // Redirect based on role and detailsCompleted
-      if (res.user?.role === 1) {
-        // Admin → go to admin dashboard
-        this.router.navigate(['/admin']);
-      } else if (res.user?.role === 3 && !res.user.detailsCompleted) {
-        // Normal user without details → redirect to fill-up page
-        this.router.navigate(['/edit-profile']);
-      } else {
-        // All other users or role 3 with details → home page
-        this.router.navigate(['/']);
-      }
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      // Redirect based on role
+if (res.user?.role === 1) {
+  // Admin → go to admin dashboard
+  this.router.navigate(['/admin']);
+} else if (res.user?.role === 2) {
+  // Staff → go to staff home page
+  this.router.navigate(['/home-staff']);
+} else if (res.user?.role === 3) {
+  // Normal user → check if profile is complete
+  if (!res.user.detailsCompleted) {
+    this.router.navigate(['/edit-profile']);
+  } else {
+    this.router.navigate(['/']); // Regular home page
+  }
+} else {
+  // Default fallback
+  this.router.navigate(['/']);
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     },
     error: (err) => {
       console.error('Login failed:', err);

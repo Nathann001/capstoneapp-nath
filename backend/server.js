@@ -735,6 +735,63 @@ app.delete('/api/admin/users/:id', verifyToken, checkRole(1), (req, res) => {
       res.json(results);
     });
   });
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+  db.connect(err => {
+    if (err) throw err;
+    console.log('MySQL Connected');
+});
+
+// Get all document requests
+app.get('/api/document_request', (req, res) => {
+  const sql = 'SELECT RequestID, name, date_created FROM document_request ORDER BY date_created DESC';
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Failed to fetch document requests:', err);
+      return res.status(500).json({ error: 'Failed to fetch document requests' });
+    }
+    res.json(results);
+  });
+});
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+// Use multer memory storage for upload
+const uploadDoc = multer({ storage: multer.memoryStorage() });
+
+app.post('/api/document_request', uploadDoc.single('file'), (req, res) => {
+  const { name } = req.body;
+
+  if (!name) return res.status(400).json({ error: 'Name is required' });
+
+  let filePath = null;
+
+  if (req.file) {
+    const uploadsDir = path.join(__dirname, 'uploads');
+    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
+
+    const filename = Date.now() + '-' + req.file.originalname;
+    const fullPath = path.join(uploadsDir, filename);
+
+    try {
+      fs.writeFileSync(fullPath, req.file.buffer);
+      filePath = 'uploads/' + filename; // relative path to store in DB
+    } catch (err) {
+      console.error('Failed to save file:', err);
+      return res.status(500).json({ error: 'Failed to save file' });
+    }
+  }
+
+  const sql = 'INSERT INTO document_request (name, file_path) VALUES (?, ?)';
+  db.query(sql, [name, filePath], (err, result) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ error: 'Database insert failed' });
+    }
+    res.json({ success: true, id: result.insertId, filePath });
+  });
+});
+
+
 
   /* START SERVER */
   const PORT = process.env.PORT || 4000;

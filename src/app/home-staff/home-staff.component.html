@@ -1,0 +1,140 @@
+<p>home-staff works!</p>
+<body class="bg-gray-200 min-h-screen p-8 font-sans">
+
+  <div class="mb-12 mt-4">
+    <h2 class="text-3xl font-bold text-blue-800 flex items-center gap-2 mb-8">
+      <i class="fa-solid fa-certificate"></i>
+      DOCUMENTS
+    </h2>
+
+    <!-- Types of Certificates -->
+    <div class="flex gap-4 mt-4 justify-center">
+      <a  class="block w-64">
+        <div class="bg-white border rounded-lg shadow-md p-4 flex flex-col items-center hover:shadow-lg   transition cursor-pointer" routerLink="/empyear" routerLinkActive="active">
+          <img src="images/its_logo.png" alt="icon" class="h-24 mb-4" routerLink="/empyear" routerLinkActive="active">
+          <p class="font-semibold text-center" routerLink="/empyear" routerLinkActive="active">Birth Certificate</p>
+        </div>
+      </a>
+
+      <a  class="block w-64">
+        <div class="bg-white border rounded-lg shadow-md p-4 flex flex-col items-center hover:shadow-lg   transition cursor-pointer" routerLink="/attendance" routerLinkActive="active">
+          <img src="images/its_logo.png" alt="icon" class="h-24 mb-4">
+          <p class="font-semibold text-center" routerLink="/attendance" routerLinkActive="active">Death Certificate</p>
+        </div>
+      </a>
+    </div>
+
+    <div class="flex justify-end">
+      <a>
+        <img src="images/more.png" alt="icon" class="h-6 mt-4 cursor-pointer"  routerLink="/certificates" routerLinkActive="active">
+      </a>
+    </div>
+
+  </div>
+
+  <div class="mb-8 mt-12">
+  <h3 class="text-3xl font-bold text-blue-800 flex items-center gap-2 mb-8">
+    <i class="fa-solid fa-file-lines"></i>
+    DOCUMENT REQUESTS
+  </h3>
+</div>
+
+<div class="overflow-x-auto rounded-lg shadow-md">
+  <table class="min-w-full bg-white rounded-lg text-gray-800 text-sm">
+    <thead class="bg-green-200 text-green-900">
+      <tr>
+        <th class="py-3 px-4 text-left font-semibold">Name</th>
+        <th class="py-3 px-4 text-left font-semibold">Requested At</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let doc of documentRequests.slice(0, 5)" class="border-b hover:bg-green-50 transition">
+        <td class="py-3 px-4">{{ doc.name }}</td>
+        <td class="py-3 px-4">{{ doc.date_created | date:'medium' }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="flex justify-end">
+  <a [routerLink]="'/document-requests'">
+    <img src="images/more.png" alt="icon" class="h-6 mt-4">
+  </a>
+</div>
+
+
+  <!-- Pending Table -->
+  <div class="mb-8">
+    <h3 class="text-3xl font-bold text-blue-800 flex items-center gap-2 mb-8">
+      <i class="fa-solid fa-hourglass-half"></i>
+      PENDING FOR APPROVAL
+    </h3>
+  </div>
+  <div class="overflow-x-auto rounded-lg shadow-md">
+    <table class="min-w-full bg-white rounded-lg text-gray-800 text-sm">
+      <thead class="bg-yellow-200 text-yellow-900">
+        <tr>
+          <th class="py-3 px-4 text-left font-semibold">Recipient</th>
+          <th class="py-3 px-4 text-left font-semibold">Creator</th>
+          <th class="py-3 px-4 text-left font-semibold">Signatory 1</th>
+          <th class="py-3 px-4 text-left font-semibold">Signatory 2</th>
+          <th class="py-3 px-4 text-left font-semibold">Issue Date</th>
+          <th class="py-3 px-4 text-left font-semibold">Status</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let cert of pendingCertificates.slice(0, 5)" class="border-b hover:bg-yellow-50 transition">
+          <td class="py-3 px-4">{{ cert.rname }}</td>
+          <td class="py-3 px-4">{{ cert.creator_name }}</td>
+          <td class="py-3 px-4">{{ cert.signatory1_name }}</td>
+          <td class="py-3 px-4">{{ cert.signatory2_name }}</td>
+          <td class="py-3 px-4">{{ cert.issue_date }}</td>
+          <td class="py-3 px-4 capitalize">{{ cert.status }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="flex justify-end">
+    <a [routerLink]="'/pending'">
+      <img src="images/more.png" alt="icon" class="h-6 mt-4">
+    </a>
+  </div>
+
+  <!-- Approved Table -->
+  <div>
+    <h3 class="text-3xl font-bold text-blue-800 flex items-center gap-2 mb-8">
+      <i class="fa-solid fa-square-check"></i>
+      APPROVED CERTIFICATES
+    </h3>
+  </div>
+
+    <div class="overflow-x-auto rounded-lg shadow-md">
+      <table class="min-w-full bg-white rounded-lg text-gray-800 text-sm">
+        <thead class="bg-blue-200 text-blue-900">
+          <tr>
+            <th class="py-3 px-4 text-left font-semibold">Recipient</th>
+            <th class="py-2 px-2 text-left font-semibold">Creator</th>
+            <th class="py-3 px-4 text-left font-semibold">Certificate</th>
+            <th class="py-3 px-4 text-left font-semibold">Status</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let cert of certificates.slice(0, 5)" class="border-b hover:bg-blue-50 transition">
+            <td class="py-3 px-4">{{ cert.name }}</td>
+            <td class="py-3 px-4">{{ cert.creator }}</td>
+            <td class="py-3 px-4">{{ cert.certificateType }}</td>
+            <td class="py-3 px-4">{{ cert.status }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="flex justify-end">
+      <a [routerLink]="'/downloads'">
+        <img src="images/more.png" alt="icon" class="h-6 mt-4">
+      </a>
+    </div>
+</body>

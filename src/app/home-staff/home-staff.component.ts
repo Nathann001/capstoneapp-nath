@@ -4,13 +4,13 @@ import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'app-home-component',
+  selector: 'app-home-staff',
   standalone: true,
   imports: [RouterModule, CommonModule],
-  templateUrl: './home-component.component.html',
-  styleUrl: './home-component.component.css'
+  templateUrl: './home-staff.component.html',
+  styleUrl: './home-staff.component.css'
 })
-export class HomeComponentComponent implements OnInit {
+export class HomeStaffComponent {
   @ViewChild('certificateContainer', { static: false }) certificateContainer!: ElementRef;
   pendingCertificates: any[] = [];
   certificates: any[] = [];

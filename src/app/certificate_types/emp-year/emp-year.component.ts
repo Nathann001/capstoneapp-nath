@@ -1,158 +1,53 @@
-import { Component, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Component } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import html2canvas from 'html2canvas';
-import emailjs from '@emailjs/browser';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-emp-year',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [ReactiveFormsModule, CommonModule],
   templateUrl: './emp-year.component.html',
   styleUrls: ['./emp-year.component.css']
 })
-export class EmpYearComponent implements AfterViewInit {
-  certificateForm: FormGroup;
-  approvalForm: FormGroup;
-  currentYear = new Date().getFullYear();
-  certificateBgImage = '/certificate-bg.png';
-  showCertificatePreview = false;
-  signatories: number[] = [];
+export class EmpYearComponent {
+  documentForm: FormGroup;
+  selectedFile: File | null = null;
 
-  @ViewChild('modalCertificate', { static: false }) modalCertificate!: ElementRef;
-
-  constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private http: HttpClient
-  ) {
-    this.certificateForm = this.fb.group({
-      recipientName: ['', [Validators.required, Validators.maxLength(50)]],
-      pronoun: ['', Validators.required],
-      issueDate: [new Date().toISOString().split('T')[0], Validators.required],
-      numberOfSignatories: ['2', Validators.required],
-      signatory1Name: ['', Validators.required],
-      signatory1Role: ['', Validators.required],
-      signatory2Name: ['', Validators.required],
-      signatory2Role: ['', Validators.required]
+  constructor(private fb: FormBuilder, private http: HttpClient) {
+    this.documentForm = this.fb.group({
+      name: ['', [Validators.required, Validators.maxLength(50)]]
     });
-
-    this.approvalForm = this.fb.group({});
   }
 
-  ngAfterViewInit() {
-    this.initializeApprovalForm();
-  }
-
+  // Getter for easy access to form controls
   get f() {
-    return this.certificateForm.controls;
+    return this.documentForm.controls;
   }
 
-  onSignatoriesChange() {
-    const num = parseInt(this.certificateForm.value.numberOfSignatories, 10);
-    if (num === 1) {
-      this.certificateForm.patchValue({
-        signatory2Name: '',
-        signatory2Role: ''
-      });
+  // Handle file selection
+  onFileSelected(event: any) {
+    if (event.target.files.length > 0) {
+      this.selectedFile = event.target.files[0];
     }
-    this.initializeApprovalForm();
   }
 
-  initializeApprovalForm() {
-    const num = parseInt(this.certificateForm.value.numberOfSignatories, 10) || 1;
-    this.signatories = Array.from({ length: num }, (_, i) => i);
-
-    const group: any = { creatorName: ['', Validators.required] };
-
-    this.signatories.forEach(index => {
-      group[`approverName${index}`] = ['', Validators.required];
-      group[`approverEmail${index}`] = ['', [Validators.required, Validators.email]];
-    });
-
-    this.approvalForm = this.fb.group(group);
-  }
-
-  async submitApprovalFromPreview() {
-    if (this.approvalForm.invalid) {
-      this.approvalForm.markAllAsTouched();
+  // Submit name + file
+  submitDocumentRequest() {
+    if (this.documentForm.invalid) {
+      this.documentForm.markAllAsTouched();
       return;
     }
 
-    try {
-      // Capture certificate as PNG
-      await new Promise(resolve => setTimeout(resolve, 300));
-      const canvas = await html2canvas(this.modalCertificate.nativeElement, { scale: 2 });
-      const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
-      if (!blob) throw new Error('Failed to generate certificate PNG');
-
-      const cert = this.certificateForm.value;
-
-      // Prepare FormData for backend
-      const formData = new FormData();
-      formData.append('recipientName', cert.recipientName);
-      formData.append('issueDate', cert.issueDate);
-      formData.append('numberOfSignatories', cert.numberOfSignatories);
-      formData.append('signatory1Name', cert.signatory1Name);
-      formData.append('signatory1Role', cert.signatory1Role);
-      formData.append('signatory2Name', cert.signatory2Name || '');
-      formData.append('signatory2Role', cert.signatory2Role || '');
-      formData.append('creator_name', this.approvalForm.value.creatorName);
-      formData.append('certificate_type', 'Employee of the Year');
-      formData.append('certificatePng', blob, 'certificate.png');
-
-      // Append approvers dynamically
-      this.signatories.forEach(index => {
-        formData.append(`approverName${index}`, this.approvalForm.value[`approverName${index}`]);
-        formData.append(`approverEmail${index}`, this.approvalForm.value[`approverEmail${index}`]);
-      });
-
-      // Save to backend
-      await this.http.post('https://its-certificate-generator.onrender.com/api/pending-certificates', formData).toPromise();
-
-      // Send approval emails via EmailJS
-      const emailPromises = this.signatories.map(index => {
-        const templateParams = {
-          to_name: this.approvalForm.value[`approverName${index}`],
-          to_email: this.approvalForm.value[`approverEmail${index}`],
-          recipient_name: cert.recipientName,
-          certificate_type: 'Employee of the Year',
-          creator_name: this.approvalForm.value.creatorName,
-          issue_date: cert.issueDate
-        };
-
-        return emailjs.send(
-          'service_hfi91vc',    
-          'template_684vrld',     
-          templateParams,
-          'UOxJjtpEhb22IFi9x'    
-        );
-      });
-
-      await Promise.all(emailPromises);
-
-      alert('Certificate saved and approval emails sent successfully!');
-      this.closeCertificatePreview();
-
-    } catch (err) {
-      console.error('Error submitting certificate or sending emails:', err);
-      alert('Failed to submit certificate or send emails.');
+    const formData = new FormData();
+    formData.append('name', this.documentForm.value.name);
+    if (this.selectedFile) {
+    formData.append('file', this.selectedFile, this.selectedFile.name);
     }
-  }
-
-  goBack() {
-    this.router.navigate(['/certificates']);
-  }
-
-  openCertificatePreview() {
-    this.initializeApprovalForm();
-    this.showCertificatePreview = true;
-  }
-
-  closeCertificatePreview() {
-    this.showCertificatePreview = false;
+    this.http.post('http://localhost:4000/api/document_request', formData)
+    .subscribe({
+    next: () => alert('Document request submitted successfully!'),
+    error: err => alert('Failed to submit document request. Error: ' + err.message)
+  });
   }
 }

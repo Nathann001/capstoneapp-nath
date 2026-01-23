@@ -27,6 +27,7 @@ import { CoeComponent } from './certificate_types/coe/coe.component';
 import { AdminComponent } from './admin/admin.component';
 import { OtpVerificationComponent } from './otpverify/otpverify.component'
 import { EditProfileComponent } from './edit-profile/edit-profile.component';
+import { HomeStaffComponent } from './home-staff/home-staff.component';
 
 export const routes: Routes = [
     { path: 'certificates', component: CertificateComponent },
@@ -62,5 +63,6 @@ export const routes: Routes = [
     { path: 'reset-password', component: ResetPasswordComponent },
     { path: 'coe-with-salary', component: CoeComponent },
     { path: 'admin', component: AdminComponent },
-    { path: 'edit-profile', component: EditProfileComponent }
+    { path: 'edit-profile', component: EditProfileComponent },
+    { path: 'home-staff', component: HomeStaffComponent}
 ];
