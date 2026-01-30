@@ -1,14 +1,31 @@
 .account-container {
+  position: relative;
   max-width: 750px;
   margin: 50px auto;
   padding: 30px;
   border-radius: 12px;
   box-shadow: 0 30px 42px 30px rgba(0, 0, 0, 0.1);
   border: 5px solid #2563eb;
- background-image: url("../../../public/accountBG.png");
- background-size: cover;
-background-position: center;
+  overflow: hidden;
 }
+
+
+.account-container::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url("/assets/images/angeles_city_logo.png");
+  background-size: 50%;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.2;
+  z-index: 0;
+}
+.account-container > * {
+  position: relative;
+  z-index: 1;
+}
+
 
 .profile-settings {
   max-width: 700px;
@@ -16,14 +33,14 @@ background-position: center;
   font-family: Arial, sans-serif;
 }
 .ImportB {
-box-shadow: 3px 4px 5px rgb(136, 136, 136); 
+box-shadow: 3px 4px 5px rgb(136, 136, 136);
 border-radius: 4px;
 padding: 8px 12px;
-background-color: rgb(255, 255, 255); 
-border-radius: 5px; 
-color: rgb(0, 0, 0); 
-text-align: center; 
-margin-left:450px; 
+background-color: rgb(255, 255, 255);
+border-radius: 5px;
+color: rgb(0, 0, 0);
+text-align: center;
+margin-left:450px;
 margin-top:-50px;
 border: 1px solid black;
 

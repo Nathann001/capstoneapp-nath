@@ -1,0 +1,68 @@
+<!-- request-detail.component.html -->
+<div class="p-8 bg-gray-100 min-h-screen">
+  <button class="mb-4 text-blue-600 hover:underline" routerLink="/home-staff">
+    ← Back to Requests
+  </button>
+
+  <h2 class="text-3xl font-bold text-blue-800 mb-6">
+    Document Request Details
+  </h2>
+
+  <div *ngIf="loading">Loading...</div>
+  <div *ngIf="errorMessage" class="text-red-600">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="request" class="bg-white p-6 rounded-lg shadow-md space-y-4">
+    <p><strong>Request ID:</strong> {{ request.RequestID }}</p>
+    <p><strong>Name:</strong> {{ request.name }}</p>
+    <p><strong>Status:</strong> {{ request.status }}</p>
+    <p>
+      <strong>Requested At:</strong>
+      {{ request.date_created | date:'medium' }}
+    </p>
+    <p *ngIf="request.updated_at">
+      <strong>Last Updated:</strong>
+      {{ request.updated_at | date:'medium' }}
+    </p>
+
+    <!-- File Preview -->
+    <div *ngIf="request.file_path">
+      <p><strong>File:</strong></p>
+      <a
+        [href]="request.fullFileUrl"
+        target="_blank"
+        class="text-blue-600 hover:underline">
+        {{ request.file_path }}
+      </a>
+
+      <div class="mt-4">
+        <img
+          *ngIf="
+            request.file_path.endsWith('.png') ||
+            request.file_path.endsWith('.jpg') ||
+            request.file_path.endsWith('.jpeg')
+          "
+          [src]="request.fullFileUrl"
+          alt="Document File"
+          class="max-w-full border rounded"
+        />
+      </div>
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="flex gap-4 mt-6">
+      <button
+        class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+        (click)="approveRequest()">
+        Approve
+      </button>
+
+      <button
+        class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        (click)="denyRequest()">
+        Deny
+      </button>
+    </div>
+  </div>
+</div>

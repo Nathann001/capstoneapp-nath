@@ -27,6 +27,42 @@
     return sgMail.send(msg);
   }
 
+// ===== Helper function to send document request status emails =====
+function sendRequestStatusEmail(to, status) {
+  if (!to) return Promise.resolve(); // skip if no email
+
+  const subjects = {
+    in_process: 'Your document request is now In Process',
+    processed: 'Your document request has been Processed',
+    denied: 'Your document request was Denied'
+  };
+
+  const messages = {
+    in_process: `
+      <p>Hello,</p>
+      <p>Your document request is now <b>In Process</b>.</p>
+      <p>Please wait for further updates.</p>
+    `,
+    processed: `
+      <p>Hello,</p>
+      <p>Good news! Your document request has been <b>Processed</b> and is ready.</p>
+    `,
+    denied: `
+      <p>Hello,</p>
+      <p>Unfortunately, your document request was <b>Denied</b>.</p>
+      <p>If you have questions, please contact the office.</p>
+    `
+  };
+
+  const msg = {
+    to,
+    from: process.env.SENDGRID_FROM,
+    subject: subjects[status] || 'Document Request Update',
+    html: messages[status] || ''
+  };
+
+  return sgMail.send(msg);
+}
 
 
 
@@ -769,9 +805,9 @@ app.get('/api/document_request/:id', verifyToken, (req, res) => {
 
   const sql = `
     SELECT dr.RequestID, dr.name, dr.date_created, dr.status, dr.updated_at,
-           dr.file_path,      -- ADD THIS LINE
-           u.email,
-           CONCAT(ud.User_FName, ' ', ud.User_LName) AS full_name
+    dr.file_path,      -- ADD THIS LINE
+    u.email,
+    CONCAT(ud.User_FName, ' ', ud.User_LName) AS full_name
     FROM document_request dr
     LEFT JOIN users u ON dr.user_id = u.id
     LEFT JOIN user_details ud ON u.id = ud.UserID
@@ -800,21 +836,53 @@ app.post('/api/document_request/:id/process', (req, res) => {
   db.query(sql, ['in_process', requestId], (err, result) => {
     if (err) return res.status(500).json({ message: 'Failed to process request', error: err.message });
     if (result.affectedRows === 0) return res.status(404).json({ message: 'Request not found' });
+
+    // Fetch user's email to send notification
+    db.query('SELECT u.email FROM document_request dr JOIN users u ON dr.user_id = u.id WHERE dr.RequestID = ?', [requestId], (err, results) => {
+      if (!err && results.length > 0) sendRequestStatusEmail(results[0].email, 'in_process');
+    });
+
     res.json({ message: 'Request marked as In Process' });
   });
 });
 
-// Mark request as "Denied"
-app.post('/api/document_request/:id/deny', (req, res) => {
+// Mark request as "Processed"
+app.post('/api/document_request/:id/processed', (req, res) => {
   const requestId = req.params.id;
 
   const sql = 'UPDATE document_request SET status = ?, updated_at = NOW() WHERE RequestID = ?';
-  db.query(sql, ['denied', requestId], (err, result) => {
-    if (err) return res.status(500).json({ message: 'Failed to deny request', error: err.message });
+  db.query(sql, ['processed', requestId], (err, result) => {
+    if (err) return res.status(500).json({ message: 'Failed to process request', error: err.message });
     if (result.affectedRows === 0) return res.status(404).json({ message: 'Request not found' });
-    res.json({ message: 'Request marked as Denied' });
+
+    db.query('SELECT u.email FROM document_request dr JOIN users u ON dr.user_id = u.id WHERE dr.RequestID = ?', [requestId], (err, results) => {
+      if (!err && results.length > 0) sendRequestStatusEmail(results[0].email, 'processed');
+    });
+
+    res.json({ message: 'Request marked as Processed' });
   });
 });
+
+// Mark request as "Denied"
+app.put('/api/document_request/:id', verifyToken, (req, res) => {
+  const requestId = req.params.id;
+  const { status } = req.body; // expect 'denied' here
+
+  if (!status) return res.status(400).json({ message: 'Status is required' });
+
+  const sql = 'UPDATE document_request SET status = ?, updated_at = NOW() WHERE RequestID = ?';
+  db.query(sql, [status, requestId], (err, result) => {
+    if (err) return res.status(500).json({ message: 'Failed to update request', error: err.message });
+    if (result.affectedRows === 0) return res.status(404).json({ message: 'Request not found' });
+
+    db.query('SELECT u.email FROM document_request dr JOIN users u ON dr.user_id = u.id WHERE dr.RequestID = ?', [requestId], (err, results) => {
+      if (!err && results.length > 0) sendRequestStatusEmail(results[0].email, status);
+    });
+
+    res.json({ message: `Request marked as ${status}` });
+  });
+});
+
 
 
 

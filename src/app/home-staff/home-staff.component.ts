@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-home-staff',
@@ -17,7 +18,7 @@ export class HomeStaffComponent implements OnInit {
   processed: any[] = [];
   denied: any[] = [];
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(private http: HttpClient, private router: Router, private route: ActivatedRoute) {}
 
   ngOnInit() {
     this.fetchDocumentRequests();
@@ -55,9 +56,9 @@ export class HomeStaffComponent implements OnInit {
 }
 
 viewInProcessDetail(request: any) {
-  this.router.navigate(['/process-request', request.RequestID]);
+  this.router.navigate(['../process-request', request.RequestID], {
+    relativeTo: this.route
+  });
 }
-
-
 
 }

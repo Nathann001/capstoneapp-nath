@@ -1,4 +1,3 @@
-<p>home-staff works!</p>
 <body class="bg-gray-200 min-h-screen p-8 font-sans">
 
   <div class="mb-12 mt-4">
@@ -11,14 +10,14 @@
     <div class="flex gap-4 mt-4 justify-center">
       <a  class="block w-64">
         <div class="bg-white border rounded-lg shadow-md p-4 flex flex-col items-center hover:shadow-lg   transition cursor-pointer" routerLink="/empyear" routerLinkActive="active">
-          <img src="images/its_logo.png" alt="icon" class="h-24 mb-4" routerLink="/empyear" routerLinkActive="active">
+          <img src="assets/images/angeles_city_logo.png" alt="icon" class="h-24 mb-4" routerLink="/empyear" routerLinkActive="active">
           <p class="font-semibold text-center" routerLink="/empyear" routerLinkActive="active">Birth Certificate</p>
         </div>
       </a>
 
       <a  class="block w-64">
         <div class="bg-white border rounded-lg shadow-md p-4 flex flex-col items-center hover:shadow-lg   transition cursor-pointer" routerLink="/attendance" routerLinkActive="active">
-          <img src="images/its_logo.png" alt="icon" class="h-24 mb-4">
+          <img src="assets/images/angeles_city_logo.png" alt="icon" class="h-24 mb-4">
           <p class="font-semibold text-center" routerLink="/attendance" routerLinkActive="active">Death Certificate</p>
         </div>
       </a>
@@ -26,7 +25,7 @@
 
     <div class="flex justify-end">
       <a>
-        <img src="images/more.png" alt="icon" class="h-6 mt-4 cursor-pointer"  routerLink="/certificates" routerLinkActive="active">
+        <img src="assets/images/more.png" alt="icon" class="h-6 mt-4 cursor-pointer" routerLink="/certificates" routerLinkActive="active">
       </a>
     </div>
 
@@ -92,7 +91,8 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let doc of processed" class="border-b hover:bg-blue-50 transition">
+      <tr *ngFor="let doc of processed" class="border-b hover:bg-yellow-50 transition cursor-pointer"
+          (click)="viewInProcessDetail(doc)">
         <td class="py-3 px-4">{{ doc.name }}</td>
         <td class="py-3 px-4">{{ doc.updated_at | date:'medium' }}</td>
       </tr>

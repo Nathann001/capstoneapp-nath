@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { OtpVerificationComponent } from './otpverify.component';
+import { ProcessRequestComponent } from './process-request.component';
 
-describe('OtpVerificationComponent', () => {
-  let component: OtpVerificationComponent;
-  let fixture: ComponentFixture<OtpVerificationComponent>;
+describe('ProcessRequestComponent', () => {
+  let component: ProcessRequestComponent;
+  let fixture: ComponentFixture<ProcessRequestComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [OtpVerificationComponent]
+      imports: [ProcessRequestComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(OtpVerificationComponent);
+    fixture = TestBed.createComponent(ProcessRequestComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

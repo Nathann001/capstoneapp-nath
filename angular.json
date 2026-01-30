@@ -12,25 +12,23 @@
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:application",
-          "options": {
-            "outputPath": "dist/certificate-generator",
-            "index": "src/index.html",
-            "browser": "src/main.ts",
-            "polyfills": [
-              "zone.js"
-            ],
-            "tsConfig": "tsconfig.app.json",
-            "assets": [
-              {
-                "glob": "**/*",
-                "input": "public"
-              }
-            ],
-            "styles": [
-              "src/styles.css"
-            ],
-            "scripts": []
-          },
+        "options": {
+          "outputPath": "dist/certificate-generator",
+          "index": "src/index.html",
+          "browser": "src/main.ts",
+          "polyfills": [
+            "zone.js"
+          ],
+          "tsConfig": "tsconfig.app.json",
+          "assets": [
+            "src/favicon.ico",
+            "src/assets"
+          ],
+          "styles": [
+            "src/styles.css"
+          ],
+          "scripts": []
+        },
           "configurations": {
             "production": {
               "budgets": [
