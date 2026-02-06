@@ -1,0 +1,35 @@
+<div class="requests-container">
+  <h2>My Document Requests</h2>
+
+  <div *ngIf="requests.length === 0">
+    <p>You have no requests yet.</p>
+  </div>
+
+  <div *ngFor="let req of requests" class="request-card">
+    <div class="request-header">
+      <h3>{{ req.name }}</h3>
+      <span class="status" [ngClass]="req.status">{{ req.status | titlecase }}</span>
+    </div>
+    <p>Last Updated: {{ req.updated_at | date:'short' }}</p>
+
+    <div class="request-actions">
+      <button (click)="viewHistory(req.RequestID)">
+        {{ historyMap[req.RequestID] ? 'Hide History' : 'View History' }}
+      </button>
+
+      <button *ngIf="req.file_path" (click)="downloadFile(req.RequestID, req.file_path)">
+        Download File
+      </button>
+    </div>
+
+    <div class="history" *ngIf="historyMap[req.RequestID]">
+      <h4>Status History:</h4>
+      <ul>
+        <li *ngFor="let h of historyMap[req.RequestID]">
+          <strong>{{ h.status | titlecase }}</strong> - {{ h.email_message }}
+          <em>({{ h.updated_at | date:'short' }})</em>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>

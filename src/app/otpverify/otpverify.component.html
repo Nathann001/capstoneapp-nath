@@ -1,14 +1,27 @@
 <div class="otp-container">
   <h2>Verify Your Account</h2>
   <form [formGroup]="otpForm" (ngSubmit)="onSubmit()">
+
+    <!-- Make email/phone input editable -->
     <div class="input-group">
       <input type="text" formControlName="contact" placeholder="Email or Phone">
     </div>
+
+
     <div class="input-group">
       <input type="text" formControlName="otp" placeholder="Enter OTP">
     </div>
+
     <button type="submit" [disabled]="otpForm.invalid || loading">
       {{ loading ? 'Verifying...' : 'Verify OTP' }}
     </button>
+
+    <button type="button" (click)="resendOtp()" [disabled]="resendCooldown > 0">
+  {{ resendCooldown > 0 ? 'Resend OTP (' + resendCooldown + 's)' : 'Resend OTP' }}
+</button>
+
+<p class="otp-message" *ngIf="message">{{ message }}</p>
+
+
   </form>
 </div>

@@ -1,9 +1,7 @@
 import { Component, HostListener } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { Router, NavigationEnd } from '@angular/router';
-import { NgIf, NgClass } from '@angular/common';
+import { RouterOutlet, RouterModule, Router, NavigationEnd } from '@angular/router';
+import { NgIf, NgClass, CommonModule } from '@angular/common';
 import { filter } from 'rxjs/operators';
-import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { provideHttpClient } from '@angular/common/http';
 
@@ -17,37 +15,44 @@ export const appConfig = {
   selector: 'app-root',
   standalone: true,
   imports: [
+    CommonModule,
     RouterOutlet,
     RouterModule,
     NgIf,
     NgClass,
-    ReactiveFormsModule,
+    FormsModule,
+    ReactiveFormsModule
   ],
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
+  styleUrls: ['./app.component.css']
 })
 export class AppComponent {
   title = 'Certificate_Generator';
   showSidebar = true;
   isLoggedIn = false;
+  isAdmin = false;
+  isStaff = false;
 
   constructor(private router: Router) {
     this.checkLogin();
 
-    // Hide sidebar on auth routes & update login status
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
         const authRoutes = ['/login', '/register', '/reset-password'];
         this.showSidebar = !authRoutes.some(route => event.urlAfterRedirects.includes(route));
         this.isLoggedIn = !!localStorage.getItem('token');
-      });
-  }
 
-  @HostListener('document:mousemove', ['$event'])
-  onMouseMove(event: MouseEvent): void {
-    this.updateBackgroundPosition('.nav-bg', event);
-    this.updateBackgroundPosition('.login-bg', event);
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        this.isAdmin = user.role === 1;
+        this.isStaff = user.role === 2;
+
+        // Redirect users to their "home" if they access the root
+        if (event.urlAfterRedirects === '/') {
+          if (this.isAdmin) this.router.navigate(['/admin']);
+          else if (this.isStaff) this.router.navigate(['/home-staff']);
+        }
+      });
   }
 
   logout(): void {
@@ -55,6 +60,12 @@ export class AppComponent {
     localStorage.removeItem('user');
     this.isLoggedIn = false;
     this.router.navigate(['/login']);
+  }
+
+  @HostListener('document:mousemove', ['$event'])
+  onMouseMove(event: MouseEvent): void {
+    this.updateBackgroundPosition('.nav-bg', event);
+    this.updateBackgroundPosition('.login-bg', event);
   }
 
   private updateBackgroundPosition(selector: string, event: MouseEvent): void {
@@ -70,7 +81,6 @@ export class AppComponent {
     const token = localStorage.getItem('token');
     this.isLoggedIn = !!token;
 
-    // Redirect to login if not logged in and not on an auth route
     const authRoutes = ['/login', '/register', '/reset-password'];
     if (!this.isLoggedIn && !authRoutes.includes(this.router.url)) {
       this.router.navigate(['/login']);

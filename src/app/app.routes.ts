@@ -6,12 +6,14 @@ import { BirthComponent } from './certificate_types/birth/birth.component';
 import { AccountComponent } from './account/account.component';
 import { PendingComponent } from './pending/pending.component';
 import { ResetPasswordComponent } from './reset-password/reset-password.component';
-import { AdminComponent } from './admin/admin.component';
+import { AdminUsersComponent } from './admin-users/admin-users.component';
 import { OtpVerificationComponent } from './otpverify/otpverify.component'
 import { EditProfileComponent } from './edit-profile/edit-profile.component';
 import { HomeStaffComponent } from './home-staff/home-staff.component';
 import { RequestDetailComponent } from './request-detail/request-detail.component';
 import { ProcessRequestComponent } from './process-request/process-request.component';
+import { AdminComponent } from './admin/admin.component';
+import { MyRequestsComponent } from './my-requests/my-requests.component';
 
 export const routes: Routes = [
     { path: '', component: HomeComponentComponent },
@@ -29,8 +31,10 @@ export const routes: Routes = [
     { path: 'account', component: AccountComponent },
     { path: 'pending', component: PendingComponent },
     { path: 'reset-password', component: ResetPasswordComponent },
-    { path: 'admin', component: AdminComponent },
+    { path: 'admin-users', component: AdminUsersComponent },
     { path: 'edit-profile', component: EditProfileComponent },
     { path: 'home-staff', component: HomeStaffComponent},
-    { path: 'process-request/:id', component: ProcessRequestComponent }
+    { path: 'process-request/:id', component: ProcessRequestComponent },
+    { path: 'admin', component: AdminComponent },
+    { path: 'my-requests', component: MyRequestsComponent }
 ];

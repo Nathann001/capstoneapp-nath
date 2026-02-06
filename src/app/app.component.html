@@ -1,63 +1,109 @@
 <div class="flex">
-  <aside id="default-sidebar" *ngIf="showSidebar" class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform" aria-label="Sidebar">
+  <!-- Sidebar -->
+  <aside
+    id="default-sidebar"
+    *ngIf="showSidebar"
+    class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform"
+    aria-label="Sidebar"
+  >
     <div class="h-full px-3 py-4 overflow-y-auto nav-bg flex flex-col justify-between">
+
+      <!-- Logo -->
       <ul class="space-y-2 font-medium">
         <li>
           <a href="#" class="flex items-center text-gray-900 rounded-lg text-white group">
-            <img src="assets/images/angeles_city_logo.png" style="width:60%; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+            <img src="assets/images/angeles_city_logo.png"
+                 style="width:60%; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
           </a>
-          <p class="text-center text-gray-900 rounded-lg text-white group text-xl mb-20 text-sm font-bold">Angeles City</p>
+          <p class="text-center text-gray-900 rounded-lg text-white group text-xl mb-20 text-sm font-bold">
+            Angeles City
+          </p>
         </li>
-        <li>
-          <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-100 hover:bg-gray-700 group text-2xl mb-5" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-            <i class="fa-solid fa-house"></i>
-            <span class="flex-1 ms-3 whitespace-nowrap pl-2">Home</span>
-          </a>
-        </li>
-        <li>
-          <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-100 hover:bg-gray-700 group mb-5 text-2xl" routerLink="/certificates" routerLinkActive="active">
-            <i class="fa-solid fa-certificate"></i>
-            <span class="flex-1 ms-3 whitespace-nowrap pl-2">Certificates</span>
-          </a>
-        </li>
-      <!-- <li>
-          <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-100 hover:bg-gray-700 group mb-5 text-2xl"  routerLink="/pending">
-            <i class="fa-solid fa-hourglass-half"></i>
-            <span class="flex-1 ms-3 whitespace-nowrap pl-4">Pending</span>
-          </a>
-        </li>
-        <li>
-          <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-100 hover:bg-gray-700 group mb-5 text-2xl" routerLink="/approved" routerLinkActive="active">
-            <i class="fa-solid fa-square-check"></i>
-            <span class="flex-1 ms-3 whitespace-nowrap pl-3">Approved</span>
-          </a>
-        </li>
-        <li>
-          <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-100 hover:bg-gray-700 group mb-5 text-2xl"  >
-            <i class="fa-solid fa-file-export"></i>
-            <span class="flex-1 ms-3 whitespace-nowrap pl-1">Download</span>
-          </a>
-        </li> -->
+
+        <!-- Home (only for non-admin, non-staff users) -->
+<li *ngIf="!isAdmin && !isStaff">
+  <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-700 group text-2xl mb-5"
+     routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+    <i class="fa-solid fa-house"></i>
+    <span class="flex-1 ms-3 whitespace-nowrap pl-2">Home</span>
+  </a>
+</li>
+
+<!-- Certificates (only for non-admin, non-staff) -->
+<li *ngIf="!isAdmin && !isStaff">
+  <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-700 group mb-5 text-2xl"
+     routerLink="/certificates" routerLinkActive="active">
+    <i class="fa-solid fa-certificate"></i>
+    <span class="flex-1 ms-3 whitespace-nowrap pl-2">Certificates</span>
+  </a>
+</li>
+
+<!-- My Requests (only for regular users, role 3) -->
+<li *ngIf="!isAdmin && !isStaff">
+  <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-700 group mb-5 text-2xl"
+     routerLink="/my-requests" routerLinkActive="active">
+    <i class="fa-solid fa-envelope-open-text"></i>
+    <span class="flex-1 ms-3 whitespace-nowrap pl-2">My Requests</span>
+  </a>
+</li>
+
+
+        <!-- Admin Links (role 1) -->
+        <ng-container *ngIf="isAdmin">
+          <li>
+            <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-700 group mb-5 text-2xl"
+               routerLink="/admin" routerLinkActive="active">
+              <i class="fa-solid fa-chart-line"></i>
+              <span class="flex-1 ms-3 whitespace-nowrap pl-2">Admin Dashboard</span>
+            </a>
+          </li>
+          <li>
+            <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-700 group mb-5 text-2xl"
+               routerLink="/admin-users" routerLinkActive="active">
+              <i class="fa-solid fa-users"></i>
+              <span class="flex-1 ms-3 whitespace-nowrap pl-2">Manage Users</span>
+            </a>
+          </li>
+        </ng-container>
+
+        <!-- Staff Links (role 2) -->
+        <ng-container *ngIf="isStaff">
+          <li>
+            <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-700 group mb-5 text-2xl"
+               routerLink="/home-staff" routerLinkActive="active">
+              <i class="fa-solid fa-house"></i>
+              <span class="flex-1 ms-3 whitespace-nowrap pl-2">Staff Home</span>
+            </a>
+          </li>
+        </ng-container>
+
       </ul>
+
+      <!-- Bottom Links (all users) -->
       <ul>
         <li>
-          <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-100 hover:bg-gray-700 group " routerLink="/account">
+          <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-700 group"
+             routerLink="/account">
             <i class="fa-solid fa-user"></i>
             <span class="flex-1 ms-3 whitespace-nowrap font-bold pl-1">Account Settings</span>
           </a>
         </li>
         <li>
-          <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-100 hover:bg-gray-700 group ">
+          <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-700 group">
             <i class="fa-solid fa-right-from-bracket"></i>
-            <span class="flex-1 ms-3 whitespace-nowrap font-bold"><button type="button" class="LogoutB" (click)="logout()">Log out</button></span>
+            <span class="flex-1 ms-3 whitespace-nowrap font-bold">
+              <button type="button" class="LogoutB" (click)="logout()">Log out</button>
+            </span>
           </a>
         </li>
       </ul>
+
     </div>
   </aside>
 
   <!-- Main Content -->
-  <div class="flex-1 p-4 transition-all duration-300" [ngClass]="{'ml-0': !showSidebar, 'ml-64': showSidebar}">
+  <div class="flex-1 p-4 transition-all duration-300"
+       [ngClass]="{'ml-0': !showSidebar, 'ml-64': showSidebar}">
     <router-outlet></router-outlet>
   </div>
 </div>

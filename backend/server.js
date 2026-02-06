@@ -28,8 +28,8 @@
   }
 
 // ===== Helper function to send document request status emails =====
-function sendRequestStatusEmail(to, status) {
-  if (!to) return Promise.resolve(); // skip if no email
+function sendRequestStatusEmail(to, status, reason = null) {
+  if (!to) return Promise.resolve();
 
   const subjects = {
     in_process: 'Your document request is now In Process',
@@ -41,24 +41,24 @@ function sendRequestStatusEmail(to, status) {
     in_process: `
       <p>Hello,</p>
       <p>Your document request is now <b>In Process</b>.</p>
-      <p>Please wait for further updates.</p>
     `,
     processed: `
       <p>Hello,</p>
-      <p>Good news! Your document request has been <b>Processed</b> and is ready.</p>
+      <p>Your document request has been <b>Processed</b>.</p>
     `,
     denied: `
       <p>Hello,</p>
-      <p>Unfortunately, your document request was <b>Denied</b>.</p>
-      <p>If you have questions, please contact the office.</p>
+      <p>Unfortunately, Your document request was <b>Denied</b>.</p>
+      <p><b>Reason of Denial:</b></p>
+      <p>${reason || 'No reason provided.'}</p>
     `
   };
 
   const msg = {
     to,
     from: process.env.SENDGRID_FROM,
-    subject: subjects[status] || 'Document Request Update',
-    html: messages[status] || ''
+    subject: subjects[status],
+    html: messages[status]
   };
 
   return sgMail.send(msg);
@@ -69,7 +69,7 @@ function sendRequestStatusEmail(to, status) {
   const app = express();
 
   app.use(cors({
-    origin: ['http://localhost:4200', 'http://localhost:4000', 'https://its-certificate-generator.vercel.app'],
+    origin: ['http://localhost:4200', 'http://localhost:4000'],
     credentials: true
   }));
 
@@ -293,6 +293,55 @@ app.get('/api/user/details', verifyToken, (req, res) => {
       );
     });
   });
+
+  app.post('/api/auth/resend-otp', (req, res) => {
+  const { email, phone } = req.body;
+
+  if (!email && !phone) {
+    return res.status(400).json({ message: 'Email or phone is required' });
+  }
+
+  const value = email || phone;
+  const query = email
+    ? 'SELECT * FROM pending_users WHERE email = ?'
+    : 'SELECT * FROM pending_users WHERE phone = ?';
+
+  db.query(query, [value], async (err, results) => {
+    if (err) return res.status(500).json({ message: 'Database error' });
+    if (results.length === 0) return res.status(404).json({ message: 'No pending registration found' });
+
+    const pendingUser = results[0];
+
+    // Check last OTP sent time
+    const now = new Date();
+    const lastSent = new Date(pendingUser.otp_expires_at.getTime() - 10*60*1000); // original sent time
+    const cooldown = 60 * 1000; // 1 minute cooldown
+    if (now - lastSent < cooldown) {
+      return res.status(429).json({ message: `Please wait ${Math.ceil((cooldown - (now - lastSent))/1000)} seconds before resending OTP` });
+    }
+
+    // Generate new OTP
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+
+    db.query(
+      'UPDATE pending_users SET otp = ?, otp_expires_at = ? WHERE id = ?',
+      [otp, expiresAt, pendingUser.id],
+      async (err) => {
+        if (err) return res.status(500).json({ message: 'Failed to update OTP' });
+
+        if (email) {
+          try { await sendOtpEmail(email, otp); }
+          catch (e) { console.error('Error sending OTP email:', e); }
+        }
+
+        res.json({ message: 'OTP resent successfully' });
+      }
+    );
+  });
+});
+
+
 
 
 app.post('/api/auth/login', (req, res) => {
@@ -526,279 +575,27 @@ app.delete('/api/admin/users/:id', verifyToken, checkRole(1), (req, res) => {
     });
   });
 
-  /* CERTIFICATES */
 
-  // Save Pending Certificates
-  app.post('/api/pending-certificates', upload.single('certificatePng'), async (req, res) => {
-    try {
-      const {
-        recipientName,
-        issueDate,
-        numberOfSignatories,
-        signatory1Name,
-        signatory1Role,
-        signatory2Name,
-        signatory2Role,
-        creator_name,
-        certificate_type
-      } = req.body;
-
-      if (!req.file) return res.status(400).json({ message: 'Certificate PNG is required' });
-
-      const uploaded = await uploadToCloudinary(req.file.buffer, "certificates");
-
-      const approvalSignatories = [];
-      Object.keys(req.body).forEach(key => {
-        if (key.startsWith('approverName')) {
-          const index = key.replace('approverName', '');
-          approvalSignatories.push({
-            name: req.body[`approverName${index}`],
-            email: req.body[`approverEmail${index}`]
-          });
-        }
-      });
-
-      const sql = `
-        INSERT INTO pending_certificates
-        (recipient_name, issue_date, number_of_signatories, signatory1_name, signatory1_role,
-        signatory2_name, signatory2_role, png_path, approval_signatories, creator_name, status, certificate_type)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)
-      `;
-      const values = [
-        recipientName,
-        issueDate,
-        numberOfSignatories,
-        signatory1Name,
-        signatory1Role,
-        signatory2Name || null,
-        signatory2Role || null,
-        uploaded.secure_url,
-        JSON.stringify(approvalSignatories),
-        creator_name,
-        certificate_type || null
-      ];
-
-      db.query(sql, values, (err) => {
-        if (err) return res.status(500).json({ message: 'Failed to save certificate' });
-        res.status(201).json({ message: 'Certificate saved successfully', url: uploaded.secure_url });
-      });
-    } catch (err) {
-      res.status(500).json({ message: 'Upload failed' });
-    }
-  });
-
-  // Get pending certificates
-  app.get('/api/pending-certificates', (req, res) => {
-    const userEmail = req.query.email;
-    if (!userEmail) return res.status(400).json({ message: 'Email is required' });
-
-    const sql = `
-      SELECT
-        id,
-        recipient_name AS rname,
-        issue_date,
-        number_of_signatories,
-        signatory1_name,
-        signatory1_role,
-        signatory2_name,
-        signatory2_role,
-        png_path,
-        approval_signatories,
-        creator_name,
-        status,
-        certificate_type
-      FROM pending_certificates
-      WHERE status = 'pending'
-    `;
-
-    db.query(sql, (err, results) => {
-      if (err) return res.status(500).json({ message: 'Failed to fetch certificates' });
-
-      const filtered = results.filter(cert => {
-        try {
-          const signatories = JSON.parse(cert.approval_signatories || '[]');
-          return signatories.some(s => s.email?.toLowerCase() === userEmail.toLowerCase());
-        } catch {
-          return false;
-        }
-      });
-
-      res.json(filtered);
-    });
-  });
-
-  // Save pending COC
-  app.post('/api/pending-cert_coc', upload.single('certificatePng'), async (req, res) => {
-    try {
-      const {
-        recipientName, numberOfHours, internsPosition, internsDepartment, pronoun, numberOfSignatories,
-        signatory1Name, signatory1Role, signatory2Name, signatory2Role, creator_name
-      } = req.body;
-
-      if (!req.file) return res.status(400).json({ message: 'Certificate PNG is required' });
-
-      const uploaded = await uploadToCloudinary(req.file.buffer, "coc");
-
-      const approvalSignatories = [];
-      Object.keys(req.body).forEach(key => {
-        if (key.startsWith('approverName')) {
-          const index = key.replace('approverName', '');
-          approvalSignatories.push({
-            name: req.body[`approverName${index}`],
-            email: req.body[`approverEmail${index}`]
-          });
-        }
-      });
-
-      const sql = `
-        INSERT INTO pending_cert_coc
-        (recipient_name, number_of_hours, interns_position, interns_department, pro_noun,
-        number_of_signatories, signatory1_name, signatory1_role, signatory2_name, signatory2_role,
-        png_path, approval_signatories, creator_name)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `;
-
-      db.query(sql, [
-        recipientName,
-        numberOfHours,
-        internsPosition,
-        internsDepartment,
-        pronoun,
-        numberOfSignatories,
-        signatory1Name,
-        signatory1Role,
-        signatory2Name || null,
-        signatory2Role || null,
-        uploaded.secure_url,
-        JSON.stringify(approvalSignatories),
-        creator_name
-      ], (err) => {
-        if (err) return res.status(500).json({ message: 'Failed to save certificate' });
-        res.status(201).json({ message: 'Certificate saved successfully', url: uploaded.secure_url });
-      });
-    } catch (err) {
-      res.status(500).json({ message: 'Upload failed' });
-    }
-  });
-
-  // Reject pending
-  app.post('/api/pending-certificates/:id/reject', (req, res) => {
-    const certId = req.params.id;
-    const sql = `UPDATE pending_certificates SET status = 'rejected' WHERE id = ?`;
-    db.query(sql, [certId], err => {
-      if (err) return res.status(500).json({ message: 'Rejection failed' });
-      res.json({ message: 'Certificate rejected' });
-    });
-  });
-
-  // Approve certificate
-  app.post('/api/approve-certificate-with-signature', upload.single('certificatePng'), async (req, res) => {
-    try {
-      const certId = req.body.id;
-      if (!req.file || !certId) return res.status(400).json({ message: 'Missing file or certificate ID' });
-
-      const uploaded = await uploadToCloudinary(req.file.buffer, "approved");
-
-      db.query('SELECT * FROM pending_certificates WHERE id = ?', [certId], (err, results) => {
-        if (err || results.length === 0) return res.status(500).json({ message: 'Certificate not found' });
-
-        const cert = results[0];
-        const approvalSignatories = typeof cert.approval_signatories === 'string'
-          ? cert.approval_signatories
-          : JSON.stringify(cert.approval_signatories || []);
-
-        const insertSql = `
-          INSERT INTO approved_certificates
-          (recipient_name, creator_name, issue_date, number_of_signatories, signatory1_name, signatory1_role,
-          signatory2_name, signatory2_role, png_path, approval_signatories, status, certificate_type)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?)
-        `;
-
-        db.query(insertSql, [
-          cert.recipient_name,
-          cert.creator_name,
-          cert.issue_date,
-          cert.number_of_signatories,
-          cert.signatory1_name,
-          cert.signatory1_role,
-          cert.signatory2_name,
-          cert.signatory2_role,
-          uploaded.secure_url,
-          approvalSignatories,
-          cert.certificate_type || 'Employee of the Year'
-        ], (err) => {
-          if (err) return res.status(500).json({ message: 'Insert failed' });
-
-          db.query('DELETE FROM pending_certificates WHERE id = ?', [certId], (err) => {
-            if (err) return res.status(500).json({ message: 'Cleanup failed' });
-            res.json({ message: 'Certificate approved and moved to approved_certificates', url: uploaded.secure_url });
-          });
-        });
-      });
-    } catch (err) {
-      res.status(500).json({ message: 'Approval failed' });
-    }
-  });
-
-  // DELETE approved certificate by ID
-  app.delete('/api/approved-certificates/:id', (req, res) => {
-    const certId = req.params.id;
-
-    const selectSql = 'SELECT png_path FROM approved_certificates WHERE id = ?';
-    db.query(selectSql, [certId], (err, results) => {
-      if (err) return res.status(500).json({ message: 'Database error' });
-      if (results.length === 0) return res.status(404).json({ message: 'Certificate not found' });
-
-      const deleteSql = 'DELETE FROM approved_certificates WHERE id = ?';
-      db.query(deleteSql, [certId], (err) => {
-        if (err) return res.status(500).json({ message: 'Failed to delete certificate from DB' });
-        res.status(200).json({ message: 'Certificate deleted successfully' });
-      });
-    });
-  });
-
-  // Get approved certificates
-  app.get('/api/approved-certificates', (req, res) => {
-    const sql = `
-      SELECT
-        id,
-        recipient_name AS rname,
-        signatory1_name,
-        issue_date,
-        png_path,
-        creator_name,
-        status,
-        certificate_type
-      FROM approved_certificates
-      WHERE status = 'approved'
-    `;
-
-    db.query(sql, (err, results) => {
-      if (err) return res.status(500).json({ message: 'Failed to fetch approved certificates' });
-      res.json(results);
-    });
-  });
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-  db.connect(err => {
-    if (err) throw err;
-    console.log('MySQL Connected');
-});
 
 // Get all document requests
-app.get('/api/document_request', (req, res) => {
+app.get('/api/document_request', verifyToken, (req, res) => {
+  const staffId = req.user.id;
+
   const sql = `
-    SELECT RequestID, name, date_created, status, updated_at
+    SELECT *
     FROM document_request
+    WHERE (status = 'pending' AND assigned_staff_id IS NULL)
+       OR assigned_staff_id = ?
     ORDER BY date_created DESC
   `;
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.error('Failed to fetch document requests:', err);
-      return res.status(500).json({ error: 'Failed to fetch document requests' });
-    }
+
+  db.query(sql, [staffId], (err, results) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch document requests' });
     res.json(results);
   });
 });
+
+
 // Get a single document request by ID
 app.get('/api/document_request/:id', verifyToken, (req, res) => {
   const requestId = parseInt(req.params.id, 10);
@@ -828,62 +625,232 @@ app.get('/api/document_request/:id', verifyToken, (req, res) => {
 
 
 
-// Mark request as "In Process"
-app.post('/api/document_request/:id/process', (req, res) => {
+// ===== Mark request as "In Process" =====
+app.post('/api/document_request/:id/process', verifyToken, (req, res) => {
   const requestId = req.params.id;
+  const staffId = req.user.id;
 
-  const sql = 'UPDATE document_request SET status = ?, updated_at = NOW() WHERE RequestID = ?';
-  db.query(sql, ['in_process', requestId], (err, result) => {
+  const sql = `
+    UPDATE document_request
+    SET status = ?, updated_at = NOW(), assigned_staff_id = ?
+    WHERE RequestID = ?
+  `;
+  db.query(sql, ['in_process', staffId, requestId], (err, result) => {
     if (err) return res.status(500).json({ message: 'Failed to process request', error: err.message });
     if (result.affectedRows === 0) return res.status(404).json({ message: 'Request not found' });
 
-    // Fetch user's email to send notification
-    db.query('SELECT u.email FROM document_request dr JOIN users u ON dr.user_id = u.id WHERE dr.RequestID = ?', [requestId], (err, results) => {
-      if (!err && results.length > 0) sendRequestStatusEmail(results[0].email, 'in_process');
-    });
+    // Get user email
+    db.query(
+      'SELECT u.email FROM document_request dr JOIN users u ON dr.user_id = u.id WHERE dr.RequestID = ?',
+      [requestId],
+      (err, results) => {
+        if (!err && results.length > 0) {
+          const email = results[0].email;
+          const emailMsg = `Your request is now In Process.`;
+          sendRequestStatusEmail(email, 'in_process');
 
-    res.json({ message: 'Request marked as In Process' });
+          // Log to history
+          db.query(
+            'INSERT INTO request_status_history (RequestID, status, email_message) VALUES (?, ?, ?)',
+            [requestId, 'in_process', emailMsg],
+            (err) => { if (err) console.error('Failed to log history', err); }
+          );
+        }
+      }
+    );
+
+    res.json({ message: 'Request marked as In Process and assigned to you' });
   });
 });
 
-// Mark request as "Processed"
-app.post('/api/document_request/:id/processed', (req, res) => {
+// ===== Mark request as "Processed" =====
+app.post('/api/document_request/:id/processed', verifyToken, (req, res) => {
   const requestId = req.params.id;
+  const staffId = req.user.id;
 
-  const sql = 'UPDATE document_request SET status = ?, updated_at = NOW() WHERE RequestID = ?';
-  db.query(sql, ['processed', requestId], (err, result) => {
+  const sql = `
+    UPDATE document_request
+    SET status = ?, updated_at = NOW(), assigned_staff_id = ?
+    WHERE RequestID = ?
+  `;
+  db.query(sql, ['processed', staffId, requestId], (err, result) => {
     if (err) return res.status(500).json({ message: 'Failed to process request', error: err.message });
     if (result.affectedRows === 0) return res.status(404).json({ message: 'Request not found' });
 
-    db.query('SELECT u.email FROM document_request dr JOIN users u ON dr.user_id = u.id WHERE dr.RequestID = ?', [requestId], (err, results) => {
-      if (!err && results.length > 0) sendRequestStatusEmail(results[0].email, 'processed');
-    });
+    db.query(
+      'SELECT u.email FROM document_request dr JOIN users u ON dr.user_id = u.id WHERE dr.RequestID = ?',
+      [requestId],
+      (err, results) => {
+        if (!err && results.length > 0) {
+          const email = results[0].email;
+          const emailMsg = `Your request has been Processed.`;
+          sendRequestStatusEmail(email, 'processed');
 
-    res.json({ message: 'Request marked as Processed' });
+          db.query(
+            'INSERT INTO request_status_history (RequestID, status, email_message) VALUES (?, ?, ?)',
+            [requestId, 'processed', emailMsg],
+            (err) => { if (err) console.error('Failed to log history', err); }
+          );
+        }
+      }
+    );
+
+    res.json({ message: 'Request marked as Processed and assigned to you' });
   });
 });
 
-// Mark request as "Denied"
-app.put('/api/document_request/:id', verifyToken, (req, res) => {
+// ===== Mark request as "Denied" =====
+app.put('/api/document_request/:id/deny', verifyToken, (req, res) => {
   const requestId = req.params.id;
-  const { status } = req.body; // expect 'denied' here
+  const staffId = req.user.id;
+  const { reason } = req.body;
 
-  if (!status) return res.status(400).json({ message: 'Status is required' });
+  if (!reason) return res.status(400).json({ message: 'Denial reason is required' });
 
-  const sql = 'UPDATE document_request SET status = ?, updated_at = NOW() WHERE RequestID = ?';
-  db.query(sql, [status, requestId], (err, result) => {
+  const sql = `
+    UPDATE document_request
+    SET status = ?, denial_reason = ?, updated_at = NOW(), assigned_staff_id = ?
+    WHERE RequestID = ?
+  `;
+  db.query(sql, ['denied', reason, staffId, requestId], (err, result) => {
     if (err) return res.status(500).json({ message: 'Failed to update request', error: err.message });
     if (result.affectedRows === 0) return res.status(404).json({ message: 'Request not found' });
 
-    db.query('SELECT u.email FROM document_request dr JOIN users u ON dr.user_id = u.id WHERE dr.RequestID = ?', [requestId], (err, results) => {
-      if (!err && results.length > 0) sendRequestStatusEmail(results[0].email, status);
-    });
+    db.query(
+      'SELECT u.email FROM document_request dr JOIN users u ON dr.user_id = u.id WHERE dr.RequestID = ?',
+      [requestId],
+      (err, results) => {
+        if (!err && results.length > 0) {
+          const email = results[0].email;
+          const emailMsg = `Your request was Denied. Reason: ${reason}`;
+          sendRequestStatusEmail(email, 'denied', reason);
 
-    res.json({ message: `Request marked as ${status}` });
+          db.query(
+            'INSERT INTO request_status_history (RequestID, status, email_message) VALUES (?, ?, ?)',
+            [requestId, 'denied', emailMsg],
+            (err) => { if (err) console.error('Failed to log history', err); }
+          );
+        }
+      }
+    );
+
+    res.json({ message: 'Request marked as Denied and assigned to you' });
   });
 });
 
 
+// Admin: Get all document requests
+app.get('/api/admin/document_request', verifyToken, checkRole(1), (req, res) => {
+  const sql = `
+    SELECT RequestID, name, date_created, status, updated_at, archived
+    FROM document_request
+    ORDER BY date_created DESC
+  `;
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ message: 'Database error' });
+    res.json(results);
+  });
+});
+
+
+// Archive document request
+app.put('/api/document_request/:id/archive', verifyToken, (req, res) => {
+  const requestId = req.params.id;
+
+  // 1. Get request info first
+  const sqlSelect = 'SELECT * FROM document_request WHERE RequestID = ?';
+  db.query(sqlSelect, [requestId], (err, results) => {
+    if (err) return res.status(500).json({ message: 'DB error', error: err.message });
+    if (results.length === 0) return res.status(404).json({ message: 'Request not found' });
+
+    const request = results[0];
+    const recipientName = request.name ? request.name.replace(/\s+/g, '_') : `request_${requestId}`;
+    const timestamp = new Date(request.updated_at || new Date())
+      .toISOString()
+      .replace(/[:.]/g, '-');
+
+    // 2. Create archive folder if not exists
+    const archiveDir = path.join(__dirname, 'archives');
+    if (!fs.existsSync(archiveDir)) fs.mkdirSync(archiveDir);
+
+    // 3. Create a folder for this specific request
+    const requestFolder = path.join(archiveDir, `${recipientName}_${timestamp}`);
+    if (!fs.existsSync(requestFolder)) fs.mkdirSync(requestFolder);
+
+    // 4. Move the file if it exists
+    if (request.file_path) {
+      const oldPath = path.join(__dirname, request.file_path);
+
+      if (fs.existsSync(oldPath)) {
+        const fileName = path.basename(request.file_path);
+        const newPath = path.join(requestFolder, fileName);
+
+        try {
+          fs.renameSync(oldPath, newPath);
+        } catch (err) {
+          console.error('Failed to move file:', err);
+          return res.status(500).json({ message: 'Failed to archive file', error: err.message });
+        }
+      } else {
+        console.warn('File does not exist:', oldPath);
+      }
+    }
+
+    // 5. Update database to mark as archived
+    const sqlUpdate = 'UPDATE document_request SET archived = 1, updated_at = NOW() WHERE RequestID = ?';
+    db.query(sqlUpdate, [requestId], (err) => {
+      if (err) {
+        console.error('Failed to mark request as archived:', err);
+        return res.status(500).json({ message: 'Failed to update DB', error: err.message });
+      }
+      res.json({ message: 'Request archived successfully', folder: requestFolder });
+    });
+  });
+});
+
+// Get requests for logged in user
+app.get('/api/my/requests', verifyToken, (req, res) => {
+  const userId = req.user.id;
+  const sql = `
+    SELECT RequestID, name, status, updated_at, file_path
+    FROM document_request
+    WHERE user_id = ?
+    ORDER BY updated_at DESC
+  `;
+  db.query(sql, [userId], (err, results) => {
+    if (err) return res.status(500).json({ message: 'Database error' });
+    res.json(results);
+  });
+});
+
+// Get history for specific request
+app.get('/api/my/requests/:id/history', verifyToken, (req, res) => {
+  const requestId = req.params.id;
+  const userId = req.user.id;
+
+  db.query('SELECT * FROM document_request WHERE RequestID = ? AND user_id = ?', [requestId, userId], (err, reqResults) => {
+    if (err || reqResults.length === 0) return res.status(404).json({ message: 'Request not found' });
+
+    db.query('SELECT status, email_message, updated_at FROM request_status_history WHERE RequestID = ? ORDER BY updated_at ASC', [requestId], (err, history) => {
+      if (err) return res.status(500).json({ message: 'Failed to fetch history' });
+      res.json(history);
+    });
+  });
+});
+
+app.get('/api/my/requests/:id/download', verifyToken, (req, res) => {
+  const requestId = req.params.id;
+  const userId = req.user.id;
+
+  db.query('SELECT file_path FROM document_request WHERE RequestID = ? AND user_id = ?', [requestId, userId], (err, results) => {
+    if (err || results.length === 0) return res.status(404).json({ message: 'File not found' });
+
+    const filePath = path.join(__dirname, results[0].file_path);
+    if (!fs.existsSync(filePath)) return res.status(404).json({ message: 'File does not exist' });
+
+    res.download(filePath);
+  });
+});
 
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */

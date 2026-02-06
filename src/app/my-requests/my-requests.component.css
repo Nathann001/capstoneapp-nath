@@ -1,0 +1,44 @@
+.requests-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.request-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  background: #f9f9f9;
+}
+
+.request-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status {
+  padding: 3px 8px;
+  border-radius: 4px;
+  color: white;
+  font-weight: bold;
+}
+
+.status.pending { background-color: orange; }
+.status.in_process { background-color: blue; }
+.status.processed { background-color: green; }
+.status.denied { background-color: red; }
+
+.request-actions button {
+  margin-right: 10px;
+  padding: 5px 10px;
+}
+
+.history {
+  margin-top: 10px;
+  background: #fff;
+  border: 1px solid #eee;
+  padding: 10px;
+  border-radius: 5px;
+}

@@ -132,4 +132,8 @@ if (res.user?.role === 1) {
     event.preventDefault();
     this.router.navigate(['/']);
   }
+
+  goToOtp(): void {
+  this.router.navigate(['/otpverify']);
+}
 }

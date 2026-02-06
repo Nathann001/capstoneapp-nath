@@ -71,20 +71,46 @@ export class ProcessRequestComponent implements OnInit {
   }
 
   denyRequest() {
-    let headers: HttpHeaders;
-    try { headers = this.getAuthHeaders(); } catch { return; }
+  const choice = prompt(
+    `Reason for denial:
+1 - Incomplete requirements
+2 - Blurry document
+3 - Others`
+  );
 
-    // PUT request to update status to denied
-    this.http.put(`${this.backendUrl}/api/document_request/${this.requestId}`, { status: 'denied' }, { headers })
-      .subscribe({
-        next: () => {
-          alert('Request marked as Denied');
-          this.router.navigate(['/home-staff']).then(() => window.location.reload());
-        },
-        error: (err) => {
-          console.error(err);
-          alert(err.status === 401 ? 'Unauthorized' : 'Failed to update request status');
-        }
-      });
+  if (!choice) return;
+
+  let reason = '';
+
+  if (choice === '1') {
+    const detail = prompt('Which requirement is incomplete?');
+    reason = `Incomplete requirements: ${detail}`;
+  } else if (choice === '2') {
+    const detail = prompt('Which document is blurry?');
+    reason = `Blurry document: ${detail}`;
+  } else if (choice === '3') {
+    reason = prompt('Please specify the reason') || '';
   }
+
+  if (!reason.trim()) {
+    alert('Denial reason is required');
+    return;
+  }
+
+  const headers = this.getAuthHeaders();
+
+  this.http.put(
+    `${this.backendUrl}/api/document_request/${this.requestId}/deny`,
+    { reason },
+    { headers }
+  ).subscribe({
+    next: () => {
+      alert('Request denied and email sent');
+      this.router.navigate(['/home-staff']).then(() => location.reload());
+    },
+    error: () => alert('Failed to deny request')
+  });
+}
+
+
 }

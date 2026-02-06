@@ -33,3 +33,28 @@
 <button class="px-4 py-2 bg-red-600 text-white rounded" (click)="denyRequest()">Deny</button>
   </div>
 </div>
+
+<!-- DENY MODAL -->
+<!-- DENY MODAL -->
+<div *ngIf="showDenyModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+  <div class="bg-white rounded-lg p-6 w-96 relative">
+    <h3 class="text-xl font-bold mb-4">Deny Request</h3>
+
+    <div *ngFor="let option of denialOptions" class="mb-2">
+      <label class="flex items-center gap-2">
+        <input type="checkbox" [checked]="option.selected" (change)="toggleReason($event, option)">
+        {{ option.label }}
+      </label>
+      <div *ngIf="option.selected" class="mt-1">
+        <textarea [(ngModel)]="option.details"
+                  placeholder="Provide details (optional)"
+                  class="w-full p-2 border rounded"></textarea>
+      </div>
+    </div>
+
+    <div class="flex justify-end mt-4 gap-2">
+      <button class="px-4 py-2 bg-gray-300 rounded" (click)="cancelDeny()">Cancel</button>
+      <button class="px-4 py-2 bg-red-600 text-white rounded" (click)="confirmDeny()">Submit</button>
+    </div>
+  </div>
+</div>
