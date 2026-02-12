@@ -49,7 +49,7 @@
     return sgMail.send(msg);
   }
 
-// DOCUMENT REQUEST MESSAGES 
+// DOCUMENT REQUEST MESSAGES
 function sendRequestStatusEmail(to, status, reason = null, documentType = '') {
   if (!to) return Promise.resolve();
 
@@ -208,13 +208,16 @@ app.get('/api/user/details', verifyToken, (req, res) => {
 });
 
 
-  function checkRole(requiredRole) {
-    return (req, res, next) => {
-      if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
-      if (req.user.role !== requiredRole) return res.status(403).json({ message: 'Forbidden: Insufficient role' });
-      next();
+  // Middleware to check allowed roles
+function checkRoles(allowedRoles) {
+  return (req, res, next) => {
+    if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({ message: 'Forbidden: Insufficient role' });
     }
+    next();
   }
+}
 
   app.post('/api/auth/register', async (req, res) => {
     try {
@@ -483,7 +486,7 @@ app.post('/api/auth/login', (req, res) => {
     }
   });
 
-  app.post('/api/admin/create-user', verifyToken, checkRole(1), async (req, res) => {
+  app.post('/api/admin/create-user', verifyToken, checkRoles([1]), async (req, res) => {
   const { email, password, role } = req.body;
 
   if (!email || !password || ![1, 2].includes(role)) {
@@ -507,7 +510,7 @@ app.post('/api/auth/login', (req, res) => {
   });
 });
 
-app.get('/api/admin/users', verifyToken, checkRole(1), (req, res) => {
+app.get('/api/admin/users', verifyToken, checkRoles([1]), (req, res) => {
   const sql = `
   SELECT
     u.id,
@@ -526,12 +529,42 @@ db.query(sql, (err, results) => {
   if (err) return res.status(500).json({ message: 'Database error' });
   res.json(results);
 });
+});
 
+app.get('/api/admin/users/:id', verifyToken, checkRoles([1]), (req, res) => {
+  const userId = req.params.id;
+
+  const sql = `
+    SELECT
+      u.id,
+      u.email,
+      ud.User_FullName AS full_name,
+      ud.User_Address,
+      ud.User_ContactNo,
+      u.role,
+      u.created_at
+    FROM users u
+    LEFT JOIN user_details ud ON u.id = ud.UserID
+    WHERE u.id = ?
+  `;
+
+  db.query(sql, [userId], (err, results) => {
+    if (err) {
+      console.error('Error fetching user:', err);
+      return res.status(500).json({ message: 'Database error' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json(results[0]);
+  });
 });
 
 
 
-app.put('/api/admin/users/:id', verifyToken, checkRole(1), (req, res) => {
+app.put('/api/admin/users/:id', verifyToken, checkRoles([1]), (req, res) => {
   const { email, role } = req.body; // remove username
   const userId = req.params.id;
 
@@ -552,7 +585,7 @@ app.put('/api/admin/users/:id', verifyToken, checkRole(1), (req, res) => {
 });
 
 
-app.put('/api/admin/users/:id/password', verifyToken, checkRole(1), async (req, res) => {
+app.put('/api/admin/users/:id/password', verifyToken, checkRoles([1]), async (req, res) => {
   const { newPassword } = req.body;
   const userId = req.params.id;
 
@@ -570,28 +603,57 @@ app.put('/api/admin/users/:id/password', verifyToken, checkRole(1), async (req, 
   );
 });
 
-app.delete('/api/admin/users/:id', verifyToken, checkRole(1), (req, res) => {
+app.delete('/api/admin/users/:id', verifyToken, checkRoles([1]), (req, res) => {
   const userId = req.params.id;
 
   if (req.user.id == userId) {
     return res.status(400).json({ message: 'You cannot delete your own account' });
   }
 
-  db.query('DELETE FROM users WHERE id = ?', [userId], err => {
-    if (err) return res.status(500).json({ message: 'Delete failed' });
-    res.json({ message: 'User deleted successfully' });
+  db.beginTransaction(err => {
+    if (err) return res.status(500).json({ message: 'Transaction start failed' });
+
+    db.query(`
+      DELETE rsh FROM request_status_history rsh
+      JOIN document_request dr ON rsh.RequestID = dr.RequestID
+      WHERE dr.user_id = ?
+    `, [userId], err => {
+
+      if (err) return db.rollback(() => res.status(500).json({ message: 'Failed deleting history', error: err.message }));
+
+      db.query('DELETE FROM document_request WHERE user_id = ?', [userId], err => {
+
+        if (err) return db.rollback(() => res.status(500).json({ message: 'Failed deleting requests', error: err.message }));
+
+        db.query('DELETE FROM user_details WHERE UserID = ?', [userId], err => {
+
+          if (err) return db.rollback(() => res.status(500).json({ message: 'Failed deleting user details', error: err.message }));
+
+          db.query('DELETE FROM users WHERE id = ?', [userId], err => {
+
+            if (err) return db.rollback(() => res.status(500).json({ message: 'Failed deleting user', error: err.message }));
+
+            db.commit(err => {
+              if (err) return db.rollback(() => res.status(500).json({ message: 'Commit failed' }));
+              res.json({ message: 'User deleted successfully' });
+            });
+
+          });
+        });
+      });
+    });
   });
 });
 
 
-  app.get('/api/admin/staff', verifyToken, checkRole(1), (req, res) => {
+  app.get('/api/admin/staff', verifyToken, checkRoles([1]), (req, res) => {
     db.query('SELECT id, email, username, role, created_at FROM users WHERE role = 2', (err, results) => {
       if (err) return res.status(500).json({ message: 'Database error' });
       res.json(results);
     });
   });
 
-  app.delete('/api/admin/staff/:id', verifyToken, checkRole(1), (req, res) => {
+  app.delete('/api/admin/staff/:id', verifyToken, checkRoles([1]), (req, res) => {
     const staffId = req.params.id;
     db.query('DELETE FROM users WHERE id = ? AND role = 2', [staffId], (err, result) => {
       if (err) return res.status(500).json({ message: 'Database error' });
@@ -603,7 +665,7 @@ app.delete('/api/admin/users/:id', verifyToken, checkRole(1), (req, res) => {
 
 
 // Get all document requests
-app.get('/api/document_request', verifyToken, (req, res) => {
+app.get('/api/document_request', verifyToken, checkRoles([1, 2]), (req, res) => {
   const staffId = req.user.id;
 
   const sql = `
@@ -648,10 +710,29 @@ app.get('/api/document_request/:id', verifyToken, (req, res) => {
   });
 });
 
+// Admin: Get document request statistics (filterable by status)
+app.get('/api/admin/document_request/statistics', verifyToken, checkRoles([1]), (req, res) => {
+  const { status } = req.query; // optional: pending, under_review, approved, denied
+
+  let sql = `SELECT status, COUNT(*) AS count FROM document_request`;
+  const params = [];
+
+  if (status) {
+    sql += ` WHERE status = ?`;
+    params.push(status);
+  }
+
+  sql += ` GROUP BY status`;
+
+  db.query(sql, params, (err, results) => {
+    if (err) return res.status(500).json({ message: 'Database error', error: err.message });
+    res.json(results);
+  });
+});
 
 
 // ===== Mark request as "In Process" =====
-app.post('/api/document_request/:id/process', verifyToken, (req, res) => {
+app.post('/api/document_request/:id/process', verifyToken, checkRoles([1, 2]), (req, res) => {
   const requestId = req.params.id;
   const staffId = req.user.id;
 
@@ -690,7 +771,7 @@ app.post('/api/document_request/:id/process', verifyToken, (req, res) => {
 });
 
 // ===== Mark request as "Approved" =====
-app.post('/api/document_request/:id/approved', verifyToken, (req, res) => {
+app.post('/api/document_request/:id/approved', verifyToken, checkRoles([1, 2]), (req, res) => {
   const requestId = req.params.id;
   const staffId = req.user.id;
 
@@ -728,7 +809,7 @@ app.post('/api/document_request/:id/approved', verifyToken, (req, res) => {
 });
 
 // ===== Mark request as "Denied" =====
-app.put('/api/document_request/:id/deny', verifyToken, (req, res) => {
+app.put('/api/document_request/:id/deny', checkRoles([1, 2]), verifyToken, (req, res) => {
   const requestId = req.params.id;
   const staffId = req.user.id;
   const { reason } = req.body;
@@ -769,7 +850,7 @@ app.put('/api/document_request/:id/deny', verifyToken, (req, res) => {
 });
 
 // Admin: Get all document requests
-app.get('/api/admin/document_request', verifyToken, checkRole(1), (req, res) => {
+app.get('/api/admin/document_request', verifyToken, checkRoles([1]), (req, res) => {
   const sql = `
     SELECT RequestID, name, date_created, status, updated_at, archived
     FROM document_request
@@ -783,7 +864,7 @@ app.get('/api/admin/document_request', verifyToken, checkRole(1), (req, res) => 
 
 
 // Archive document request
-app.put('/api/document_request/:id/archive', verifyToken, (req, res) => {
+app.put('/api/document_request/:id/archive', checkRoles([1]), verifyToken, (req, res) => {
   const requestId = req.params.id;
 
   // 1. Get request info first
@@ -838,7 +919,7 @@ app.put('/api/document_request/:id/archive', verifyToken, (req, res) => {
 });
 
 // Get requests for logged in user
-app.get('/api/my/requests', verifyToken, (req, res) => {
+app.get('/api/my/requests', verifyToken, checkRoles([3]), (req, res) => {
   const userId = req.user.id;
   const sql = `
     SELECT RequestID, name, document_type, status, updated_at, file_path
@@ -853,7 +934,7 @@ app.get('/api/my/requests', verifyToken, (req, res) => {
 });
 
 // Get history for specific request
-app.get('/api/my/requests/:id/history', verifyToken, (req, res) => {
+app.get('/api/my/requests/:id/history', verifyToken, checkRoles([3]), (req, res) => {
   const requestId = req.params.id;
   const userId = req.user.id;
 
@@ -867,7 +948,7 @@ app.get('/api/my/requests/:id/history', verifyToken, (req, res) => {
   });
 });
 
-app.get('/api/my/requests/:id/download', verifyToken, (req, res) => {
+app.get('/api/my/requests/:id/download', verifyToken, checkRoles([3]), (req, res) => {
   const requestId = req.params.id;
   const userId = req.user.id;
 
@@ -887,7 +968,7 @@ app.get('/api/my/requests/:id/download', verifyToken, (req, res) => {
 // Use multer memory storage for upload
 const uploadDoc = multer({ storage: multer.memoryStorage() });
 
-app.post('/api/document_request', verifyToken, uploadDoc.single('file'), (req, res) => {
+app.post('/api/document_request', verifyToken, checkRoles([3]), uploadDoc.single('file'), (req, res) => {
   const { name, document_type } = req.body; // <-- add document_type
   const userId = req.user.id;
 
@@ -914,23 +995,38 @@ app.post('/api/document_request', verifyToken, uploadDoc.single('file'), (req, r
   }
 
   const sql = 'INSERT INTO document_request (name, document_type, file_path, user_id) VALUES (?, ?, ?, ?)';
-  db.query(sql, [name, document_type, filePath, userId], (err, result) => {
-    if (err) {
-      console.error('Database error:', err);
-      return res.status(500).json({ error: 'Database insert failed' });
-    }
+  db.query(sql, [name, document_type, filePath, userId], async (err, result) => {
+  if (err) {
+    console.error('Database error:', err);
+    return res.status(500).json({ error: 'Database insert failed' });
+  }
 
-    // Send email to user about request
-    db.query('SELECT email FROM users WHERE id = ?', [userId], (err, results) => {
-      if (!err && results.length > 0) {
-        const email = results[0].email;
-        const msg = `Your request for ${document_type} has been submitted successfully!`;
-        sendRequestStatusEmail(email, 'pending', null, document_type); // send document_type
-      }
+  const requestId = result.insertId;
+
+  // Send "pending" email to user
+  try {
+    const userEmailResults = await new Promise((resolve, reject) => {
+      db.query('SELECT email FROM users WHERE id = ?', [userId], (err, results) => {
+        if (err) return reject(err);
+        resolve(results);
+      });
     });
 
-    res.json({ success: true, id: result.insertId, filePath });
+    if (userEmailResults.length > 0 && userEmailResults[0].email) {
+      await sendRequestStatusEmail(userEmailResults[0].email, 'pending', null, document_type);
+    }
+  } catch (emailErr) {
+    console.error('Failed to send pending email:', emailErr);
+  }
+
+  // Respond with success
+  res.status(201).json({
+    message: 'Document request submitted successfully',
+    requestId,
+    filePath
   });
+});
+
 });
 
 

@@ -1,33 +1,54 @@
 <body class="bg-gray-200 min-h-screen p-8 font-sans">
 
-  <!-- ================== STATISTICS ================== -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-    <div class="bg-white p-6 rounded-lg shadow text-center">
-      <p class="text-gray-500 text-sm">Approved Today</p>
-      <h2 class="text-3xl font-bold text-blue-700">{{ stats.approved.today }}</h2>
-    </div>
-    <div class="bg-white p-6 rounded-lg shadow text-center">
-      <p class="text-gray-500 text-sm">Approved This Week</p>
-      <h2 class="text-3xl font-bold text-green-700">{{ stats.approved.week }}</h2>
-    </div>
-    <div class="bg-white p-6 rounded-lg shadow text-center">
-      <p class="text-gray-500 text-sm">Approved This Month</p>
-      <h2 class="text-3xl font-bold text-purple-700">{{ stats.approved.month }}</h2>
-    </div>
+  <!-- ================== ROW 1 STAT CARDS ================== -->
+  <div class="flex items-center gap-4 mb-4">
+    <label class="font-semibold">Row 1:</label>
+    <select [(ngModel)]="selectedRow1" class="border px-2 py-1 rounded">
+      <option value="approved">Approved</option>
+      <option value="denied">Denied</option>
+      <option value="pending">Pending</option>
+      <option value="under_review">Under Review</option>
+    </select>
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
     <div class="bg-white p-6 rounded-lg shadow text-center">
-      <p class="text-gray-500 text-sm">Denied Today</p>
-      <h2 class="text-3xl font-bold text-blue-700">{{ stats.denied.today }}</h2>
+      <p class="text-gray-500 text-sm">{{ formatStatName(selectedRow1) }} Today</p>
+      <h2 class="text-3xl font-bold text-blue-700">{{ stats[selectedRow1].today }}</h2>
     </div>
     <div class="bg-white p-6 rounded-lg shadow text-center">
-      <p class="text-gray-500 text-sm">Denied This Week</p>
-      <h2 class="text-3xl font-bold text-green-700">{{ stats.denied.week }}</h2>
+      <p class="text-gray-500 text-sm">{{ formatStatName(selectedRow1) }} This Week</p>
+      <h2 class="text-3xl font-bold text-green-700">{{ stats[selectedRow1].week }}</h2>
     </div>
     <div class="bg-white p-6 rounded-lg shadow text-center">
-      <p class="text-gray-500 text-sm">Denied This Month</p>
-      <h2 class="text-3xl font-bold text-purple-700">{{ stats.denied.month }}</h2>
+      <p class="text-gray-500 text-sm">{{ formatStatName(selectedRow1) }} This Month</p>
+      <h2 class="text-3xl font-bold text-purple-700">{{ stats[selectedRow1].month }}</h2>
+    </div>
+  </div>
+
+  <!-- ================== ROW 2 STAT CARDS ================== -->
+  <div class="flex items-center gap-4 mb-4">
+    <label class="font-semibold">Row 2:</label>
+    <select [(ngModel)]="selectedRow2" class="border px-2 py-1 rounded">
+      <option value="approved">Approved</option>
+      <option value="denied">Denied</option>
+      <option value="pending">Pending</option>
+      <option value="under_review">Under Review</option>
+    </select>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+    <div class="bg-white p-6 rounded-lg shadow text-center">
+      <p class="text-gray-500 text-sm">{{ formatStatName(selectedRow2) }} Today</p>
+      <h2 class="text-3xl font-bold text-blue-700">{{ stats[selectedRow2].today }}</h2>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow text-center">
+      <p class="text-gray-500 text-sm">{{ formatStatName(selectedRow2) }} This Week</p>
+      <h2 class="text-3xl font-bold text-green-700">{{ stats[selectedRow2].week }}</h2>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow text-center">
+      <p class="text-gray-500 text-sm">{{ formatStatName(selectedRow2) }} This Month</p>
+      <h2 class="text-3xl font-bold text-purple-700">{{ stats[selectedRow2].month }}</h2>
     </div>
   </div>
 
@@ -39,8 +60,9 @@
     </h3>
   </div>
 
-  <!-- Requested Table -->
-  <div class="overflow-x-auto rounded-lg shadow-md">
+  <!-- ================== PENDING TABLE ================== -->
+  <div class="overflow-x-auto rounded-lg shadow-md mb-8">
+    <h3 class="text-2xl font-bold mb-4">Pending</h3>
     <table class="min-w-full bg-white rounded-lg text-gray-800 text-sm">
       <thead class="bg-green-200 text-green-900">
         <tr>
@@ -50,7 +72,8 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let doc of pending" class="border-b hover:bg-green-50 transition cursor-pointer"
+        <tr *ngFor="let doc of getPaginatedItems(pending, currentPage1)"
+            class="border-b hover:bg-green-50 transition cursor-pointer"
             (click)="viewRequestDetail(doc)">
           <td class="py-3 px-4">{{ doc.name }}</td>
           <td class="py-3 px-4">{{ doc.date_created | date:'medium' }}</td>
@@ -58,10 +81,21 @@
         </tr>
       </tbody>
     </table>
+
+    <!-- Pagination -->
+    <div class="flex justify-end mt-2 gap-2">
+      <button *ngFor="let page of getTotalPages(pending)"
+              (click)="currentPage1 = page"
+              [class.bg-blue-500]="currentPage1 === page"
+              [class.text-white]="currentPage1 === page"
+              class="px-3 py-1 border rounded hover:bg-blue-200">
+        {{ page }}
+      </button>
+    </div>
   </div>
 
-  <!-- In Process Table -->
-  <div class="overflow-x-auto rounded-lg shadow-md mt-8">
+  <!-- ================== UNDER REVIEW TABLE ================== -->
+  <div class="overflow-x-auto rounded-lg shadow-md mb-8">
     <h3 class="text-2xl font-bold mb-4">In Process</h3>
     <table class="min-w-full bg-white rounded-lg text-gray-800 text-sm">
       <thead class="bg-yellow-200 text-yellow-900">
@@ -71,17 +105,29 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let doc of under_review" class="border-b hover:bg-yellow-50 transition cursor-pointer"
+        <tr *ngFor="let doc of getPaginatedItems(under_review, currentPage2)"
+            class="border-b hover:bg-yellow-50 transition cursor-pointer"
             (click)="viewInProcessDetail(doc)">
           <td class="py-3 px-4">{{ doc.name }}</td>
           <td class="py-3 px-4">{{ doc.updated_at | date:'medium' }}</td>
         </tr>
       </tbody>
     </table>
+
+    <!-- Pagination -->
+    <div class="flex justify-end mt-2 gap-2">
+      <button *ngFor="let page of getTotalPages(under_review)"
+              (click)="currentPage2 = page"
+              [class.bg-blue-500]="currentPage2 === page"
+              [class.text-white]="currentPage2 === page"
+              class="px-3 py-1 border rounded hover:bg-blue-200">
+        {{ page }}
+      </button>
+    </div>
   </div>
 
-  <!-- Processed Table -->
-  <div class="overflow-x-auto rounded-lg shadow-md mt-8">
+  <!-- ================== APPROVED TABLE ================== -->
+  <div class="overflow-x-auto rounded-lg shadow-md mb-8">
     <h3 class="text-2xl font-bold mb-4">Processed</h3>
     <table class="min-w-full bg-white rounded-lg text-gray-800 text-sm">
       <thead class="bg-blue-200 text-blue-900">
@@ -91,7 +137,8 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let doc of approved" class="border-b hover:bg-yellow-50 transition cursor-pointer"
+        <tr *ngFor="let doc of approved"
+            class="border-b hover:bg-yellow-50 transition cursor-pointer"
             (click)="viewInProcessDetail(doc)">
           <td class="py-3 px-4">{{ doc.name }}</td>
           <td class="py-3 px-4">{{ doc.updated_at | date:'medium' }}</td>
@@ -100,8 +147,8 @@
     </table>
   </div>
 
-  <!-- Denied Table -->
-  <div class="overflow-x-auto rounded-lg shadow-md mt-8">
+  <!-- ================== DENIED TABLE ================== -->
+  <div class="overflow-x-auto rounded-lg shadow-md mb-8">
     <h3 class="text-2xl font-bold mb-4">Denied</h3>
     <table class="min-w-full bg-white rounded-lg text-gray-800 text-sm">
       <thead class="bg-red-200 text-red-900">
@@ -111,7 +158,8 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let doc of denied" class="border-b hover:bg-red-50 transition">
+        <tr *ngFor="let doc of denied"
+            class="border-b hover:bg-red-50 transition">
           <td class="py-3 px-4">{{ doc.name }}</td>
           <td class="py-3 px-4">{{ doc.updated_at | date:'medium' }}</td>
         </tr>

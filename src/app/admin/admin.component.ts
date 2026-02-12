@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
 @Component({
   selector: 'app-admin',
   standalone: true,
@@ -11,18 +10,30 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./admin.component.css']
 })
 export class AdminComponent implements OnInit {
-  archiveCount: number = 0;
-  // Arrays for different statuses
+  // ---------- DATA ----------
   documentRequests: any[] = [];
   inProcess: any[] = [];
-  processed: any[] = [];
+  approved: any[] = [];
   denied: any[] = [];
+  rows: (1 | 2)[] = [1, 2];
 
-  // ---------- STATISTICS ----------
+
+  // ---------- STATS ----------
   stats = {
-    processed: { today: 0, week: 0, month: 0 },
-    denied: { today: 0, week: 0, month: 0 }
+    approved: { today: 0, week: 0, month: 0 },
+    denied: { today: 0, week: 0, month: 0 },
+    pending: { today: 0, week: 0, month: 0 },
+    under_review: { today: 0, week: 0, month: 0 }
   };
+
+  // ---------- CURRENT SELECTION ----------
+  selectedRow1: 'approved' | 'denied' | 'pending' | 'under_review' = 'approved';
+  selectedRow2: 'approved' | 'denied' | 'pending' | 'under_review' = 'denied';
+
+  // ---------- PAGINATION ----------
+  itemsPerPage = 6;
+  currentPage1 = 1;
+  currentPage2 = 1;
 
   constructor(private http: HttpClient) {}
 
@@ -30,112 +41,84 @@ export class AdminComponent implements OnInit {
     this.loadRequests();
   }
 
-  // ---------- LOAD REQUESTS ----------
-loadRequests() {
-  const token = localStorage.getItem('token'); // get JWT from storage
-  if (!token) {
-    console.error('No token found. Please log in.');
-    return;
-  }
+  // ---------- FETCH DATA ----------
+  loadRequests() {
+    const token = localStorage.getItem('token');
+    if (!token) return console.error('No token found. Please log in.');
 
-  this.http.get<any[]>('http://localhost:4000/api/admin/document_request', {
-  headers: { Authorization: `Bearer ${token}` }
-}).subscribe({
-    next: (data) => {
-      console.log('Raw API data:', data);
-
-      // Only include active (archived = 0)
-      const activeData = data.filter(d => d.archived === 0);
-
-      // Split by status
-      this.documentRequests = activeData.filter(d => d.status === 'requested');
-      this.inProcess = activeData.filter(d => d.status === 'in_process');
-      this.processed = activeData.filter(d => d.status === 'processed');
-      this.denied = activeData.filter(d => d.status === 'denied');
-
-      // Calculate stats separately for Processed and Denied
-      this.calculateStats(data); // optionally include archived for stats
-    },
-    error: (err) => console.error('Failed to fetch document requests', err)
-  });
-}
-
-
-
-  // ---------- ARCHIVE REQUEST ----------
-  archiveRequest(id: number) {
-    const token = localStorage.getItem('token'); // get JWT from storage
-    if (!token) {
-      console.error('No token found. Please log in.');
-      return;
-    }
-
-    this.http.put(`http://localhost:4000/api/document_request/${id}/archive`, {}, {
+    this.http.get<any[]>('http://localhost:4000/api/admin/document_request', {
       headers: { Authorization: `Bearer ${token}` }
     }).subscribe({
-      next: (res) => {
-        console.log('Archived:', res);
-        // Refresh the list after archiving
-        this.loadRequests();
+      next: (data) => {
+        const activeData = data.filter(d => d.archived === 0);
+
+        this.documentRequests = activeData.filter(d => d.status === 'pending');
+        this.inProcess = activeData.filter(d => d.status === 'under_review');
+        this.approved = activeData.filter(d => d.status === 'approved');
+        this.denied = activeData.filter(d => d.status === 'denied');
+
+        this.calculateStats(data);
       },
-      error: (err) => console.error('Archive failed:', err)
+      error: (err) => console.error('Failed to fetch document requests', err)
     });
   }
 
-calculateStats(data: any[]) {
-  const now = new Date();
-
-  // Processed requests (include archived)
-  const processedData = data.filter(d => d.status === 'processed' || d.status === 'archived');
-  const deniedData = data.filter(d => d.status === 'denied');
-
-  this.stats.processed.today = processedData.filter(d =>
-    this.isSameDay(new Date(d.updated_at || d.date_created), now)
-  ).length;
-
-  this.stats.processed.week = processedData.filter(d =>
-    this.isSameWeek(new Date(d.updated_at || d.date_created), now)
-  ).length;
-
-  this.stats.processed.month = processedData.filter(d =>
-    this.isSameMonth(new Date(d.updated_at || d.date_created), now)
-  ).length;
-
-  this.stats.denied.today = deniedData.filter(d =>
-    this.isSameDay(new Date(d.updated_at || d.date_created), now)
-  ).length;
-
-  this.stats.denied.week = deniedData.filter(d =>
-    this.isSameWeek(new Date(d.updated_at || d.date_created), now)
-  ).length;
-
-  this.stats.denied.month = deniedData.filter(d =>
-    this.isSameMonth(new Date(d.updated_at || d.date_created), now)
-  ).length;
-}
-
-
   // ---------- HELPER FUNCTIONS ----------
-  isSameDay(a: Date, b: Date) {
-    return a.toDateString() === b.toDateString();
+  getTableForRow(row: 1 | 2) {
+    const category = row === 1 ? this.selectedRow1 : this.selectedRow2;
+    switch (category) {
+      case 'approved': return this.approved;
+      case 'denied': return this.denied;
+      case 'pending': return this.documentRequests;
+      case 'under_review': return this.inProcess;
+      default: return [];
+    }
   }
 
-  isSameWeek(a: Date, b: Date) {
-    const oneDay = 24 * 60 * 60 * 1000;
-    return Math.abs(a.getTime() - b.getTime()) / oneDay < 7;
+  getPaginatedItems(row: 1 | 2) {
+    const list = this.getTableForRow(row);
+    const currentPage = row === 1 ? this.currentPage1 : this.currentPage2;
+    const start = (currentPage - 1) * this.itemsPerPage;
+    return list.slice(start, start + this.itemsPerPage);
   }
 
-  isSameMonth(a: Date, b: Date) {
-    return a.getMonth() === b.getMonth() &&
-           a.getFullYear() === b.getFullYear();
+  getTotalPages(row: 1 | 2) {
+    const list = this.getTableForRow(row);
+    return Array(Math.ceil(list.length / this.itemsPerPage)).fill(0).map((_, i) => i + 1);
   }
 
-  // ---------- NAVIGATION / DETAILS ----------
-  viewRequestDetail(request: any) {
-    console.log('View requested detail for', request.RequestID);
+  changePage(row: 1 | 2, page: number) {
+    if (row === 1) this.currentPage1 = page;
+    else this.currentPage2 = page;
   }
 
-  viewInProcessDetail(request: any) {
-    console.log('View in-process detail for', request.RequestID);
+  // ---------- NAVIGATION ----------
+  viewRequestDetail(doc: any) {
+    console.log('View Request Detail', doc);
   }
+
+  viewInProcessDetail(doc: any) {
+    console.log('View In Process Detail', doc);
+  }
+
+  // ---------- STATS ----------
+  calculateStats(data: any[]) {
+    const now = new Date();
+    const countByPeriod = (arr: any[], fn: (d: Date) => boolean) =>
+      arr.filter(d => fn(new Date(d.updated_at || d.date_created))).length;
+
+    const filterStatus = (status: string) => data.filter(d => d.status === status);
+
+    for (const status of ['approved', 'denied', 'pending', 'under_review'] as const) {
+      const arr = filterStatus(status);
+      this.stats[status].today = countByPeriod(arr, d => this.isSameDay(d, now));
+      this.stats[status].week = countByPeriod(arr, d => this.isSameWeek(d, now));
+      this.stats[status].month = countByPeriod(arr, d => this.isSameMonth(d, now));
+    }
+  }
+
+  isSameDay(a: Date, b: Date) { return a.toDateString() === b.toDateString(); }
+  isSameWeek(a: Date, b: Date) { return Math.abs(a.getTime() - b.getTime()) / (24*60*60*1000) < 7; }
+  isSameMonth(a: Date, b: Date) { return a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear(); }
+  formatStatName(name: string) { return name === 'under_review' ? 'Under Review' : name.charAt(0).toUpperCase() + name.slice(1); }
 }

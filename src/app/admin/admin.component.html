@@ -1,86 +1,87 @@
-<!-- ================== STATISTICS ================== -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-  <!-- Processed -->
-  <div class="bg-white p-6 rounded-lg shadow text-center">
-    <p class="text-gray-500 text-sm">Processed Today</p>
-    <h2 class="text-3xl font-bold text-blue-700">{{ stats.processed.today }}</h2>
+<body class="bg-gray-200 min-h-screen p-8 font-sans">
+
+  <!-- ================== ROW 1 STAT CARDS ================== -->
+  <div class="flex items-center gap-4 mb-4">
+    <label class="font-semibold">Row 1:</label>
+    <select [(ngModel)]="selectedRow1" class="border px-2 py-1 rounded">
+      <option value="approved">Approved</option>
+      <option value="denied">Denied</option>
+      <option value="pending">Pending</option>
+      <option value="under_review">Under Review</option>
+    </select>
   </div>
 
-  <div class="bg-white p-6 rounded-lg shadow text-center">
-    <p class="text-gray-500 text-sm">Processed This Week</p>
-    <h2 class="text-3xl font-bold text-green-700">{{ stats.processed.week }}</h2>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+    <div class="bg-white p-6 rounded-lg shadow text-center">
+      <p class="text-gray-500 text-sm">{{ formatStatName(selectedRow1) }} Today</p>
+      <h2 class="text-3xl font-bold text-blue-700">{{ stats[selectedRow1].today }}</h2>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow text-center">
+      <p class="text-gray-500 text-sm">{{ formatStatName(selectedRow1) }} This Week</p>
+      <h2 class="text-3xl font-bold text-green-700">{{ stats[selectedRow1].week }}</h2>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow text-center">
+      <p class="text-gray-500 text-sm">{{ formatStatName(selectedRow1) }} This Month</p>
+      <h2 class="text-3xl font-bold text-purple-700">{{ stats[selectedRow1].month }}</h2>
+    </div>
   </div>
 
-  <div class="bg-white p-6 rounded-lg shadow text-center">
-    <p class="text-gray-500 text-sm">Processed This Month</p>
-    <h2 class="text-3xl font-bold text-purple-700">{{ stats.processed.month }}</h2>
+  <!-- ================== ROW 2 STAT CARDS ================== -->
+  <div class="flex items-center gap-4 mb-4">
+    <label class="font-semibold">Row 2:</label>
+    <select [(ngModel)]="selectedRow2" class="border px-2 py-1 rounded">
+      <option value="approved">Approved</option>
+      <option value="denied">Denied</option>
+      <option value="pending">Pending</option>
+      <option value="under_review">Under Review</option>
+    </select>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+    <div class="bg-white p-6 rounded-lg shadow text-center">
+      <p class="text-gray-500 text-sm">{{ formatStatName(selectedRow2) }} Today</p>
+      <h2 class="text-3xl font-bold text-blue-700">{{ stats[selectedRow2].today }}</h2>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow text-center">
+      <p class="text-gray-500 text-sm">{{ formatStatName(selectedRow2) }} This Week</p>
+      <h2 class="text-3xl font-bold text-green-700">{{ stats[selectedRow2].week }}</h2>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow text-center">
+      <p class="text-gray-500 text-sm">{{ formatStatName(selectedRow2) }} This Month</p>
+      <h2 class="text-3xl font-bold text-purple-700">{{ stats[selectedRow2].month }}</h2>
+    </div>
+  </div>
+
+<!-- ================== TABLES WITH PAGINATION ================== -->
+<div *ngFor="let row of rows" class="overflow-x-auto rounded-lg shadow-md mb-8">
+  <h3 class="text-2xl font-bold mb-4">{{ formatStatName(row === 1 ? selectedRow1 : selectedRow2) }}</h3>
+  <table class="min-w-full bg-white rounded-lg text-gray-800 text-sm">
+    <thead class="bg-gray-200 text-gray-900">
+      <tr>
+        <th class="py-3 px-4 text-left font-semibold">Name</th>
+        <th class="py-3 px-4 text-left font-semibold">Date</th>
+        <th class="py-3 px-4 text-left font-semibold">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let doc of getPaginatedItems(row)"
+          class="border-b hover:bg-gray-50 transition cursor-pointer"
+          (click)="doc.status === 'under_review' ? viewInProcessDetail(doc) : viewRequestDetail(doc)">
+        <td class="py-3 px-4">{{ doc.name }}</td>
+        <td class="py-3 px-4">{{ doc.updated_at || doc.date_created | date:'medium' }}</td>
+        <td class="py-3 px-4 capitalize">{{ doc.status === 'under_review' ? 'Under Review' : doc.status }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Pagination -->
+  <div class="flex justify-end mt-2 gap-2">
+    <button *ngFor="let page of getTotalPages(row)"
+            (click)="changePage(row, page)"
+            [class.bg-blue-500]="(row === 1 ? currentPage1 : currentPage2) === page"
+            [class.text-white]="(row === 1 ? currentPage1 : currentPage2) === page"
+            class="px-3 py-1 border rounded hover:bg-blue-200">
+      {{ page }}
+    </button>
   </div>
 </div>
-
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-  <!-- Denied -->
-  <div class="bg-white p-6 rounded-lg shadow text-center">
-    <p class="text-gray-500 text-sm">Denied Today</p>
-    <h2 class="text-3xl font-bold text-blue-700">{{ stats.denied.today }}</h2>
-  </div>
-
-  <div class="bg-white p-6 rounded-lg shadow text-center">
-    <p class="text-gray-500 text-sm">Denied This Week</p>
-    <h2 class="text-3xl font-bold text-green-700">{{ stats.denied.week }}</h2>
-  </div>
-
-  <div class="bg-white p-6 rounded-lg shadow text-center">
-    <p class="text-gray-500 text-sm">Denied This Month</p>
-    <h2 class="text-3xl font-bold text-purple-700">{{ stats.denied.month }}</h2>
-  </div>
-</div>
-
-<!-- ================== PROCESSED TABLE ================== -->
-<h3 class="text-2xl font-bold mb-4">Processed</h3>
-<table class="min-w-full bg-white rounded-lg shadow text-sm">
-  <thead class="bg-blue-200">
-    <tr>
-      <th class="p-3 text-left">Name</th>
-      <th class="p-3 text-left">Processed At</th>
-      <th class="p-3 text-left">Action</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr *ngFor="let doc of processed" class="border-b">
-      <td class="p-3">{{ doc.name }}</td>
-      <td class="p-3">{{ doc.updated_at | date:'medium' }}</td>
-      <td class="p-3">
-        <button
-          class="bg-gray-700 text-white px-3 py-1 rounded hover:bg-gray-800"
-          (click)="archiveRequest(doc.RequestID)">
-          Archive
-        </button>
-      </td>
-    </tr>
-  </tbody>
-</table>
-
-<!-- ================== DENIED TABLE ================== -->
-<h3 class="text-2xl font-bold mt-10 mb-4">Denied</h3>
-<table class="min-w-full bg-white rounded-lg shadow text-sm">
-  <thead class="bg-red-200">
-    <tr>
-      <th class="p-3 text-left">Name</th>
-      <th class="p-3 text-left">Denied At</th>
-      <th class="p-3 text-left">Action</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr *ngFor="let doc of denied" class="border-b">
-      <td class="p-3">{{ doc.name }}</td>
-      <td class="p-3">{{ doc.updated_at | date:'medium' }}</td>
-      <td class="p-3">
-        <button
-          class="bg-gray-700 text-white px-3 py-1 rounded hover:bg-gray-800"
-          (click)="archiveRequest(doc.RequestID)">
-          Archive
-        </button>
-      </td>
-    </tr>
-  </tbody>
-</table>

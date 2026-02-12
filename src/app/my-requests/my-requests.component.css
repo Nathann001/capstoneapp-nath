@@ -25,10 +25,11 @@
   font-weight: bold;
 }
 
-.status.pending { background-color: orange; }
-.status.in_process { background-color: blue; }
-.status.processed { background-color: green; }
-.status.denied { background-color: red; }
+.status.pending { background-color: yellow; color: black; }
+.status.under_review { background-color: blue; color: white; }
+.status.approved { background-color: green; color: white; }
+.status.denied { background-color: red; color: white; }
+
 
 .request-actions button {
   margin-right: 10px;
