@@ -392,7 +392,13 @@ app.post('/api/auth/login', (req, res) => {
       const detailsCompleted = details.length > 0;
 
       const token = jwt.sign(
-        { id: user.id, email: user.email, role: user.role },
+  {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    can_create_admins: user.can_create_admins
+  },
+
         process.env.JWT_SECRET || 'yoursecretkey',
         { expiresIn: '1d' }
       );
@@ -487,7 +493,12 @@ app.post('/api/auth/login', (req, res) => {
   });
 
   app.post('/api/admin/create-user', verifyToken, checkRoles([1]), async (req, res) => {
-  const { email, password, role } = req.body;
+  const { email, password, role, can_create_admins } = req.body;
+
+  // Only admins WITH permission can create other admins
+  if (role === 1 && !req.user.can_create_admins) {
+    return res.status(403).json({ message: 'You are not allowed to create other admins' });
+  }
 
   if (!email || !password || ![1, 2].includes(role)) {
     return res.status(400).json({ message: 'Invalid data' });
@@ -500,8 +511,8 @@ app.post('/api/auth/login', (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     db.query(
-      'INSERT INTO users (email, password, role, created_at) VALUES (?, ?, ?, NOW())',
-      [email, hashedPassword, role],
+      'INSERT INTO users (email, password, role, can_create_admins, created_at) VALUES (?, ?, ?, ?, NOW())',
+      [email, hashedPassword, role, role === 1 ? (can_create_admins ? 1 : 0) : 0],
       err => {
         if (err) return res.status(500).json({ message: 'Failed to create account' });
         res.status(201).json({ message: 'Account created successfully' });
@@ -509,6 +520,7 @@ app.post('/api/auth/login', (req, res) => {
     );
   });
 });
+
 
 app.get('/api/admin/users', verifyToken, checkRoles([1]), (req, res) => {
   const sql = `
@@ -519,11 +531,13 @@ app.get('/api/admin/users', verifyToken, checkRoles([1]), (req, res) => {
     ud.User_Address,
     ud.User_ContactNo,
     u.role,
+    u.can_create_admins,
     u.created_at
   FROM users u
   LEFT JOIN user_details ud ON u.id = ud.UserID
   ORDER BY u.role ASC, u.created_at DESC
 `;
+
 
 db.query(sql, (err, results) => {
   if (err) return res.status(500).json({ message: 'Database error' });
@@ -564,20 +578,27 @@ app.get('/api/admin/users/:id', verifyToken, checkRoles([1]), (req, res) => {
 
 
 
+
 app.put('/api/admin/users/:id', verifyToken, checkRoles([1]), (req, res) => {
-  const { email, role } = req.body; // remove username
+  const { email, role, can_create_admins } = req.body;
   const userId = req.params.id;
 
   if (![1, 2, 3].includes(role)) {
     return res.status(400).json({ message: 'Invalid role' });
   }
 
-  const sql = 'UPDATE users SET email = ?, role = ? WHERE id = ?';
-  db.query(sql, [email, role, userId], (err, result) => {
-    if (err) {
-      console.error('Error updating user credentials:', err);
-      return res.status(500).json({ message: 'Update failed', error: err.message });
-    }
+  if (role === 1 && !req.user.can_create_admins) {
+    return res.status(403).json({ message: 'You are not allowed to assign admin roles' });
+  }
+
+  const sql = `
+    UPDATE users
+    SET email = ?, role = ?, can_create_admins = ?
+    WHERE id = ?
+  `;
+
+  db.query(sql, [email, role, role === 1 ? (can_create_admins ? 1 : 0) : 0, userId], (err, result) => {
+    if (err) return res.status(500).json({ message: 'Update failed', error: err.message });
     if (result.affectedRows === 0) return res.status(404).json({ message: 'User not found' });
 
     res.json({ message: 'User updated successfully' });

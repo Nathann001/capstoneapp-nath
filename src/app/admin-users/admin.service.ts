@@ -11,8 +11,10 @@ export interface User {
   address?: string;
   contact_no?: string;
   role: number;
+  can_create_admins?: number;
   created_at?: string;
 }
+
 
 
 
@@ -35,9 +37,9 @@ export class AdminService {
     return this.http.get<User[]>(`${this.apiUrl}/users`, { headers: this.getAuthHeaders() });
   }
 
-  createUser(data: { email: string; password: string; role: number }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/create-user`, data, { headers: this.getAuthHeaders() });
-  }
+  createUser(data: { email: string; password: string; role: number; can_create_admins?: boolean }): Observable<any> {
+  return this.http.post(`${this.apiUrl}/create-user`, data, { headers: this.getAuthHeaders() });
+}
 
 updateUser(id: number, data: any) {
   return this.http.put(`${this.apiUrl}/users/${id}`, data, { headers: this.getAuthHeaders() });

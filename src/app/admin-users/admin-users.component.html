@@ -10,6 +10,15 @@
       <select formControlName="role">
         <option *ngFor="let r of roles" [value]="r.value">{{ r.label }}</option>
       </select>
+
+      <!-- Only show for Admins -->
+      <div *ngIf="createForm.value.role == 1" style="margin:0.5rem 0;">
+        <label>
+          <input type="checkbox" formControlName="can_create_admins">
+          Can create other admins
+        </label>
+      </div>
+
       <button type="submit" [disabled]="createForm.invalid || loading">
         {{ loading ? 'Creating...' : 'Create User' }}
       </button>
@@ -46,7 +55,12 @@
         <tr *ngFor="let user of filteredUsers">
           <td>{{ user.full_name || 'N/A' }}</td>
           <td>{{ user.email }}</td>
-          <td>{{ getRoleLabel(user.role) }}</td>
+          <td>
+            {{ getRoleLabel(user.role) }}
+            <span *ngIf="user.role == 1 && user.can_create_admins" title="Can create admins">
+              🔑
+            </span>
+          </td>
           <td>
             <button (click)="selectUser(user)">Edit</button>
             <button (click)="deleteUser(user.id)">Delete</button>
@@ -68,6 +82,15 @@
       <select formControlName="role">
         <option *ngFor="let r of roles" [value]="r.value">{{ r.label }}</option>
       </select>
+
+      <!-- Only show for Admins -->
+      <div *ngIf="editForm.value.role == 1" style="margin:0.5rem 0;">
+        <label>
+          <input type="checkbox" formControlName="can_create_admins">
+          Can create other admins
+        </label>
+      </div>
+
       <input formControlName="password" type="password" placeholder="New Password (optional)">
       <button type="submit" [disabled]="editForm.invalid || loading">
         {{ loading ? 'Updating...' : 'Update User' }}

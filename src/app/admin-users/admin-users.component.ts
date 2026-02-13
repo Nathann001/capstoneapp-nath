@@ -24,7 +24,7 @@ export class AdminUsersComponent implements OnInit {
     { value: 3, label: 'User' }
   ];
   searchTerm: string = '';
-  filterRole: number | '' = ''; // 1 = admin, 2 = staff, 3 = user
+  filterRole: number | '' = '';
   filteredUsers: any[] = [];
 
   createForm: FormGroup;
@@ -36,13 +36,15 @@ export class AdminUsersComponent implements OnInit {
     this.createForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
-      role: [2, Validators.required] // default Staff
+      role: [2, Validators.required], // default Staff
+      can_create_admins: [false] // only relevant for Admins
     });
 
     this.editForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       role: [2, Validators.required],
-      password: ['']
+      password: [''],
+      can_create_admins: [false]
     });
   }
 
@@ -54,7 +56,7 @@ export class AdminUsersComponent implements OnInit {
     this.adminService.getUsers().subscribe({
       next: (res: User[]) => {
         this.users = res;
-        this.applyFilter(); // <-- apply search & filter after loading
+        this.applyFilter();
       },
       error: (err: any) => {
         console.error('Error loading users', err);
@@ -89,43 +91,66 @@ export class AdminUsersComponent implements OnInit {
   }
 
   createUser() {
-    if (this.createForm.invalid) return;
-    this.loading = true;
-
-    this.adminService.createUser(this.createForm.value).subscribe({
-      next: (res: any) => {
-        console.log(res.message);
-        this.createForm.reset({ role: 2 });
-        this.loadUsers();
-      },
-      error: (err: any) => console.error(err.error?.message || 'Failed to create user'),
-      complete: () => this.loading = false
-    });
+  if (this.createForm.invalid) {
+    console.error('Form is invalid');
+    return;
   }
+
+  this.loading = true;
+
+  // Convert role to number
+  const formValue = { ...this.createForm.value, role: Number(this.createForm.value.role) };
+
+  // Ensure role is valid (1 = admin, 2 = staff)
+  if (![1, 2].includes(formValue.role)) {
+    console.error('Invalid role:', formValue.role);
+    this.loading = false;
+    return;
+  }
+
+  // Only allow can_create_admins if role === 1 (admin)
+  if (formValue.role !== 1) {
+    formValue.can_create_admins = false;
+  }
+
+  console.log('Creating user with payload:', formValue);
+
+  this.adminService.createUser(formValue).subscribe({
+    next: (res: any) => {
+      console.log(res.message);
+      this.createForm.reset({ role: 2, can_create_admins: false });
+      this.loadUsers();
+    },
+    error: (err: any) => console.error(err.error?.message || 'Failed to create user'),
+    complete: () => this.loading = false
+  });
+}
+
 
   selectUser(user: User) {
     this.selectedUser = user;
     this.editForm.patchValue({
       email: user.email,
       role: user.role,
-      password: ''
+      password: '',
+      can_create_admins: (user as any).can_create_admins || false
     });
   }
 
   updateUser() {
     if (!this.selectedUser || this.editForm.invalid) return;
-
     this.loading = true;
 
-    const payload = {
+    const payload: any = {
       email: this.editForm.value.email,
       role: Number(this.editForm.value.role)
     };
 
+    if (payload.role === 1) payload.can_create_admins = this.editForm.value.can_create_admins;
+
     this.adminService.updateUser(this.selectedUser.id, payload).subscribe({
       next: (res: any) => {
         const newPassword = this.editForm.value.password;
-
         if (newPassword) {
           this.adminService.updateUserPassword(this.selectedUser!.id, newPassword).subscribe({
             next: () => {

@@ -7,8 +7,8 @@ export const authGuard: CanActivateFn = (route, state) => {
   const user = storedUser ? JSON.parse(storedUser) : null;
 
   if (!token || !user) {
-    window.alert('You must be logged in to access this page');
-    window.location.href = '/login';
+    // Navigate to login page using Angular Router
+    window.location.href = '/login'; // Can replace with Router.navigate in a service if needed
     return false;
   }
 
@@ -26,8 +26,8 @@ export const authGuard: CanActivateFn = (route, state) => {
   const allowed = roleAccess[role]?.some((path: string) => currentUrl.startsWith(path));
 
   if (!allowed) {
-    window.alert('You do not have access to this page');
-    window.location.href = '/';
+    // Navigate to home page for unauthorized access
+    window.location.href = '/'; // Can replace with Router.navigate in a service if needed
     return false;
   }
 

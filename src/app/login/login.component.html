@@ -14,6 +14,9 @@
     <!-- LOGIN CARD -->
     <div class="login-container">
         <div class="login-box">
+<div *ngIf="loginError" class="text-yellow-300 mb-4 font-semibold">
+  {{ loginError }}
+</div>
 
             <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="form-box">
 

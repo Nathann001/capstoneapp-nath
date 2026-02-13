@@ -6,7 +6,6 @@ import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
-
 @Component({
   selector: 'app-request-detail',
   standalone: true,
@@ -23,19 +22,17 @@ export class RequestDetailComponent implements OnInit {
   // Modal controls
   showDenyModal = false;
 
-// Denial reasons with checkboxes
-denialOptions = [
-  { key: 'blurry', label: 'Blurry', details: '', selected: false },
-  { key: 'incomplete', label: 'Incomplete', details: '', selected: false },
-  { key: 'unauthorized', label: 'Unauthorized', details: '', selected: false },
-  { key: 'other', label: 'Other', details: '', selected: false }
-];
-
+  // Denial reasons with checkboxes
+  denialOptions = [
+    { key: 'blurry', label: 'Blurry', details: '', selected: false },
+    { key: 'incomplete', label: 'Incomplete', details: '', selected: false },
+    { key: 'unauthorized', label: 'Unauthorized', details: '', selected: false },
+    { key: 'other', label: 'Other', details: '', selected: false }
+  ];
 
   backendUrl = 'http://localhost:4000';
 
   constructor(private route: ActivatedRoute, private http: HttpClient, private router: Router) {}
-
 
   ngOnInit() {
     this.requestId = +this.route.snapshot.paramMap.get('id')!;
@@ -45,7 +42,7 @@ denialOptions = [
   private getAuthHeaders() {
     const token = localStorage.getItem('token');
     if (!token) {
-      alert('You are not logged in!');
+      console.error('You are not logged in!');
       throw new Error('Unauthorized');
     }
     return new HttpHeaders({ Authorization: `Bearer ${token}` });
@@ -66,7 +63,7 @@ denialOptions = [
         this.loading = false;
       },
       error: (err) => {
-        console.error(err);
+        console.error('Failed to load document request:', err);
         this.errorMessage = 'Failed to load document request.';
         this.loading = false;
       }
@@ -77,35 +74,56 @@ denialOptions = [
   let headers: HttpHeaders;
   try { headers = this.getAuthHeaders(); } catch { return; }
 
-  this.http.post(`${this.backendUrl}/api/document_request/${this.requestId}/process`, {}, { headers })
-    .subscribe({
-      next: () => {
-        alert('Request marked as In Process');
-        // Redirect staff back to home-staff
-        this.router.navigate(['/home-staff']);
-      },
-      error: (err) => {
-        console.error(err);
-        alert(err.status === 401 ? 'Unauthorized' : 'Failed to process request');
-      }
-    });
+  let endpoint = '';
+  let successMessage = '';
+
+  if (this.request.status === 'pending') {
+    endpoint = `${this.backendUrl}/api/document_request/${this.requestId}/process`;
+    successMessage = 'Request is now In Process';
+  } else if (this.request.status === 'in_process') {
+    endpoint = `${this.backendUrl}/api/document_request/${this.requestId}/approved`;
+    successMessage = 'Request has been Approved';
+  } else {
+    console.warn('Cannot process this request:', this.request.status);
+    return;
+  }
+
+  this.http.post(endpoint, {}, { headers }).subscribe({
+    next: async () => {
+      console.log(successMessage);
+
+      // Wait a short moment to ensure backend data has updated
+      await new Promise(r => setTimeout(r, 100));
+
+      // Refresh local data if needed
+      this.fetchRequestDetail();
+
+      // Then navigate back to home-staff
+      this.router.navigate(['/home-staff']).then(success => {
+        if (!success) console.warn('Navigation failed');
+      });
+    },
+    error: (err) => console.error('Failed to update request status:', err)
+  });
 }
 
 
-  denyRequest() {
-    this.showDenyModal = true;
-    // Reset previous selections
-    this.denialOptions.forEach(option => option.details = '');
-  }
+  // Show modal to select reasons
+denyRequest() {
+  this.showDenyModal = true;
+  this.denialOptions.forEach(opt => opt.details = '');
+}
 
-  toggleReason(event: any, option: any) {
-    option.selected = event.target.checked;
-  }
+// Toggle checkbox selection
+toggleReason(event: any, option: any) {
+  option.selected = event.target.checked;
+}
 
-  confirmDeny() {
+// Confirm deny: send to backend and navigate to home-staff
+confirmDeny() {
   const selected = this.denialOptions.filter(opt => opt.selected);
   if (selected.length === 0) {
-    alert('Please select at least one reason.');
+    console.error('Please select at least one reason.');
     return;
   }
 
@@ -115,27 +133,29 @@ denialOptions = [
   let headers: HttpHeaders;
   try { headers = this.getAuthHeaders(); } catch { return; }
 
-  this.http.put(`${this.backendUrl}/api/document_request/${this.requestId}`,
-    { status: 'denied', reason: finalReason },
+  this.http.put(
+    `${this.backendUrl}/api/document_request/${this.requestId}/deny`, // unified endpoint
+    { reason: finalReason },
     { headers }
   ).subscribe({
     next: () => {
-      alert('Request denied successfully');
+      console.log('Request denied successfully');
       this.showDenyModal = false;
       this.denialOptions.forEach(opt => opt.selected = false);
-      // Redirect staff back to home-staff
-      this.router.navigate(['/home-staff']);
+
+      // Navigate back automatically
+      this.router.navigate(['/home-staff']).then(success => {
+        if (!success) console.warn('Navigation failed');
+      });
     },
-    error: (err) => {
-      console.error(err);
-      alert(err.status === 401 ? 'Unauthorized' : 'Failed to deny request');
-    }
+    error: (err) => console.error('Failed to deny request:', err)
   });
 }
 
+// Cancel modal
+cancelDeny() {
+  this.showDenyModal = false;
+  this.denialOptions.forEach(opt => opt.selected = false);
+}
 
-  cancelDeny() {
-    this.showDenyModal = false;
-    this.denialOptions.forEach(opt => opt.selected = false);
-  }
 }

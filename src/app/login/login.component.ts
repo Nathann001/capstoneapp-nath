@@ -1,3 +1,4 @@
+// login.component.ts
 import { Component, HostListener } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -15,52 +16,38 @@ export class LoginComponent {
   loginForm: FormGroup;
   showPassword: boolean = false;
   loading: boolean = false;
+  loginError: string = ''; // <-- New variable for error messages
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private authService: AuthService
   ) {
-    // Initialize form
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required]
     });
 
-    // Redirect if already logged in
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       const user = JSON.parse(storedUser);
-      if (user.role === 1) {
-        this.router.navigate(['/admin']);
-      } else if (user.role === 2) {
-        this.router.navigate(['/home-staff']);
-      } else if (user.role === 3 && !user.detailsCompleted) {
-        this.router.navigate(['/edit-profile']);
-      } else {
-        this.router.navigate(['/']);
-      }
+      if (user.role === 1) this.router.navigate(['/admin']);
+      else if (user.role === 2) this.router.navigate(['/home-staff']);
+      else if (user.role === 3 && !user.detailsCompleted) this.router.navigate(['/edit-profile']);
+      else this.router.navigate(['/']);
     }
   }
 
-  // Form getters for template convenience
-  public get email() {
-    return this.loginForm.get('email');
-  }
+  public get email() { return this.loginForm.get('email'); }
+  public get password() { return this.loginForm.get('password'); }
 
-  public get password() {
-    return this.loginForm.get('password');
-  }
+  togglePassword(): void { this.showPassword = !this.showPassword; }
 
-  // Toggle password visibility
-  togglePassword(): void {
-    this.showPassword = !this.showPassword;
-  }
-
-  // Login submission
   onSubmit(): void {
+    this.loginError = ''; // reset previous errors
+
     if (!this.loginForm.valid) {
-      console.log('Please enter valid email and password.');
+      this.loginError = 'Please enter a valid email and password.';
       return;
     }
 
@@ -68,32 +55,25 @@ export class LoginComponent {
 
     this.authService.login(this.loginForm.value).subscribe({
       next: (res: any) => {
-        console.log('Login successful:', res);
+        if (!res.token || !res.user) {
+          this.loginError = res.message || 'Invalid email or password.';
+          return;
+        }
 
-        // Store token and user info
-        if (res.token) localStorage.setItem('token', res.token);
-        if (res.user) localStorage.setItem('user', JSON.stringify(res.user));
-
-        console.log(res.message || 'Login successful!');
+        localStorage.setItem('token', res.token);
+        localStorage.setItem('user', JSON.stringify(res.user));
 
         // Redirect based on role
-        if (res.user?.role === 1) {
-          this.router.navigate(['/admin']);
-        } else if (res.user?.role === 2) {
-          this.router.navigate(['/home-staff']);
-        } else if (res.user?.role === 3) {
-          if (!res.user.detailsCompleted) {
-            this.router.navigate(['/edit-profile']);
-          } else {
-            this.router.navigate(['/']);
-          }
-        } else {
-          this.router.navigate(['/']);
-        }
+        if (res.user.role === 1) this.router.navigate(['/admin']);
+        else if (res.user.role === 2) this.router.navigate(['/home-staff']);
+        else if (res.user.role === 3) {
+          if (!res.user.detailsCompleted) this.router.navigate(['/edit-profile']);
+          else this.router.navigate(['/']);
+        } else this.router.navigate(['/']);
       },
       error: (err) => {
         console.error('Login failed:', err);
-        console.log(err.error?.message || 'Wrong email or password.');
+        this.loginError = err.error?.message || 'Incorrect email or password.';
       },
       complete: () => {
         this.loading = false;
@@ -101,7 +81,6 @@ export class LoginComponent {
     });
   }
 
-  // Parallax effect for background
   @HostListener('document:mousemove', ['$event'])
   onMouseMove(event: MouseEvent): void {
     const navBg = document.querySelector('.login-bg') as HTMLElement | null;
@@ -112,18 +91,7 @@ export class LoginComponent {
     }
   }
 
-  // Navigate to register page
-  goToRegister(): void {
-    this.router.navigate(['/register']);
-  }
-
-  // Navigate to reset-password page
-  goToForgotPassword(event: Event): void {
-    event.preventDefault();
-    this.router.navigate(['/']);
-  }
-
-  goToOtp(): void {
-    this.router.navigate(['/otpverify']);
-  }
+  goToRegister(): void { this.router.navigate(['/register']); }
+  goToForgotPassword(event: Event): void { event.preventDefault(); this.router.navigate(['/']); }
+  goToOtp(): void { this.router.navigate(['/otpverify']); }
 }
