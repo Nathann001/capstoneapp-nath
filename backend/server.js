@@ -732,8 +732,10 @@ app.get('/api/admin/document_request/statistics', verifyToken, checkRoles([1]), 
 
 
 // ===== Mark request as "In Process" =====
-app.post('/api/document_request/:id/process', verifyToken, checkRoles([1, 2]), (req, res) => {
-  const requestId = req.params.id;
+app.post('/api/document_request/:id/process', verifyToken, checkRoles([1, 2]), async (req, res) => {
+  const requestId = parseInt(req.params.id, 10);
+  if (isNaN(requestId)) return res.status(400).json({ message: 'Invalid request ID' });
+
   const staffId = req.user.id;
 
   const sql = `
@@ -741,34 +743,39 @@ app.post('/api/document_request/:id/process', verifyToken, checkRoles([1, 2]), (
     SET status = ?, updated_at = NOW(), assigned_staff_id = ?
     WHERE RequestID = ?
   `;
-  db.query(sql, ['under_review', staffId, requestId], (err, result) => {
+
+  db.query(sql, ['under_review', staffId, requestId], async (err, result) => {
     if (err) return res.status(500).json({ message: 'Failed to process request', error: err.message });
     if (result.affectedRows === 0) return res.status(404).json({ message: 'Request not found' });
 
-    // Get user email and document type
-    db.query(
-      'SELECT u.email, dr.document_type FROM document_request dr JOIN users u ON dr.user_id = u.id WHERE dr.RequestID = ?',
-      [requestId],
-      (err, results) => {
-        if (!err && results.length > 0) {
-          const email = results[0].email;
-          const documentType = results[0].document_type;
-          sendRequestStatusEmail(email, 'under_review', null, documentType);
+    try {
+      const [userData] = await new Promise((resolve, reject) => {
+        db.query(
+          'SELECT u.email, dr.document_type FROM document_request dr JOIN users u ON dr.user_id = u.id WHERE dr.RequestID = ?',
+          [requestId],
+          (err, results) => err ? reject(err) : resolve(results)
+        );
+      });
 
-          // Log to history
-          const emailMsg = `Your request for ${documentType} is now In Process.`;
-          db.query(
-            'INSERT INTO request_status_history (RequestID, status, email_message) VALUES (?, ?, ?)',
-            [requestId, 'under_review', emailMsg],
-            (err) => { if (err) console.error('Failed to log history', err); }
-          );
-        }
+      if (userData && userData.email) {
+        await sendRequestStatusEmail(userData.email, 'under_review', null, userData.document_type);
+
+        // Log to history
+        const emailMsg = `Your request for ${userData.document_type} is now In Process.`;
+        db.query(
+          'INSERT INTO request_status_history (RequestID, status, email_message) VALUES (?, ?, ?)',
+          [requestId, 'under_review', emailMsg],
+          (err) => { if (err) console.error('Failed to log history', err); }
+        );
       }
-    );
+    } catch (err) {
+      console.error('Error sending email or logging history:', err);
+    }
 
     res.json({ message: 'Request marked as In Process and assigned to you' });
   });
 });
+
 
 // ===== Mark request as "Approved" =====
 app.post('/api/document_request/:id/approved', verifyToken, checkRoles([1, 2]), (req, res) => {
@@ -809,7 +816,7 @@ app.post('/api/document_request/:id/approved', verifyToken, checkRoles([1, 2]), 
 });
 
 // ===== Mark request as "Denied" =====
-app.put('/api/document_request/:id/deny', checkRoles([1, 2]), verifyToken, (req, res) => {
+app.put('/api/document_request/:id/deny', verifyToken, checkRoles([1, 2]), (req, res) => {
   const requestId = req.params.id;
   const staffId = req.user.id;
   const { reason } = req.body;
@@ -863,60 +870,41 @@ app.get('/api/admin/document_request', verifyToken, checkRoles([1]), (req, res) 
 });
 
 
-// Archive document request
-app.put('/api/document_request/:id/archive', checkRoles([1]), verifyToken, (req, res) => {
+app.put('/api/document_request/:id/archive', verifyToken, checkRoles([1]), (req, res) => {
   const requestId = req.params.id;
 
-  // 1. Get request info first
-  const sqlSelect = 'SELECT * FROM document_request WHERE RequestID = ?';
-  db.query(sqlSelect, [requestId], (err, results) => {
+  db.query('SELECT * FROM document_request WHERE RequestID = ?', [requestId], (err, results) => {
     if (err) return res.status(500).json({ message: 'DB error', error: err.message });
     if (results.length === 0) return res.status(404).json({ message: 'Request not found' });
 
     const request = results[0];
     const recipientName = request.name ? request.name.replace(/\s+/g, '_') : `request_${requestId}`;
-    const timestamp = new Date(request.updated_at || new Date())
-      .toISOString()
-      .replace(/[:.]/g, '-');
+    const timestamp = new Date(request.updated_at || new Date()).toISOString().replace(/[:.]/g, '-');
 
-    // 2. Create archive folder if not exists
     const archiveDir = path.join(__dirname, 'archives');
     if (!fs.existsSync(archiveDir)) fs.mkdirSync(archiveDir);
 
-    // 3. Create a folder for this specific request
     const requestFolder = path.join(archiveDir, `${recipientName}_${timestamp}`);
     if (!fs.existsSync(requestFolder)) fs.mkdirSync(requestFolder);
 
-    // 4. Move the file if it exists
     if (request.file_path) {
       const oldPath = path.join(__dirname, request.file_path);
-
       if (fs.existsSync(oldPath)) {
-        const fileName = path.basename(request.file_path);
-        const newPath = path.join(requestFolder, fileName);
-
         try {
-          fs.renameSync(oldPath, newPath);
+          fs.renameSync(oldPath, path.join(requestFolder, path.basename(request.file_path)));
         } catch (err) {
-          console.error('Failed to move file:', err);
           return res.status(500).json({ message: 'Failed to archive file', error: err.message });
         }
-      } else {
-        console.warn('File does not exist:', oldPath);
       }
     }
 
-    // 5. Update database to mark as archived
-    const sqlUpdate = 'UPDATE document_request SET archived = 1, updated_at = NOW() WHERE RequestID = ?';
-    db.query(sqlUpdate, [requestId], (err) => {
-      if (err) {
-        console.error('Failed to mark request as archived:', err);
-        return res.status(500).json({ message: 'Failed to update DB', error: err.message });
-      }
-      res.json({ message: 'Request archived successfully', folder: requestFolder });
+    db.query('UPDATE document_request SET archived = 1, updated_at = NOW() WHERE RequestID = ?', [requestId], (err) => {
+      if (err) return res.status(500).json({ message: 'Failed to update DB', error: err.message });
+      res.json({ message: 'Request archived successfully' });
     });
   });
 });
+
 
 // Get requests for logged in user
 app.get('/api/my/requests', verifyToken, checkRoles([3]), (req, res) => {
@@ -1019,13 +1007,14 @@ app.post('/api/document_request', verifyToken, checkRoles([3]), uploadDoc.single
     console.error('Failed to send pending email:', emailErr);
   }
 
-  // Respond with success
+    // Respond with success
   res.status(201).json({
     message: 'Document request submitted successfully',
     requestId,
     filePath
   });
 });
+
 
 });
 

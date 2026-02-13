@@ -29,15 +29,6 @@
   </a>
 </li>
 
-<!-- Certificates (only for non-admin, non-staff) -->
-<li *ngIf="!isAdmin && !isStaff">
-  <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-700 group mb-5 text-2xl"
-     routerLink="/certificates" routerLinkActive="active">
-    <i class="fa-solid fa-certificate"></i>
-    <span class="flex-1 ms-3 whitespace-nowrap pl-2">Certificates</span>
-  </a>
-</li>
-
 <!-- My Requests (only for regular users, role 3) -->
 <li *ngIf="!isAdmin && !isStaff">
   <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-700 group mb-5 text-2xl"
@@ -49,33 +40,42 @@
 
 
         <!-- Admin Links (role 1) -->
-        <ng-container *ngIf="isAdmin">
-          <li>
-            <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-700 group mb-5 text-2xl"
-               routerLink="/admin" routerLinkActive="active">
-              <i class="fa-solid fa-chart-line"></i>
-              <span class="flex-1 ms-3 whitespace-nowrap pl-2">Admin Dashboard</span>
-            </a>
-          </li>
-          <li>
-            <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-700 group mb-5 text-2xl"
-               routerLink="/admin-users" routerLinkActive="active">
-              <i class="fa-solid fa-users"></i>
-              <span class="flex-1 ms-3 whitespace-nowrap pl-2">Manage Users</span>
-            </a>
-          </li>
-        </ng-container>
+<ng-container *ngIf="isAdmin">
+  <li>
+    <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-700 group mb-5 text-2xl"
+       routerLink="/admin" routerLinkActive="active">
+      <i class="fa-solid fa-chart-line"></i>
+      <span class="flex-1 ms-3 whitespace-nowrap pl-2">Admin Dashboard</span>
+    </a>
+  </li>
+  <li>
+    <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-700 group mb-5 text-2xl"
+       routerLink="/admin-users" routerLinkActive="active">
+      <i class="fa-solid fa-users"></i>
+      <span class="flex-1 ms-3 whitespace-nowrap pl-2">Manage Users</span>
+    </a>
+  </li>
+  <!-- Archives Link -->
+  <li>
+    <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-700 group mb-5 text-2xl"
+       routerLink="/archives" routerLinkActive="active">
+      <i class="fa-solid fa-archive"></i>
+      <span class="flex-1 ms-3 whitespace-nowrap pl-2">Archives</span>
+    </a>
+  </li>
+</ng-container>
 
-        <!-- Staff Links (role 2) -->
-        <ng-container *ngIf="isStaff">
-          <li>
-            <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-700 group mb-5 text-2xl"
-               routerLink="/home-staff" routerLinkActive="active">
-              <i class="fa-solid fa-house"></i>
-              <span class="flex-1 ms-3 whitespace-nowrap pl-2">Staff Home</span>
-            </a>
-          </li>
-        </ng-container>
+<!-- Staff Links (role 2) -->
+<ng-container *ngIf="isStaff">
+  <li>
+    <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-700 group mb-5 text-2xl"
+       routerLink="/home-staff" routerLinkActive="active">
+      <i class="fa-solid fa-house"></i>
+      <span class="flex-1 ms-3 whitespace-nowrap pl-2">Staff Home</span>
+    </a>
+  </li>
+</ng-container>
+
 
       </ul>
 

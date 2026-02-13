@@ -29,7 +29,7 @@ export class ProcessRequestComponent implements OnInit {
   private getAuthHeaders(): HttpHeaders {
     const token = localStorage.getItem('token');
     if (!token) {
-      alert('You are not logged in!');
+      console.error('You are not logged in!');
       throw new Error('Unauthorized');
     }
     return new HttpHeaders({ Authorization: `Bearer ${token}` });
@@ -49,7 +49,7 @@ export class ProcessRequestComponent implements OnInit {
           this.loading = false;
         },
         error: (err) => {
-          console.error(err);
+          console.error('Failed to load document request:', err);
           this.errorMessage = 'Failed to load document request.';
           this.loading = false;
         }
@@ -62,55 +62,33 @@ export class ProcessRequestComponent implements OnInit {
 
     this.http.post(`${this.backendUrl}/api/document_request/${this.requestId}/approved`, {}, { headers })
       .subscribe({
-        next: () => alert('Request marked as In Process'),
+        next: () => console.log('Request marked as In Process'),
         error: (err) => {
-          console.error(err);
-          alert(err.status === 401 ? 'Unauthorized' : 'Failed to process request');
+          console.error('Failed to approve request:', err);
         }
       });
   }
 
-  denyRequest() {
-  const choice = prompt(
-    `Reason for denial:
-1 - Incomplete requirements
-2 - Blurry document
-3 - Others`
-  );
+  denyRequest(reason?: string) {
+    if (!reason || !reason.trim()) {
+      console.error('Denial reason is required');
+      return;
+    }
 
-  if (!choice) return;
+    const headers = this.getAuthHeaders();
 
-  let reason = '';
-
-  if (choice === '1') {
-    const detail = prompt('Which requirement is incomplete?');
-    reason = `Incomplete requirements: ${detail}`;
-  } else if (choice === '2') {
-    const detail = prompt('Which document is blurry?');
-    reason = `Blurry document: ${detail}`;
-  } else if (choice === '3') {
-    reason = prompt('Please specify the reason') || '';
+    this.http.put(
+      `${this.backendUrl}/api/document_request/${this.requestId}/deny`,
+      { reason },
+      { headers }
+    ).subscribe({
+      next: () => {
+        console.log('Request denied and email sent');
+        this.router.navigate(['/home-staff']).then(() => location.reload());
+      },
+      error: (err) => {
+        console.error('Failed to deny request:', err);
+      }
+    });
   }
-
-  if (!reason.trim()) {
-    alert('Denial reason is required');
-    return;
-  }
-
-  const headers = this.getAuthHeaders();
-
-  this.http.put(
-    `${this.backendUrl}/api/document_request/${this.requestId}/deny`,
-    { reason },
-    { headers }
-  ).subscribe({
-    next: () => {
-      alert('Request denied and email sent');
-      this.router.navigate(['/home-staff']).then(() => location.reload());
-    },
-    error: () => alert('Failed to deny request')
-  });
-}
-
-
 }

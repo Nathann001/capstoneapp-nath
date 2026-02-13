@@ -51,9 +51,9 @@ export class ResetPasswordComponent {
 
     const { email, password } = this.form.value;
 
-    this.http.post('https://its-certificate-generator.onrender.com/api/auth/reset-password', { 
-      email, 
-      newPassword: password 
+    this.http.post('https://its-certificate-generator.onrender.com/api/auth/reset-password', {
+      email,
+      newPassword: password
     })
     .subscribe({
       next: (res: any) => {

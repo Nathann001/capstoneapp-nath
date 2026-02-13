@@ -25,7 +25,6 @@ export class PendingComponent implements OnInit {
   resizing = false;
   offset = { x: 0, y: 0 };
 
-  // Role-based access
   accessDenied = false;
   userRole: string = '';
   userEmail: string = '';
@@ -40,30 +39,17 @@ export class PendingComponent implements OnInit {
   constructor(private http: HttpClient) {}
 
   ngOnInit() {
-  // Fake a logged-in user for local testing
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-  // If localStorage is empty, fill it with a test user
-  if (!user.email) {
-    console.warn('No user found, faking local user for testing...');
-    this.userEmail = 'test@example.com';
-    this.userRole = 'approval_authority';
-    localStorage.setItem('user', JSON.stringify({ email: this.userEmail, role: this.userRole }));
-  } else {
-    this.userEmail = user.email;
-    this.userRole = (user.role || '').toLowerCase();
-  }
-
-  // Optional: skip accessDenied checks entirely for testing
-  // if (this.userRole !== 'approval_authority' && this.userRole !== 'both') {
-  //   this.accessDenied = true;
-  // } else {
-  //   this.fetchPendingCertificates();
-  // }
-
-  this.fetchPendingCertificates();
-
-
+    if (!user.email) {
+      console.warn('No user found, faking local user for testing...');
+      this.userEmail = 'test@example.com';
+      this.userRole = 'approval_authority';
+      localStorage.setItem('user', JSON.stringify({ email: this.userEmail, role: this.userRole }));
+    } else {
+      this.userEmail = user.email;
+      this.userRole = (user.role || '').toLowerCase();
+    }
 
     if (this.userRole !== 'approval_authority' && this.userRole !== 'both') {
       this.accessDenied = true;
@@ -81,13 +67,6 @@ export class PendingComponent implements OnInit {
         next: (data) => this.pendingCertificates = data,
         error: (err) => {
           console.error('Error fetching certificates (check auth/Cloudinary):', err);
-          if (err instanceof HttpErrorResponse) {
-            if (err.status === 401) {
-              alert('Unauthorized - Please log in again.');
-            } else {
-              alert('Failed to fetch pending certificates.');
-            }
-          }
         }
       });
   }
@@ -111,11 +90,11 @@ export class PendingComponent implements OnInit {
 
   approveCert(cert: any) {
     if (this.userRole !== 'approval_authority' && this.userRole !== 'both') {
-      alert('You are not authorized to approve certificates.');
+      console.error('You are not authorized to approve certificates.');
       return;
     }
     if (!this.certificateContainer?.nativeElement) {
-      alert('Certificate preview not loaded.');
+      console.error('Certificate preview not loaded.');
       return;
     }
 
@@ -124,17 +103,13 @@ export class PendingComponent implements OnInit {
       useCORS: true,
       scale: 2,
       ignoreElements: (element) => {
-        // Skip elements explicitly marked or resizer handles
-        return (
-          element.hasAttribute("data-html2canvas-ignore") ||
-          element.classList.contains("cursor-se-resize")
-        );
+        return element.hasAttribute("data-html2canvas-ignore") ||
+               element.classList.contains("cursor-se-resize");
       }
     }).then(canvas => {
       canvas.toBlob(blob => {
         if (!blob || blob.size === 0 || !blob.type.startsWith('image/png')) {
           console.error('Generated signed PNG blob is invalid');
-          alert('Failed to generate signed certificate image');
           return;
         }
 
@@ -147,33 +122,23 @@ export class PendingComponent implements OnInit {
         this.http.post('https://its-certificate-generator.onrender.com/api/approve-certificate-with-signature', formData, { headers })
           .subscribe({
             next: (response: any) => {
-              console.log('Cloudinary approved cert URL:', response?.url);
-              alert('Certificate approved and uploaded to cloud storage!');
+              console.log('Certificate approved and uploaded to cloud storage:', response?.url);
               this.fetchPendingCertificates();
               this.closeModal();
             },
             error: (err) => {
               console.error('Error approving certificate (check Cloudinary/backend):', err);
-              if (err instanceof HttpErrorResponse) {
-                if (err.status === 401) alert('Unauthorized - Please log in again.');
-                else if (err.status === 500) alert('Failed to upload signed certificate. Check server logs.');
-                else if (err.status === 403) alert('Not authorized to approve this certificate.');
-                else alert(`Approval failed: ${err.error?.message || err.message}`);
-              } else {
-                alert('Failed to generate or approve certificate.');
-              }
             }
           });
       }, 'image/png');
     }).catch(err => {
       console.error('html2canvas error (loading Cloudinary image failed):', err);
-      alert('Failed to preview certificate for signing. Ensure image loads from cloud.');
     });
   }
 
   rejectCert(cert: any) {
     if (this.userRole !== 'approval_authority' && this.userRole !== 'both') {
-      alert('You are not authorized to reject certificates.');
+      console.error('You are not authorized to reject certificates.');
       return;
     }
 
@@ -183,17 +148,12 @@ export class PendingComponent implements OnInit {
     this.http.post(url, {}, { headers })
       .subscribe({
         next: () => {
-          alert('Certificate rejected successfully.');
+          console.log('Certificate rejected successfully.');
           this.fetchPendingCertificates();
           this.closeModal();
         },
         error: (err) => {
           console.error('Rejection failed (check auth):', err);
-          if (err instanceof HttpErrorResponse) {
-            if (err.status === 401) alert('Unauthorized - Please log in again.');
-            else if (err.status === 403) alert('Not authorized to reject this certificate.');
-            else alert('Failed to reject certificate.');
-          }
         }
       });
   }
@@ -202,7 +162,7 @@ export class PendingComponent implements OnInit {
     const file = event.target.files[0];
     if (file && this.certificateContainer?.nativeElement) {
       if (!file.type.startsWith('image/') || file.size > 5 * 1024 * 1024) {
-        alert('Please upload a valid image file under 5MB.');
+        console.error('Please upload a valid image file under 5MB.');
         return;
       }
 
@@ -230,7 +190,7 @@ export class PendingComponent implements OnInit {
         img.onerror = () => console.error('Failed to load signature image');
         img.src = reader.result as string;
       };
-      reader.onerror = () => alert('Failed to read signature file.');
+      reader.onerror = () => console.error('Failed to read signature file.');
       reader.readAsDataURL(file);
     }
   }

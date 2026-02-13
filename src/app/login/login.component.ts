@@ -17,34 +17,31 @@ export class LoginComponent {
   loading: boolean = false;
 
   constructor(
-  private fb: FormBuilder,
-  private router: Router,
-  private authService: AuthService
-) {
-  // Initialize form
-  this.loginForm = this.fb.group({
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', Validators.required]
-  });
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  // Redirect if already logged in
-  const storedUser = localStorage.getItem('user');
-if (storedUser) {
-  const user = JSON.parse(storedUser);
-  if (user.role === 1) {
-    this.router.navigate(['/admin']);
-  } else if (user.role === 2) {
-    this.router.navigate(['/home-staff']);
-  } else if (user.role === 3 && !user.detailsCompleted) {
-    this.router.navigate(['/edit-profile']);
-  } else {
-    this.router.navigate(['/']);
+    private fb: FormBuilder,
+    private router: Router,
+    private authService: AuthService
+  ) {
+    // Initialize form
+    this.loginForm = this.fb.group({
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', Validators.required]
+    });
+
+    // Redirect if already logged in
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      if (user.role === 1) {
+        this.router.navigate(['/admin']);
+      } else if (user.role === 2) {
+        this.router.navigate(['/home-staff']);
+      } else if (user.role === 3 && !user.detailsCompleted) {
+        this.router.navigate(['/edit-profile']);
+      } else {
+        this.router.navigate(['/']);
+      }
+    }
   }
-}
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-}
-
-
 
   // Form getters for template convenience
   public get email() {
@@ -61,55 +58,48 @@ if (storedUser) {
   }
 
   // Login submission
-onSubmit(): void {
-  if (!this.loginForm.valid) {
-    alert('Please enter valid email and password.');
-    return;
-  }
-
-  this.loading = true;
-
-  this.authService.login(this.loginForm.value).subscribe({
-    next: (res: any) => {
-      console.log('Login successful:', res);
-
-      // Store token and user info
-      if (res.token) localStorage.setItem('token', res.token);
-      if (res.user) localStorage.setItem('user', JSON.stringify(res.user));
-
-      alert(res.message || 'Login successful!');
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      // Redirect based on role
-if (res.user?.role === 1) {
-  // Admin → go to admin dashboard
-  this.router.navigate(['/admin']);
-} else if (res.user?.role === 2) {
-  // Staff → go to staff home page
-  this.router.navigate(['/home-staff']);
-} else if (res.user?.role === 3) {
-  // Normal user → check if profile is complete
-  if (!res.user.detailsCompleted) {
-    this.router.navigate(['/edit-profile']);
-  } else {
-    this.router.navigate(['/']); // Regular home page
-  }
-} else {
-  // Default fallback
-  this.router.navigate(['/']);
-}
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    },
-    error: (err) => {
-      console.error('Login failed:', err);
-      alert(err.error?.message || 'Wrong email or password.');
-    },
-    complete: () => {
-      this.loading = false;
+  onSubmit(): void {
+    if (!this.loginForm.valid) {
+      console.log('Please enter valid email and password.');
+      return;
     }
-  });
-}
 
+    this.loading = true;
 
+    this.authService.login(this.loginForm.value).subscribe({
+      next: (res: any) => {
+        console.log('Login successful:', res);
+
+        // Store token and user info
+        if (res.token) localStorage.setItem('token', res.token);
+        if (res.user) localStorage.setItem('user', JSON.stringify(res.user));
+
+        console.log(res.message || 'Login successful!');
+
+        // Redirect based on role
+        if (res.user?.role === 1) {
+          this.router.navigate(['/admin']);
+        } else if (res.user?.role === 2) {
+          this.router.navigate(['/home-staff']);
+        } else if (res.user?.role === 3) {
+          if (!res.user.detailsCompleted) {
+            this.router.navigate(['/edit-profile']);
+          } else {
+            this.router.navigate(['/']);
+          }
+        } else {
+          this.router.navigate(['/']);
+        }
+      },
+      error: (err) => {
+        console.error('Login failed:', err);
+        console.log(err.error?.message || 'Wrong email or password.');
+      },
+      complete: () => {
+        this.loading = false;
+      }
+    });
+  }
 
   // Parallax effect for background
   @HostListener('document:mousemove', ['$event'])
@@ -134,6 +124,6 @@ if (res.user?.role === 1) {
   }
 
   goToOtp(): void {
-  this.router.navigate(['/otpverify']);
-}
+    this.router.navigate(['/otpverify']);
+  }
 }

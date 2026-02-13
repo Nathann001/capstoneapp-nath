@@ -15,6 +15,7 @@ import { ProcessRequestComponent } from './process-request/process-request.compo
 import { AdminComponent } from './admin/admin.component';
 import { MyRequestsComponent } from './my-requests/my-requests.component';
 import { authGuard } from './auth.guard';
+import { ArchivesComponent } from './archives/archives.component';
 
 export const routes: Routes = [
     { path: '', component: HomeComponentComponent },
@@ -37,5 +38,6 @@ export const routes: Routes = [
     { path: 'home-staff', component: HomeStaffComponent, canActivate: [authGuard] },
     { path: 'process-request/:id', component: ProcessRequestComponent, canActivate: [authGuard] },
     { path: 'admin', component: AdminComponent, canActivate: [authGuard] },
-    { path: 'my-requests', component: MyRequestsComponent, canActivate: [authGuard] }
+    { path: 'my-requests', component: MyRequestsComponent, canActivate: [authGuard] },
+    { path: 'archives', component: ArchivesComponent }
 ];

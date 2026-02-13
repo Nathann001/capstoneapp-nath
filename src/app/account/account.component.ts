@@ -16,7 +16,7 @@ export class AccountComponent implements OnInit {
   profileForm: FormGroup;
   editMode = false;
   imageUrl: string | null = null;
-  selectedFile: File | null = null; 
+  selectedFile: File | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -109,14 +109,14 @@ export class AccountComponent implements OnInit {
 
     this.http.put('https://its-certificate-generator.onrender.com/api/auth/update', formData, { headers }).subscribe({
       next: (res: any) => {
-        alert('Profile updated successfully!');
+        console.log('Profile updated successfully!');
         if (res.user) localStorage.setItem('user', JSON.stringify(res.user));
         this.editMode = false;
         this.loadUserInfo();
       },
       error: (err) => {
         console.error('Failed to update profile:', err);
-        alert('Failed to update profile.');
+        console.log('Failed to update profile.');
       }
     });
   }
@@ -128,17 +128,17 @@ export class AccountComponent implements OnInit {
 
   deleteAccount() {
     const token = localStorage.getItem('token');
-    if (!token) return alert('No active session found. Please log in again.');
+    if (!token) return console.log('No active session found. Please log in again.');
 
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
     this.http.delete('https://its-certificate-generator.onrender.com/api/user/delete', { headers }).subscribe({
       next: () => {
-        alert('Your account has been deleted.');
+        console.log('Your account has been deleted.');
         this.logout();
       },
       error: (err) => {
         console.error('Error deleting account:', err);
-        alert('Failed to delete account.');
+        console.log('Failed to delete account.');
       }
     });
   }

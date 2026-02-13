@@ -23,9 +23,9 @@ export class AdminUsersComponent implements OnInit {
     { value: 2, label: 'Staff' },
     { value: 3, label: 'User' }
   ];
-searchTerm: string = '';
-filterRole: number | '' = ''; // 1 = admin, 2 = staff, 3 = user
-filteredUsers: any[] = [];
+  searchTerm: string = '';
+  filterRole: number | '' = ''; // 1 = admin, 2 = staff, 3 = user
+  filteredUsers: any[] = [];
 
   createForm: FormGroup;
   editForm: FormGroup;
@@ -51,42 +51,37 @@ filteredUsers: any[] = [];
   }
 
   loadUsers() {
-  this.adminService.getUsers().subscribe({
-    next: (res: User[]) => {
-      this.users = res;
-      this.applyFilter(); // <-- apply search & filter after loading
-    },
-    error: (err: any) => {
-      console.error('Error loading users', err);
-      if (err.status === 401) this.router.navigate(['/login']);
-    }
-  });
-}
+    this.adminService.getUsers().subscribe({
+      next: (res: User[]) => {
+        this.users = res;
+        this.applyFilter(); // <-- apply search & filter after loading
+      },
+      error: (err: any) => {
+        console.error('Error loading users', err);
+        if (err.status === 401) this.router.navigate(['/login']);
+      }
+    });
+  }
 
-applyFilter() {
-  this.filteredUsers = this.users.filter(user => {
-    // Filter by role
-    if (this.filterRole && user.role !== this.filterRole) return false;
+  applyFilter() {
+    this.filteredUsers = this.users.filter(user => {
+      if (this.filterRole && user.role !== this.filterRole) return false;
+      const fullName = user.full_name?.toLowerCase() || '';
+      const email = user.email?.toLowerCase() || '';
+      const term = this.searchTerm.toLowerCase();
+      return fullName.includes(term) || email.includes(term);
+    });
+  }
 
-    // Search by name or email
-    const fullName = user.full_name?.toLowerCase() || '';
-    const email = user.email?.toLowerCase() || '';
-    const term = this.searchTerm.toLowerCase();
+  onSearchChange(term: string) {
+    this.searchTerm = term;
+    this.applyFilter();
+  }
 
-    return fullName.includes(term) || email.includes(term);
-  });
-}
-
-onSearchChange(term: string) {
-  this.searchTerm = term;
-  this.applyFilter();
-}
-
-onRoleFilterChange(role: string) {
-  this.filterRole = role ? +role : '';
-  this.applyFilter();
-}
-
+  onRoleFilterChange(role: string) {
+    this.filterRole = role ? +role : '';
+    this.applyFilter();
+  }
 
   getRoleLabel(roleValue: number): string {
     const role = this.roles.find(r => r.value === roleValue);
@@ -99,11 +94,11 @@ onRoleFilterChange(role: string) {
 
     this.adminService.createUser(this.createForm.value).subscribe({
       next: (res: any) => {
-        alert(res.message);
+        console.log(res.message);
         this.createForm.reset({ role: 2 });
         this.loadUsers();
       },
-      error: (err: any) => alert(err.error?.message || 'Failed to create user'),
+      error: (err: any) => console.error(err.error?.message || 'Failed to create user'),
       complete: () => this.loading = false
     });
   }
@@ -117,47 +112,43 @@ onRoleFilterChange(role: string) {
     });
   }
 
-updateUser() {
-  if (!this.selectedUser || this.editForm.invalid) return; // ✅ guard
+  updateUser() {
+    if (!this.selectedUser || this.editForm.invalid) return;
 
-  this.loading = true;
+    this.loading = true;
 
-  // Make sure role is a number
-  const payload = {
-    email: this.editForm.value.email,
-    role: Number(this.editForm.value.role)
-  };
+    const payload = {
+      email: this.editForm.value.email,
+      role: Number(this.editForm.value.role)
+    };
 
-  // Update email & role first
-  this.adminService.updateUser(this.selectedUser.id, payload).subscribe({
-    next: (res: any) => {
-      const newPassword = this.editForm.value.password;
+    this.adminService.updateUser(this.selectedUser.id, payload).subscribe({
+      next: (res: any) => {
+        const newPassword = this.editForm.value.password;
 
-      if (newPassword) {
-        // Update password separately
-        this.adminService.updateUserPassword(this.selectedUser!.id, newPassword).subscribe({
-          next: () => {
-            alert('User credentials and password updated successfully');
-            this.selectedUser = null;
-            this.loadUsers();
-          },
-          error: (err) => alert(err.error?.message || 'Failed to update password'),
-          complete: () => this.loading = false
-        });
-      } else {
-        alert('User updated successfully');
-        this.selectedUser = null;
-        this.loadUsers();
+        if (newPassword) {
+          this.adminService.updateUserPassword(this.selectedUser!.id, newPassword).subscribe({
+            next: () => {
+              console.log('User credentials and password updated successfully');
+              this.selectedUser = null;
+              this.loadUsers();
+            },
+            error: (err) => console.error(err.error?.message || 'Failed to update password'),
+            complete: () => this.loading = false
+          });
+        } else {
+          console.log('User updated successfully');
+          this.selectedUser = null;
+          this.loadUsers();
+          this.loading = false;
+        }
+      },
+      error: (err: any) => {
+        console.error(err.error?.message || 'Failed to update user');
         this.loading = false;
       }
-    },
-    error: (err: any) => {
-      alert(err.error?.message || 'Failed to update user');
-      this.loading = false;
-    }
-  });
-}
-
+    });
+  }
 
   cancelEdit() {
     this.selectedUser = null;
@@ -168,10 +159,10 @@ updateUser() {
 
     this.adminService.deleteUser(id).subscribe({
       next: (res: any) => {
-        alert(res.message);
+        console.log(res.message);
         this.loadUsers();
       },
-      error: (err: any) => alert(err.error?.message || 'Failed to delete user')
+      error: (err: any) => console.error(err.error?.message || 'Failed to delete user')
     });
   }
 }

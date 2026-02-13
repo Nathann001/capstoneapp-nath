@@ -4,6 +4,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+
 
 @Component({
   selector: 'app-request-detail',
@@ -32,7 +34,8 @@ denialOptions = [
 
   backendUrl = 'http://localhost:4000';
 
-  constructor(private route: ActivatedRoute, private http: HttpClient) {}
+  constructor(private route: ActivatedRoute, private http: HttpClient, private router: Router) {}
+
 
   ngOnInit() {
     this.requestId = +this.route.snapshot.paramMap.get('id')!;
@@ -71,18 +74,23 @@ denialOptions = [
   }
 
   processRequest() {
-    let headers: HttpHeaders;
-    try { headers = this.getAuthHeaders(); } catch { return; }
+  let headers: HttpHeaders;
+  try { headers = this.getAuthHeaders(); } catch { return; }
 
-    this.http.post(`${this.backendUrl}/api/document_request/${this.requestId}/process`, {}, { headers })
-      .subscribe({
-        next: () => alert('Request marked as In Process'),
-        error: (err) => {
-          console.error(err);
-          alert(err.status === 401 ? 'Unauthorized' : 'Failed to process request');
-        }
-      });
-  }
+  this.http.post(`${this.backendUrl}/api/document_request/${this.requestId}/process`, {}, { headers })
+    .subscribe({
+      next: () => {
+        alert('Request marked as In Process');
+        // Redirect staff back to home-staff
+        this.router.navigate(['/home-staff']);
+      },
+      error: (err) => {
+        console.error(err);
+        alert(err.status === 401 ? 'Unauthorized' : 'Failed to process request');
+      }
+    });
+}
+
 
   denyRequest() {
     this.showDenyModal = true;
@@ -95,37 +103,36 @@ denialOptions = [
   }
 
   confirmDeny() {
-    const selected = this.denialOptions.filter(opt => opt.selected);
-    if (selected.length === 0) {
-      alert('Please select at least one reason.');
-      return;
-    }
-
-    // Build final reason string with details
-    const reasonStrings = selected.map(opt => {
-      return `${opt.label}${opt.details ? `: ${opt.details}` : ''}`;
-    });
-    const finalReason = reasonStrings.join('; ');
-
-    let headers: HttpHeaders;
-    try { headers = this.getAuthHeaders(); } catch { return; }
-
-    this.http.put(`${this.backendUrl}/api/document_request/${this.requestId}`,
-      { status: 'denied', reason: finalReason },
-      { headers }
-    ).subscribe({
-      next: () => {
-        alert('Request denied successfully');
-        this.showDenyModal = false;
-        this.denialOptions.forEach(opt => opt.selected = false);
-        this.fetchRequestDetail();
-      },
-      error: (err) => {
-        console.error(err);
-        alert(err.status === 401 ? 'Unauthorized' : 'Failed to deny request');
-      }
-    });
+  const selected = this.denialOptions.filter(opt => opt.selected);
+  if (selected.length === 0) {
+    alert('Please select at least one reason.');
+    return;
   }
+
+  const reasonStrings = selected.map(opt => `${opt.label}${opt.details ? `: ${opt.details}` : ''}`);
+  const finalReason = reasonStrings.join('; ');
+
+  let headers: HttpHeaders;
+  try { headers = this.getAuthHeaders(); } catch { return; }
+
+  this.http.put(`${this.backendUrl}/api/document_request/${this.requestId}`,
+    { status: 'denied', reason: finalReason },
+    { headers }
+  ).subscribe({
+    next: () => {
+      alert('Request denied successfully');
+      this.showDenyModal = false;
+      this.denialOptions.forEach(opt => opt.selected = false);
+      // Redirect staff back to home-staff
+      this.router.navigate(['/home-staff']);
+    },
+    error: (err) => {
+      console.error(err);
+      alert(err.status === 401 ? 'Unauthorized' : 'Failed to deny request');
+    }
+  });
+}
+
 
   cancelDeny() {
     this.showDenyModal = false;

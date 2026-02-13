@@ -64,14 +64,23 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let doc of getPaginatedItems(row)"
-          class="border-b hover:bg-gray-50 transition cursor-pointer"
-          (click)="doc.status === 'under_review' ? viewInProcessDetail(doc) : viewRequestDetail(doc)">
-        <td class="py-3 px-4">{{ doc.name }}</td>
-        <td class="py-3 px-4">{{ doc.updated_at || doc.date_created | date:'medium' }}</td>
-        <td class="py-3 px-4 capitalize">{{ doc.status === 'under_review' ? 'Under Review' : doc.status }}</td>
-      </tr>
-    </tbody>
+  <tr *ngFor="let doc of getPaginatedItems(row)"
+      class="border-b hover:bg-gray-50 transition"
+      (click)="doc.status === 'under_review' ? viewInProcessDetail(doc) : viewRequestDetail(doc)">
+    <td class="py-3 px-4">{{ doc.name }}</td>
+    <td class="py-3 px-4">{{ doc.updated_at || doc.date_created | date:'medium' }}</td>
+    <td class="py-3 px-4 capitalize">{{ doc.status === 'under_review' ? 'Under Review' : doc.status }}</td>
+    <td class="py-3 px-4">
+      <button *ngIf="doc.archived === 0"
+              (click)="archiveRequest(doc, $event)"
+              class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600">
+        Archive
+      </button>
+      <span *ngIf="doc.archived === 1" class="text-gray-500 italic">Archived</span>
+    </td>
+  </tr>
+</tbody>
+
   </table>
 
   <!-- Pagination -->
