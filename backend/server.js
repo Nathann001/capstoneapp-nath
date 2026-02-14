@@ -153,7 +153,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
   }
 
   // Create or update user details for first-time login
-app.post('/api/user/details', verifyToken, (req, res) => {
+  app.post('/api/user/details', verifyToken, (req, res) => {
   const userId = req.user.id;
   const { firstName, middleName, lastName, address, contactNo } = req.body;
 
@@ -392,13 +392,7 @@ app.post('/api/auth/login', (req, res) => {
       const detailsCompleted = details.length > 0;
 
       const token = jwt.sign(
-  {
-    id: user.id,
-    email: user.email,
-    role: user.role,
-    can_create_admins: user.can_create_admins
-  },
-
+        { id: user.id, email: user.email, role: user.role },
         process.env.JWT_SECRET || 'yoursecretkey',
         { expiresIn: '1d' }
       );
@@ -493,12 +487,7 @@ app.post('/api/auth/login', (req, res) => {
   });
 
   app.post('/api/admin/create-user', verifyToken, checkRoles([1]), async (req, res) => {
-  const { email, password, role, can_create_admins } = req.body;
-
-  // Only admins WITH permission can create other admins
-  if (role === 1 && !req.user.can_create_admins) {
-    return res.status(403).json({ message: 'You are not allowed to create other admins' });
-  }
+  const { email, password, role } = req.body;
 
   if (!email || !password || ![1, 2].includes(role)) {
     return res.status(400).json({ message: 'Invalid data' });
@@ -511,8 +500,8 @@ app.post('/api/auth/login', (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     db.query(
-      'INSERT INTO users (email, password, role, can_create_admins, created_at) VALUES (?, ?, ?, ?, NOW())',
-      [email, hashedPassword, role, role === 1 ? (can_create_admins ? 1 : 0) : 0],
+      'INSERT INTO users (email, password, role, created_at) VALUES (?, ?, ?, NOW())',
+      [email, hashedPassword, role],
       err => {
         if (err) return res.status(500).json({ message: 'Failed to create account' });
         res.status(201).json({ message: 'Account created successfully' });
@@ -520,7 +509,6 @@ app.post('/api/auth/login', (req, res) => {
     );
   });
 });
-
 
 app.get('/api/admin/users', verifyToken, checkRoles([1]), (req, res) => {
   const sql = `
@@ -531,13 +519,11 @@ app.get('/api/admin/users', verifyToken, checkRoles([1]), (req, res) => {
     ud.User_Address,
     ud.User_ContactNo,
     u.role,
-    u.can_create_admins,
     u.created_at
   FROM users u
   LEFT JOIN user_details ud ON u.id = ud.UserID
   ORDER BY u.role ASC, u.created_at DESC
 `;
-
 
 db.query(sql, (err, results) => {
   if (err) return res.status(500).json({ message: 'Database error' });
@@ -578,27 +564,20 @@ app.get('/api/admin/users/:id', verifyToken, checkRoles([1]), (req, res) => {
 
 
 
-
 app.put('/api/admin/users/:id', verifyToken, checkRoles([1]), (req, res) => {
-  const { email, role, can_create_admins } = req.body;
+  const { email, role } = req.body; // remove username
   const userId = req.params.id;
 
   if (![1, 2, 3].includes(role)) {
     return res.status(400).json({ message: 'Invalid role' });
   }
 
-  if (role === 1 && !req.user.can_create_admins) {
-    return res.status(403).json({ message: 'You are not allowed to assign admin roles' });
-  }
-
-  const sql = `
-    UPDATE users
-    SET email = ?, role = ?, can_create_admins = ?
-    WHERE id = ?
-  `;
-
-  db.query(sql, [email, role, role === 1 ? (can_create_admins ? 1 : 0) : 0, userId], (err, result) => {
-    if (err) return res.status(500).json({ message: 'Update failed', error: err.message });
+  const sql = 'UPDATE users SET email = ?, role = ? WHERE id = ?';
+  db.query(sql, [email, role, userId], (err, result) => {
+    if (err) {
+      console.error('Error updating user credentials:', err);
+      return res.status(500).json({ message: 'Update failed', error: err.message });
+    }
     if (result.affectedRows === 0) return res.status(404).json({ message: 'User not found' });
 
     res.json({ message: 'User updated successfully' });
@@ -975,68 +954,72 @@ app.get('/api/my/requests/:id/download', verifyToken, checkRoles([3]), (req, res
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 // Use multer memory storage for upload
-const uploadDoc = multer({ storage: multer.memoryStorage() });
+// Use multer memory storage for multiple file upload
+const uploadDocMultiple = multer({ storage: multer.memoryStorage() }).array('files', 5); // allow max 5 files
 
-app.post('/api/document_request', verifyToken, checkRoles([3]), uploadDoc.single('file'), (req, res) => {
-  const { name, document_type } = req.body; // <-- add document_type
-  const userId = req.user.id;
+app.post('/api/document_request', verifyToken, checkRoles([3]), (req, res) => {
+  uploadDocMultiple(req, res, async (err) => {
+    if (err) return res.status(500).json({ error: 'File upload failed', details: err.message });
 
-  if (!name || !document_type) {
-    return res.status(400).json({ error: 'Name and document_type are required' });
-  }
+    const { name, document_type } = req.body;
+    const userId = req.user.id;
 
-  let filePath = null;
-
-  if (req.file) {
-    const uploadsDir = path.join(__dirname, 'uploads');
-    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
-
-    const filename = Date.now() + '-' + req.file.originalname;
-    const fullPath = path.join(uploadsDir, filename);
-
-    try {
-      fs.writeFileSync(fullPath, req.file.buffer);
-      filePath = 'uploads/' + filename;
-    } catch (err) {
-      console.error('Failed to save file:', err);
-      return res.status(500).json({ error: 'Failed to save file' });
+    if (!name || !document_type) {
+      return res.status(400).json({ error: 'Name and document_type are required' });
     }
-  }
 
-  const sql = 'INSERT INTO document_request (name, document_type, file_path, user_id) VALUES (?, ?, ?, ?)';
-  db.query(sql, [name, document_type, filePath, userId], async (err, result) => {
-  if (err) {
-    console.error('Database error:', err);
-    return res.status(500).json({ error: 'Database insert failed' });
-  }
+    let savedFiles = [];
 
-  const requestId = result.insertId;
+    if (req.files && req.files.length > 0) {
+      const uploadsDir = path.join(__dirname, 'uploads');
+      if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 
-  // Send "pending" email to user
-  try {
-    const userEmailResults = await new Promise((resolve, reject) => {
-      db.query('SELECT email FROM users WHERE id = ?', [userId], (err, results) => {
-        if (err) return reject(err);
-        resolve(results);
+      req.files.forEach(file => {
+        const filename = Date.now() + '-' + file.originalname;
+        const fullPath = path.join(uploadsDir, filename);
+        try {
+          fs.writeFileSync(fullPath, file.buffer);
+          savedFiles.push('uploads/' + filename);
+        } catch (err) {
+          console.error('Failed to save file:', err);
+        }
+      });
+    }
+
+    const filePathString = savedFiles.join(','); // save all files in 1 column
+
+    const sql = 'INSERT INTO document_request (name, document_type, file_path, user_id) VALUES (?, ?, ?, ?)';
+    db.query(sql, [name, document_type, filePathString, userId], async (err, result) => {
+      if (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({ error: 'Database insert failed' });
+      }
+
+      const requestId = result.insertId;
+
+      // Send "pending" email to user
+      try {
+        const userEmailResults = await new Promise((resolve, reject) => {
+          db.query('SELECT email FROM users WHERE id = ?', [userId], (err, results) => {
+            if (err) return reject(err);
+            resolve(results);
+          });
+        });
+
+        if (userEmailResults.length > 0 && userEmailResults[0].email) {
+          await sendRequestStatusEmail(userEmailResults[0].email, 'pending', null, document_type);
+        }
+      } catch (emailErr) {
+        console.error('Failed to send pending email:', emailErr);
+      }
+
+      res.status(201).json({
+        message: 'Document request submitted successfully',
+        requestId,
+        filePath: filePathString
       });
     });
-
-    if (userEmailResults.length > 0 && userEmailResults[0].email) {
-      await sendRequestStatusEmail(userEmailResults[0].email, 'pending', null, document_type);
-    }
-  } catch (emailErr) {
-    console.error('Failed to send pending email:', emailErr);
-  }
-
-    // Respond with success
-  res.status(201).json({
-    message: 'Document request submitted successfully',
-    requestId,
-    filePath
   });
-});
-
-
 });
 
 

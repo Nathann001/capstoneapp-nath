@@ -1,0 +1,273 @@
+/* Container layout */
+.editor-preview-container {
+  display: flex;
+  gap: 2rem;
+  padding: 1rem;
+  min-height: 80vh;
+}
+
+.form-panel {
+  flex: 0 0 400px;
+  padding: 1.5rem;
+  background: #d7d8d8;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #eaeaea;
+}
+
+.form-panel h2 {
+  text-align: center;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background-color: #f8fafc;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+}
+
+.error {
+  color: #e53e3e;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+/* Buttons */
+.button-group {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.btn {
+  flex: 1;
+  padding: 0.75rem 1.25rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.btn.secondary {
+  background: #f7fafc;
+  color: #4a5568;
+  border: 1px solid #cbd5e0;
+}
+
+.btn.secondary:hover {
+  background: #ebf8ff;
+}
+
+.btn-req {
+  background-color: #3BE2FF;
+  color: #fff;
+}
+
+/* Certificate Preview Panel */
+.preview-panel {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Certificate (letter size, landscape) */
+.certificate {
+  width: 11in !important;
+  height: 8.5in !important;
+  background-size: cover;
+  background-position: center;
+  border: 1px solid #ccc;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75in; 
+  position: relative;
+  font-family: "Lato", sans-serif;
+  color: #000;
+  box-sizing: border-box;
+}
+
+/* Inner content */
+.certificate-content {
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Logo at the top */
+.cert-logo {
+  width: 120px;
+  margin: 0 auto 1rem auto;
+}
+
+/* Main headings */
+.certificate h1 {
+  font-size: 48px;
+  font-family: "Noto Serif", serif;
+  font-optical-sizing: auto;
+  font-weight: bold;
+  font-style: normal;
+  font-variation-settings:"wdth" 100;
+  margin: 0.5rem 0 0 0;
+}
+
+.certificate h2 {
+  font-size: 36px;
+  font-family: "Noto Serif", serif;
+  font-optical-sizing: auto;
+  font-weight: bold;
+  font-style: normal;
+  font-variation-settings:"wdth" 100;
+  color: #0355a1;
+  margin: 0.5rem 0 1rem 0;
+}
+
+.certificate h3 {
+  font-size: 22px;
+  color: #fff;
+  background-color: #7e48c5;
+  width: 55%;
+  margin: 0.5rem auto 1rem auto;
+  padding: 10px 0;
+  border-radius: 20px;
+  font-family: "Noto Serif", serif;
+  font-optical-sizing: auto;
+  font-weight: bold;
+  font-style: normal;
+  font-variation-settings:"wdth" 100;
+}
+
+/* Certificate text */
+.certificate-text {
+  line-height: 1.5;
+  font-family: "Lato", sans-serif;
+  font-style: normal;
+  font-weight: bold;
+}
+
+/* Issuance details */
+.issuance {
+  font-weight: bold;
+  margin-top: 1rem;
+}
+
+.iss-date {
+  color: #005bb0;
+}
+
+/* Signature section */
+.signatures {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 2rem;
+}
+
+.signature {
+  text-align: center;
+}
+
+.signature-line {
+  border-top: 1px solid #000;
+  width: 200px;
+  margin: 0 auto 5px;
+}
+
+.sig-names {
+  text-transform: uppercase;
+  font-family: "Noto Serif", serif !important;
+  font-optical-sizing: auto !important;
+  font-weight: bold;
+  font-style: normal;
+  font-variation-settings:"wdth" 100 !important;
+  color: #001b6b;
+  font-size: 18px;
+}
+
+.sig-roles {
+  font-weight: bold;
+}
+
+/* Popup modal adjustments for html2canvas */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.popup-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 95vw;
+  max-height: 95vh;
+  overflow: auto;
+}
+
+.popup-overlay .certificate {
+  width: 11in;
+  height: 8.5in;
+  transform: scale(1);
+  transform-origin: center center;
+  margin: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .editor-preview-container {
+    flex-direction: column;
+  }
+  
+  .form-panel {
+    width: 100%;
+  }
+  
+  .preview-panel {
+    width: 100%;
+  }
+  
+  .button-group {
+    flex-direction: column;
+  }
+  
+  .btn {
+    width: 100%;
+  }
+}

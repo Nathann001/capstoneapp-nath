@@ -1,72 +1,103 @@
 <div class="account-container">
   <div class="profile-settings" style="margin-top:20px">
 
-    <!-- User Profile Image -->
-    <img *ngIf="imageUrl" [src]="imageUrl" alt="User Image"
-      style="width: 20%; height: 20%; object-fit: cover; margin-bottom:-60px; border-radius: 50%; border: 5px solid rgb(88, 88, 88);">
-
-    <div class="profile-picture">
-      <div style="margin-top: 20px; margin-left: 130px;">
-        <input type="file" accept="image/*" (change)="onFileSelected($event)" hidden #fileInput />
-        <button class="ImportB" type="button" (click)="fileInput.click()">Change Image</button>
-      </div>
-    </div>
-
-    <!-- Display Mode -->
+    <!-- DISPLAY MODE -->
     <ng-container *ngIf="!editMode; else editTemplate">
+
       <div class="section" style="margin-top:40px">
-        <label>Username</label>
-        <p>{{ profileForm.get('username')?.value }}</p>
+        <label>First Name:</label>
+        <p>{{ profileForm.get('firstName')?.value }}</p>
       </div>
 
       <div class="section">
-        <label>Contact Email</label>
+        <label>Middle Name:</label>
+        <p>{{ profileForm.get('middleName')?.value }}</p>
+      </div>
+
+      <div class="section">
+        <label>Last Name:</label>
+        <p>{{ profileForm.get('lastName')?.value }}</p>
+      </div>
+
+      <div class="section">
+        <label>Address:</label>
+        <p>{{ profileForm.get('address')?.value }}</p>
+      </div>
+
+      <div class="section">
+        <label>Contact Number:</label>
+        <p>{{ profileForm.get('contactNo')?.value }}</p>
+      </div>
+
+      <div class="section">
+        <label>Email:</label>
         <p>{{ profileForm.get('email')?.value }}</p>
-      </div>
-
-      <div class="section">
-        <label>Role</label>
-        <p>{{ profileForm.get('role')?.value }}</p>
       </div>
 
       <div class="section" style="margin-top:60px">
         <button type="button" class="save" (click)="toggleEdit()" style="margin-right: 10px;">
           Edit Profile
         </button>
-        <button type="button" class="danger" (click)="deleteAccount()">Delete my account</button>
-      </div>
-  
-      <div class="section" >
-        <div class="row">       
-          <button type="button" class="LogoutB" (click)="logout()">Log out</button>
-        </div>
+
+        <button type="button" class="danger" (click)="deleteAccount()">
+          Delete my account
+        </button>
       </div>
 
-      
+      <div class="section">
+        <button type="button" class="LogoutB" (click)="logout()">Log out</button>
+      </div>
+
     </ng-container>
 
-    <!-- Edit Mode -->
+
+    <!-- EDIT MODE -->
     <ng-template #editTemplate>
       <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" style="margin-top:20px">
+
         <div class="section">
-          <label>Username</label>
-          <input type="text" formControlName="username" />
+          <label>First Name:</label>
+          <input type="text" formControlName="firstName" />
         </div>
 
         <div class="section">
-          <label>Contact Email</label>
-          <input type="email" formControlName="email" />
+          <label>Middle Name:</label>
+          <input type="text" formControlName="middleName" />
         </div>
 
         <div class="section">
-          <label>New Password</label>
+          <label>Last Name:</label>
+          <input type="text" formControlName="lastName" />
+        </div>
+
+        <div class="section">
+          <label>Address:</label>
+          <input type="text" formControlName="address" />
+        </div>
+
+        <div class="section">
+          <label>Contact Number:</label>
+          <input type="text" formControlName="contactNo" />
+        </div>
+
+        <!-- EMAIL is READ-ONLY (matches TypeScript) -->
+        <div class="section">
+          <label>Email:</label>
+          <input type="email" formControlName="email" readonly />
+        </div>
+
+        <div class="section">
+          <label>New Password:</label>
           <input type="password" formControlName="newPassword" placeholder="Enter new password" />
         </div>
 
         <div class="section" style="margin-top:60px">
-          <button type="submit" class="save" [disabled]="profileForm.invalid">Save Changes</button>
+          <!-- remove invalid blocking during testing -->
+          <button type="submit" class="save">Save Changes</button>
+
           <button type="button" class="danger" (click)="cancelEdit()">Cancel</button>
         </div>
+
       </form>
     </ng-template>
 

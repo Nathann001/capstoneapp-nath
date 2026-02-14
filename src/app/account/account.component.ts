@@ -1,9 +1,16 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+
+interface UserDetails {
+  User_FName: string;
+  User_MName: string;
+  User_LName: string;
+  User_Address: string;
+  User_ContactNo: string;
+}
 
 @Component({
   selector: 'app-account',
@@ -15,7 +22,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 export class AccountComponent implements OnInit {
   profileForm: FormGroup;
   editMode = false;
-  imageUrl: string | null = null;
+
   selectedFile: File | null = null;
 
   constructor(
@@ -24,122 +31,142 @@ export class AccountComponent implements OnInit {
     private http: HttpClient
   ) {
     this.profileForm = this.fb.group({
-      username: [{ value: '', disabled: true }, Validators.required],
       email: [{ value: '', disabled: true }, [Validators.required, Validators.email]],
-      role: [{ value: '', disabled: true }],
-      newPassword: ['']
+      firstName: [{ value: '', disabled: true }],
+      middleName: [{ value: '', disabled: true }],
+      lastName: [{ value: '', disabled: true }],
+      address: [{ value: '', disabled: true }],
+      contactNo: [{ value: '', disabled: true }],
+      newPassword: [{ value: '', disabled: true }]
     });
   }
 
-  ngOnInit() {
-    this.loadUserInfo();
+  ngOnInit(): void {
+    this.loadAccountData();
   }
 
-  loadUserInfo() {
-    const storedUser = localStorage.getItem('user');
-    if (!storedUser) {
+  // 🔹 Load account data
+  loadAccountData(): void {
+    const token = localStorage.getItem('token');
+    if (!token) {
       this.router.navigate(['/login']);
       return;
     }
 
-    try {
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+    // Load email from localStorage
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
       const user = JSON.parse(storedUser);
       this.profileForm.patchValue({
-        username: user.username ?? '',
-        email: user.email ?? '',
-        role: user.role ?? ''
+        email: user.email ?? ''
       });
-
-      // Use Cloudinary/full URLs directly (no hardcoded backend path)
-      this.imageUrl = user.image ?? null;
-    } catch (error) {
-      console.error('Error parsing user data:', error);
-      this.router.navigate(['/login']);
     }
+
+    // Load user details from DB
+    this.http.get<UserDetails>('http://localhost:4000/api/user/details', { headers })
+      .subscribe({
+        next: (details) => {
+          this.profileForm.patchValue({
+            firstName: details.User_FName ?? '',
+            middleName: details.User_MName ?? '',
+            lastName: details.User_LName ?? '',
+            address: details.User_Address ?? '',
+            contactNo: details.User_ContactNo ?? ''
+          });
+        },
+        error: () => {
+          console.warn('No user details found.');
+        }
+      });
   }
 
-  toggleEdit() {
-    this.editMode = !this.editMode;
-    ['username', 'email'].forEach(control => {
-      const formControl = this.profileForm.get(control);
-      if (this.editMode) formControl?.enable();
-      else formControl?.disable();
+  // 🔹 Enable edit mode
+  toggleEdit(): void {
+    this.editMode = true;
+
+    const editableFields = [
+      'firstName',
+      'middleName',
+      'lastName',
+      'address',
+      'contactNo',
+      'newPassword'
+    ];
+
+    editableFields.forEach(field => {
+      this.profileForm.get(field)?.enable();
+    });
+  }
+
+  // 🔹 Cancel editing
+  cancelEdit(): void {
+    this.editMode = false;
+
+    Object.keys(this.profileForm.controls).forEach(key => {
+      this.profileForm.get(key)?.disable();
     });
 
-    if (this.editMode) {
-      this.profileForm.get('newPassword')?.enable();
-    } else {
-      this.profileForm.get('newPassword')?.disable();
-    }
+    this.loadAccountData();
   }
 
-  onFileSelected(event: Event) {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (file) {
-      this.selectedFile = file;
-      const reader = new FileReader();
-      reader.onload = () => this.imageUrl = reader.result as string;
-      reader.readAsDataURL(file);
-    }
-  }
-
-  logout() {
+  // 🔹 Logout
+  logout(): void {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     this.router.navigate(['/login']);
   }
 
-  saveProfile() {
+  // 🔹 Save profile
+  saveProfile(): void {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+
+  const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+  const body = {
+    firstName: this.profileForm.get('firstName')?.value,
+    middleName: this.profileForm.get('middleName')?.value,
+    lastName: this.profileForm.get('lastName')?.value,
+    address: this.profileForm.get('address')?.value,
+    contactNo: this.profileForm.get('contactNo')?.value
+  };
+
+  // 🔹 MUST be POST (not PUT)
+  this.http.post('http://localhost:4000/api/user/details', body, { headers })
+    .subscribe({
+      next: () => {
+        alert('Profile details updated successfully!');
+        this.editMode = false;
+        this.loadAccountData();
+      },
+      error: (err) => {
+        console.error('Failed to update user details:', err);
+        alert('Failed to update profile details.');
+      }
+    });
+}
+
+  // 🔹 Delete account
+  deleteAccount(): void {
+    const confirmDelete = confirm('Are you sure you want to delete your account?');
+    if (!confirmDelete) return;
+
     const token = localStorage.getItem('token');
     if (!token) return;
 
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-    const formData = new FormData();
 
-    formData.append('username', this.profileForm.get('username')?.value);
-    formData.append('email', this.profileForm.get('email')?.value);
-
-    if (this.profileForm.get('newPassword')?.value) {
-      formData.append('newPassword', this.profileForm.get('newPassword')?.value);
-    }
-
-    if (this.selectedFile) {
-      formData.append('image', this.selectedFile);
-    }
-
-    this.http.put('https://its-certificate-generator.onrender.com/api/auth/update', formData, { headers }).subscribe({
-      next: (res: any) => {
-        console.log('Profile updated successfully!');
-        if (res.user) localStorage.setItem('user', JSON.stringify(res.user));
-        this.editMode = false;
-        this.loadUserInfo();
-      },
-      error: (err) => {
-        console.error('Failed to update profile:', err);
-        console.log('Failed to update profile.');
-      }
-    });
-  }
-
-  cancelEdit() {
-    this.editMode = false;
-    this.loadUserInfo();
-  }
-
-  deleteAccount() {
-    const token = localStorage.getItem('token');
-    if (!token) return console.log('No active session found. Please log in again.');
-
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-    this.http.delete('https://its-certificate-generator.onrender.com/api/user/delete', { headers }).subscribe({
-      next: () => {
-        console.log('Your account has been deleted.');
-        this.logout();
-      },
-      error: (err) => {
-        console.error('Error deleting account:', err);
-        console.log('Failed to delete account.');
-      }
-    });
+    this.http.delete('https://its-certificate-generator.onrender.com/api/user/delete', { headers })
+      .subscribe({
+        next: () => {
+          alert('Account deleted.');
+          this.logout();
+        },
+        error: () => {
+          alert('Failed to delete account.');
+        }
+      });
   }
 }

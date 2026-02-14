@@ -16,16 +16,22 @@
     <p><strong>Requested At:</strong> {{ request.date_created | date:'medium' }}</p>
     <p *ngIf="request.updated_at"><strong>Last Updated:</strong> {{ request.updated_at | date:'medium' }}</p>
 
-    <div *ngIf="request.file_path">
-  <p><strong>File:</strong></p>
-  <a [href]="request.fullFileUrl" target="_blank" class="text-blue-600 hover:underline">
-    {{ request.file_path }}
-  </a>
-  <div class="mt-4">
-    <img *ngIf="request.file_path.endsWith('.png') || request.file_path.endsWith('.jpg') || request.file_path.endsWith('.jpeg')"
-         [src]="request.fullFileUrl"
-         alt="Document File"
-         class="max-w-full border rounded" />
+    <div *ngIf="request.fileUrls?.length">
+  <p><strong>Files:</strong></p>
+
+  <div *ngFor="let file of request.fileUrls" class="mb-4">
+    <!-- Clickable link -->
+    <a [href]="file" target="_blank" class="text-blue-600 hover:underline">
+      Open file
+    </a>
+
+    <!-- Image preview -->
+    <div class="mt-2">
+      <img *ngIf="file.endsWith('.png') || file.endsWith('.jpg') || file.endsWith('.jpeg')"
+           [src]="file"
+           alt="Document File"
+           class="max-w-full border rounded" />
+    </div>
   </div>
 </div>
 

@@ -49,26 +49,33 @@ export class RequestDetailComponent implements OnInit {
   }
 
   fetchRequestDetail() {
-    this.loading = true;
-    const token = localStorage.getItem('token');
+  this.loading = true;
+  const token = localStorage.getItem('token');
 
-    this.http.get<any>(`${this.backendUrl}/api/document_request/${this.requestId}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    }).subscribe({
-      next: (data) => {
-        this.request = data;
-        if (this.request?.file_path) {
-          this.request.fullFileUrl = `${this.backendUrl}/${this.request.file_path}`;
-        }
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Failed to load document request:', err);
-        this.errorMessage = 'Failed to load document request.';
-        this.loading = false;
+  this.http.get<any>(`${this.backendUrl}/api/document_request/${this.requestId}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  }).subscribe({
+    next: (data) => {
+      this.request = data;
+
+      // 🔥 IMPORTANT: split multiple files
+      if (this.request?.file_path) {
+        this.request.fileUrls = this.request.file_path
+          .split(',')
+          .map((p: string) => `${this.backendUrl}/${p.trim()}`);
+      } else {
+        this.request.fileUrls = [];
       }
-    });
-  }
+
+      this.loading = false;
+    },
+    error: (err) => {
+      console.error('Failed to load document request:', err);
+      this.errorMessage = 'Failed to load document request.';
+      this.loading = false;
+    }
+  });
+}
 
   processRequest() {
   let headers: HttpHeaders;

@@ -12,7 +12,8 @@ import { CommonModule } from '@angular/common';
 })
 export class BirthComponent {
   documentForm: FormGroup;
-  selectedFile: File | null = null;
+  file1: File | null = null;
+  file2: File | null = null;
 
   constructor(private fb: FormBuilder, private http: HttpClient) {
     this.documentForm = this.fb.group({
@@ -26,9 +27,13 @@ export class BirthComponent {
     return this.documentForm.controls;
   }
 
-  onFileSelected(event: any) {
+  onFileSelected(event: any, fileNumber: number) {
     if (event.target.files.length > 0) {
-      this.selectedFile = event.target.files[0];
+      if (fileNumber === 1) {
+        this.file1 = event.target.files[0];
+      } else if (fileNumber === 2) {
+        this.file2 = event.target.files[0];
+      }
     }
   }
 
@@ -38,31 +43,32 @@ export class BirthComponent {
       return;
     }
 
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token'); // get token from localStorage
     if (!token) {
-      alert('You are not logged in. Please log in first.');
+      alert('You are not logged in!');
       return;
-    }
-
-    const formData = new FormData();
-    formData.append('name', this.documentForm.value.name);
-    formData.append('document_type', this.documentType);
-    if (this.selectedFile) {
-      formData.append('file', this.selectedFile, this.selectedFile.name);
     }
 
     const headers = new HttpHeaders({
       Authorization: `Bearer ${token}`
     });
 
+    const formData = new FormData();
+    formData.append('name', this.documentForm.value.name);
+    formData.append('document_type', this.documentType);
+
+    if (this.file1) formData.append('files', this.file1, this.file1.name);
+    if (this.file2) formData.append('files', this.file2, this.file2.name);
+
     this.http.post('http://localhost:4000/api/document_request', formData, { headers })
       .subscribe({
         next: (res: any) => {
-          alert('Document request submitted successfully! Request ID: ' + res.id);
+          alert('Document request submitted successfully! Request ID: ' + res.requestId);
           this.documentForm.reset();
-          this.selectedFile = null;
+          this.file1 = null;
+          this.file2 = null;
         },
-        error: err => {
+        error: (err: any) => {
           if (err.status === 401) {
             alert('Unauthorized! Please log in again.');
           } else {

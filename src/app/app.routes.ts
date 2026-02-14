@@ -16,6 +16,8 @@ import { AdminComponent } from './admin/admin.component';
 import { MyRequestsComponent } from './my-requests/my-requests.component';
 import { authGuard } from './auth.guard';
 import { ArchivesComponent } from './archives/archives.component';
+import { DeathComponent } from './certificate_types/death/death.component';
+import { MarriageComponent } from './certificate_types/marriage/marriage.component';
 
 export const routes: Routes = [
     { path: '', component: HomeComponentComponent },
@@ -39,5 +41,7 @@ export const routes: Routes = [
     { path: 'process-request/:id', component: ProcessRequestComponent, canActivate: [authGuard] },
     { path: 'admin', component: AdminComponent, canActivate: [authGuard] },
     { path: 'my-requests', component: MyRequestsComponent, canActivate: [authGuard] },
-    { path: 'archives', component: ArchivesComponent }
+    { path: 'archives', component: ArchivesComponent },
+    { path: 'death', component: DeathComponent },
+    { path: 'marriage', component: MarriageComponent }
 ];
