@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { HomeComponentComponent } from './home-component/home-component.component';
+import { HomeComponent } from './home-component/home-component.component'; 
 import { CertificateDownloadComponent } from './certficate-download/certficate-download.component';
 import { RegisterComponent } from './register/register.component';
 import { BirthComponent } from './certificate_types/birth/birth.component';
@@ -16,11 +16,19 @@ import { AdminComponent } from './admin/admin.component';
 import { MyRequestsComponent } from './my-requests/my-requests.component';
 import { authGuard } from './auth.guard';
 import { ArchivesComponent } from './archives/archives.component';
+import { DocumentsComponent } from './documents/documents.component';
+import { DelayedRegistrationOfBirthComponent } from './delayed-registration-of-birth/delayed-registration-of-birth.component';
+import { DelayedRegistrationOfMarriageComponent } from './delayed-registration-of-marriage/delayed-registration-of-marriage.component';
+import { DelayedRegistrationOfDeathComponent } from './delayed-registration-of-death/delayed-registration-of-death.component';
+import { RegistrationOfBirthOnTimeComponent } from './registration-of-birth-on-time/registration-of-birth-on-time.component';
+import { RegistrationOfDeathOnTimeComponent } from './registration-of-death-on-time/registration-of-death-on-time.component';
+import { RegistrationOfMarriageOnTimeComponent } from './registration-of-marriage-on-time/registration-of-marriage-on-time.component';
+import { IssuanceOfCertifiedCopyOfBirthOthersComponent } from './issuance-of-certified-copy-of-birth-others/issuance-of-certified-copy-of-birth-others.component';
+import { IssuanceOfMarriedLicenseComponent } from './issuance-of-married-license/issuance-of-married-license.component';
 import { DeathComponent } from './certificate_types/death/death.component';
 import { MarriageComponent } from './certificate_types/marriage/marriage.component';
-
 export const routes: Routes = [
-    { path: '', component: HomeComponentComponent },
+    { path: '', component: HomeComponent }, 
     {
       path: 'login',
       loadComponent: () => import('./login/login.component').then(m => m.LoginComponent)
@@ -42,6 +50,16 @@ export const routes: Routes = [
     { path: 'admin', component: AdminComponent, canActivate: [authGuard] },
     { path: 'my-requests', component: MyRequestsComponent, canActivate: [authGuard] },
     { path: 'archives', component: ArchivesComponent },
+    { path: 'documents', component: DocumentsComponent },
+    { path: 'delayed-registration-of-birth', component: DelayedRegistrationOfBirthComponent },
+    { path: 'delayed-registration-of-marriage', component: DelayedRegistrationOfMarriageComponent },
+    { path: 'delayed-registration-of-death', component: DelayedRegistrationOfDeathComponent },
+    { path: 'registration-of-birth-on-time', component: RegistrationOfBirthOnTimeComponent },
+    { path: 'registration-of-death-on-time', component: RegistrationOfDeathOnTimeComponent },
+    { path: 'registration-of-marriage-on-time', component: RegistrationOfMarriageOnTimeComponent },
+    { path: 'issuance-of-certified-copy-of-birth-others', component: IssuanceOfCertifiedCopyOfBirthOthersComponent },
+    { path: 'issuance-of-married-license', component: IssuanceOfMarriedLicenseComponent },
     { path: 'death', component: DeathComponent },
     { path: 'marriage', component: MarriageComponent }
+
 ];

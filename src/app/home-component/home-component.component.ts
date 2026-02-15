@@ -1,35 +1,56 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-home-component',
   standalone: true,
-  imports: [RouterModule, CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './home-component.component.html',
-  styleUrl: './home-component.component.css'
+  styleUrls: ['./home-component.component.css']
 })
-export class HomeComponentComponent implements OnInit {
-  @ViewChild('certificateContainer', { static: false }) certificateContainer!: ElementRef;
-  pendingCertificates: any[] = [];
-  certificates: any[] = [];
-  documentRequests: any[] = [];
+export class HomeComponent implements OnInit {
 
-  constructor(private http: HttpClient) {}
+  hotlines = [
+    {
+      name: '𝗔𝗻𝗴𝗲𝗹𝗲𝘀 𝗖𝗶𝘁𝘆 𝗣𝗼𝗹𝗶𝗰𝗲 𝗢𝗳𝗳𝗶𝗰𝗲',
+      numbers: ['0907-742-8000', '0908-377-0144'],
+      icon: 'fa-shield-halved'
+    },
+    {
+      name: '𝗕𝗙𝗣 – 𝗔𝗻𝗴𝗲𝗹𝗲𝘀 𝗖𝗶𝘁𝘆 𝗙𝗶𝗿𝗲 𝗦𝘁𝗮𝘁𝗶𝗼𝗻',
+      numbers: ['0995-822-3620', '0925-451-3550'],
+      icon: 'fa-fire-extinguisher'
+    },
+    {
+      name: '𝗔𝗖𝗗𝗥𝗥𝗠𝗢 (𝗗𝗶𝘀𝗮𝘀𝘁𝗲𝗿 𝗥𝗶𝘀𝗸 𝗥𝗲𝗱𝘂𝗰𝘁𝗶𝗼𝗻 & 𝗠𝗮𝗻𝗮𝗴𝗲𝗺𝗲𝗻𝘁)',
+      numbers: ['0917-851-9581', '0998-842-7746'],
+      landline: '045-322-7796',
+      messenger: 'https://www.facebook.com/DisasterReadyAngelesCity/',
+      icon: 'fa-triangle-exclamation'
+    },
+    {
+      name: '𝗖𝗶𝘁𝘆 𝗦𝗼𝗰𝗶𝗮𝗹 𝗪𝗲𝗹𝗳𝗮𝗿𝗲 𝗮𝗻𝗱 𝗗𝗲𝘃𝗲𝗹𝗼𝗽𝗺𝗲𝗻𝘁',
+      numbers: ['0966-350-7393'],
+      icon: 'fa-handshake'
+    },
+    {
+      name: '𝗘𝗻𝘃𝗶𝗿𝗼𝗻𝗺𝗲𝗻𝘁𝗮𝗹 𝗠𝗮𝗻𝗮𝗴𝗲𝗺𝗲𝗻𝘁 𝗦𝘆𝘀𝘁𝗲𝗺',
+      numbers: ['0950-312-1699'],
+      icon: 'fa-leaf'
+    },
+    {
+      name: '𝗗𝗲𝗻𝗴𝘂𝗲 𝗧𝗮𝘀𝗸 𝗙𝗼𝗿𝗰𝗲',
+      numbers: ['0933-928-8286'],
+      icon: 'fa-bug'
+    }
+  ];
 
-  ngOnInit() {
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
 
-    this.fetchDocumentRequests();
-  }
-
-  fetchDocumentRequests() {
-    this.http.get<any[]>('http://localhost:4000/api/document_request')
-      .subscribe({
-        next: (data) => {
-          this.documentRequests = data;
-        },
-        error: (err) => console.error('Failed to fetch document requests', err)
-      });
+  ngOnInit(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      console.log('Landing page loaded');
+    }
   }
 }

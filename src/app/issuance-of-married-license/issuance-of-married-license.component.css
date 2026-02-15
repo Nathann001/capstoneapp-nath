@@ -1,0 +1,498 @@
+/* =========================================
+   1. GLOBAL & APP LAYOUT
+   ========================================= */
+   * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Arial, sans-serif;
+  }
+  
+  .app-container {
+    display: flex;
+    min-height: 100vh;
+    position: relative;
+    background-color: #fff;
+  }
+  
+  /* MAIN CONTENT */
+  .landing-bg {
+    flex: 1;
+    position: relative;
+    background-color: #d3cdcd;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* =========================================
+     3. MAIN CONTENT & WATERMARK
+     ========================================= */
+  .landing-bg {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    position: relative;
+  }
+  
+  .landing-bg::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: url('/assets/images/angeles_city_logo.png');
+    background-size: 35%;
+    background-repeat: no-repeat;
+    background-position: center center;
+    opacity: 0.06;
+    z-index: 0;
+    pointer-events: none;
+  }
+  
+  /* =========================================
+     4. HEADER
+     ========================================= */
+  .landing-header {
+    text-align: center;
+    margin: 40px 0;
+    z-index: 10;
+  }
+  .page-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: #b30000;
+    letter-spacing: -0.5px;
+  }
+  
+  /* =========================================
+     5. CARDS & GRID
+     ========================================= */
+  .requirements-container {
+    flex: 1;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 60px 60px;
+  }
+  
+  .requirements-grid {
+    display: flex;
+    gap: 40px;
+    width: 100%;
+    max-width: 1100px;
+  }
+  
+  .card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+  }
+  
+  .card:hover { transform: translateY(-5px); }
+  
+  .preview-card { flex: 1.3; min-height: 480px; }
+  .list-card { flex: 1; min-height: 480px; }
+  
+  .card-header {
+    background: #f8f9fa;
+    padding: 18px 25px;
+    font-weight: 700;
+    color: #555;
+    font-size: 14px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .card-header i { color: #df5757; }
+  
+  .preview-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: #fafafa;
+    color: #999;
+  }
+  
+  .placeholder-icon {
+    font-size: 64px;
+    margin-bottom: 15px;
+    opacity: 0.2;
+  }
+  
+  /* =========================================
+     5. CARDS & GRID (FIXED FOR OVERSPILL)
+     ========================================= */
+  .requirements-container {
+    flex: 1;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 60px 20px;
+    overflow: hidden; /* Prevents the whole page from growing */
+  }
+  
+  .requirements-grid {
+    display: flex;
+    gap: 30px;
+    width: 100%;
+    max-width: 1100px;
+    /* This is the magic line: it keeps the cards from being too tall */
+    height: 55vh; 
+  }
+  
+  .card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+  }
+  
+  .preview-card { flex: 1.2; }
+  .list-card { flex: 1; }
+  
+  .card-header {
+    background: #f8f9fa;
+    padding: 18px 25px;
+    font-weight: 700;
+    color: #555;
+    font-size: 14px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0; /* Keeps header from squishing */
+  }
+  
+  /* =========================================
+     6. INTERNAL SCROLL AREA
+     ========================================= */
+  .list-scroll-area {
+    flex: 1;
+    overflow-y: auto; /* This makes the list scroll inside the card */
+    padding: 0 25px 20px 25px;
+  }
+  
+  /* Custom Scrollbar to look cleaner */
+  .list-scroll-area::-webkit-scrollbar {
+    width: 6px;
+  }
+  .list-scroll-area::-webkit-scrollbar-thumb {
+    background: #ddd;
+    border-radius: 10px;
+  }
+  
+  .requirements-list {
+    list-style: none;
+    margin: 0;
+  }
+  
+  .requirements-list li:not(.section-header) {
+    padding: 12px 0 12px 25px;
+    border-bottom: 1px solid #f0f0f0;
+    position: relative;
+    font-size: 14px;
+    color: #444;
+  }
+  
+  .requirements-list li:not(.section-header)::before {
+    content: "\f111";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    color: #df5757;
+    position: absolute;
+    left: 0;
+    top: 18px;
+    font-size: 6px;
+  }
+  
+  .section-header {
+    font-weight: 800;
+    font-size: 11px;
+    color: #b30000;
+    text-transform: uppercase;
+    background: #fff5f5;
+    padding: 8px 12px;
+    margin: 20px 0 10px;
+    border-radius: 4px;
+    border-left: 4px solid #b30000;
+    top: 0;
+    z-index: 5;
+  }
+  
+  /* Added info area at the bottom of the card */
+  .card-footer-info {
+    background: #fdfdfd;
+    padding: 15px 25px;
+    border-top: 1px solid #eee;
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  /* Remove bottom border from the last item in a group */
+  .requirements-list li:last-child {
+    border-bottom: none;
+  }
+  /* =========================================
+     7. BUTTONS & FOOTER
+     ========================================= */
+  .apply-button-wrapper {
+    margin-top: 40px;
+    z-index: 10;
+  }
+  
+  .modern-apply-btn {
+    background: linear-gradient(135deg, #df5757 0%, #b30000 100%);
+    color: white;
+    border: none;
+    padding: 18px 60px;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.3s ease;
+  }
+  
+  .modern-apply-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+  
+  
+  /* =========================================
+     FEE FOOTER STYLING
+     ========================================= */
+  .card-footer-info {
+    background: #fdfdfd;
+    padding: 15px 25px;
+    border-top: 1px solid #eee;
+    display: flex;
+    flex-direction: column; /* Stacks them slightly for better readability */
+    gap: 5px;
+    flex-shrink: 0;
+  }
+  
+  .fee-group {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #444;
+  }
+  
+  .fee-amount {
+    font-weight: 700;
+  }
+  
+  .fee-amount.highlight {
+    color: #b30000; /* Makes the higher fee stand out */
+  }
+  
+  .fee-label {
+    font-weight: 500;
+  }
+  .landing-footer {
+    padding: 30px;
+    font-size: 14px;
+    color: #666;
+    text-align: center;
+    background: #f9f9f9;
+    margin-top: auto;
+    border-top: 1px solid #eee;
+    z-index: 10;
+  }
+  
+  /* =========================================
+     8. RESPONSIVE MEDIA QUERIES
+     ========================================= */
+  
+  /* Tablets and Mobile (under 992px) */
+  @media (max-width: 992px) {
+    .requirements-grid {
+      flex-direction: column; /* Stack cards vertically */
+      height: auto; /* Allow content to grow naturally */
+    }
+  
+    .requirements-container {
+      padding: 0 20px 40px;
+      overflow: visible; /* Let the page scroll normally */
+    }
+  
+    .preview-card {
+      display: none; /* Often hidden on mobile to save space, or set min-height */
+    }
+  
+    .list-card {
+      min-height: 400px;
+    }
+  }
+  
+  /* Small Mobile (under 768px) */
+  @media (max-width: 768px) {
+    .app-container {
+      flex-direction: column; /* Move sidebar/content into a stack */
+    }
+  
+    /* 1. Transform Sidebar into a Bottom Nav Bar */
+    .sidebar {
+      width: 100%;
+      height: 70px;
+      flex-direction: row; /* Buttons side-by-side */
+      padding-top: 0;
+      position: fixed;
+      top: auto;
+      bottom: 0;
+      justify-content: space-around;
+      border-right: none;
+      border-top: 1px solid #ddd;
+    }
+  
+    .sidebar-logo {
+      display: none; /* Hide logo in the bottom nav to save space */
+    }
+  
+    .side-btn {
+      padding: 10px 0;
+      font-size: 11px;
+      gap: 4px;
+    }
+  
+    .side-btn i {
+      font-size: 18px;
+    }
+  
+    /* 2. Adjust Main Content Area */
+    .landing-bg {
+      padding-bottom: 80px; /* Space so content isn't hidden by bottom nav */
+    }
+  
+    .page-title {
+      font-size: 24px;
+      padding: 0 20px;
+    }
+  
+    .landing-header {
+      margin: 20px 0;
+    }
+  
+    /* 3. Button adjustments */
+    .modern-apply-btn {
+      width: 100%;
+      justify-content: center;
+      padding: 15px 30px;
+    }
+  
+    /* 4. Background Watermark adjustment */
+    .landing-bg::before {
+      background-size: 60%; /* Make watermark larger on mobile */
+    }
+  }
+  
+  /* =========================================
+     9. SPECIFIC MOBILE OPTIMIZATION (< 480px)
+     ========================================= */
+  @media (max-width: 480px) {
+    /* 1. Layout Adjustments */
+    .app-container {
+      display: block; /* Remove flex to avoid horizontal stretching issues */
+    }
+  
+    .landing-bg {
+      padding-bottom: 90px; /* Extra room for the bottom nav */
+    }
+  
+    /* 2. Header & Title */
+    .landing-header {
+      margin: 25px 0 15px;
+    }
+  
+    .header-logo {
+      width: 60px !important;
+    }
+  
+    .page-title {
+      font-size: 22px;
+      line-height: 1.2;
+      padding: 0 15px;
+    }
+  
+    /* 3. The Grid & Cards */
+    .requirements-container {
+      padding: 0 15px 30px; /* Reduced side padding for more screen real estate */
+    }
+  
+    .requirements-grid {
+      gap: 20px; /* Tighter gap between cards */
+    }
+    .list-card {
+      height: 450px; /* Fixed height to allow the internal scroll area to work */
+    }
+  
+    /* 4. Requirement List Styling */
+    .requirements-list li:not(.section-header) {
+      font-size: 13px; /* Slightly smaller text for mobile */
+      padding: 10px 0 10px 20px;
+    }
+  
+    /* 5. Sticky "Apply Now" Button */
+    .apply-button-wrapper {
+      margin-top: 25px;
+      width: 100%;
+    }
+  
+    .modern-apply-btn {
+      width: 100%;
+      padding: 16px;
+      font-size: 15px;
+      border-radius: 12px; /* Slightly less rounded for a modern app feel */
+      justify-content: center;
+    }
+  
+    /* 6. Mobile Bottom Navigation */
+    .sidebar {
+      position: fixed;
+      bottom: 0;
+      top: auto;
+      width: 100%;
+      height: 65px;
+      flex-direction: row;
+      padding-top: 0;
+      background: #ffffff;
+      box-shadow: 0 -4px 15px rgba(0,0,0,0.08);
+      border-right: none;
+      border-top: 1px solid #eee;
+    }
+  
+    .sidebar-logo {
+      display: none; /* Hide logo in bottom bar */
+    }
+  
+    .side-btn {
+      flex: 1; /* Each button takes equal width */
+      padding: 10px 0;
+      gap: 2px;
+    }
+  
+    .side-btn i {
+      font-size: 20px;
+    }
+  
+    .side-btn span {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }

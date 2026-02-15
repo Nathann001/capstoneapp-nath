@@ -6,7 +6,7 @@
     <h1 class="city-title">ANGELES CITY</h1>
 
     <!-- LOGO -->
-    <img src="/angeles_city_logo.png" alt="Angeles City Logo" class="logo" />
+    <img src="/assets/images/angeles_city_logo.png" alt="Angeles City Logo" class="logo" />
 
     <!-- WELCOME TEXT -->
     <p class="welcome-text">WELCOME ANGELEÑOS</p>
@@ -14,9 +14,6 @@
     <!-- LOGIN CARD -->
     <div class="login-container">
         <div class="login-box">
-<div *ngIf="loginError" class="text-yellow-300 mb-4 font-semibold">
-  {{ loginError }}
-</div>
 
             <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="form-box">
 
@@ -47,18 +44,19 @@
 
                 <p class="register-text">
                     Don't have an account?
-                    <a (click)="goToRegister()">Register</a>
+                    <a routerLink="/register" style="cursor:pointer;">Register</a>
                 </p>
 
-                <p>
+                 <p>
                   Not verified yet?
                   <a (click)="goToOtp()" style="cursor:pointer;">Go to OTP Verification</a>
                 </p>
-
-
 
             </form>
         </div>
     </div>
 
 </div>
+
+
+               

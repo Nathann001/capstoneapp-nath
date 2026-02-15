@@ -10,14 +10,14 @@
   },
   "private": true,
   "dependencies": {
-    "@angular/animations": "^18.2.0",
-    "@angular/common": "^18.2.0",
-    "@angular/compiler": "^18.2.0",
-    "@angular/core": "^18.2.0",
-    "@angular/forms": "^18.2.0",
-    "@angular/platform-browser": "^18.2.0",
-    "@angular/platform-browser-dynamic": "^18.2.0",
-    "@angular/router": "^18.2.0",
+    "@angular/animations": "^21.1.4",
+    "@angular/common": "^21.1.4",
+    "@angular/compiler": "^21.1.4",
+    "@angular/core": "^21.1.4",
+    "@angular/forms": "^21.1.4",
+    "@angular/platform-browser": "^21.1.4",
+    "@angular/platform-browser-dynamic": "^21.1.4",
+    "@angular/router": "^21.1.4",
     "@emailjs/browser": "^4.4.1",
     "@emailjs/nodejs": "^5.0.2",
     "@sendgrid/mail": "^8.1.6",
@@ -30,7 +30,7 @@
     "googleapis": "^160.0.0",
     "html2canvas": "^1.4.1",
     "jsonwebtoken": "^9.0.2",
-    "jspdf": "^3.0.2",
+    "jspdf": "^4.1.0",
     "mysql2": "^3.14.3",
     "ng2-pdf-viewer": "^10.4.0",
     "nodemailer": "^7.0.12",
@@ -40,9 +40,9 @@
     "zone.js": "~0.14.10"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^18.2.20",
-    "@angular/cli": "^18.2.20",
-    "@angular/compiler-cli": "^18.2.0",
+    "@angular-devkit/build-angular": "^21.1.4",
+    "@angular/cli": "^21.1.4",
+    "@angular/compiler-cli": "^21.1.4",
     "@types/jasmine": "~5.1.0",
     "autoprefixer": "^10.4.21",
     "jasmine-core": "~5.2.0",
@@ -53,6 +53,6 @@
     "karma-jasmine-html-reporter": "~2.1.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
-    "typescript": "~5.5.2"
+    "typescript": "^5.9.2"
   }
 }

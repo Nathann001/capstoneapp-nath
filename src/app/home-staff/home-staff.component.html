@@ -1,170 +1,156 @@
-<body class="bg-gray-200 min-h-screen p-8 font-sans">
+<div class="app-container">
+  <!-- ================== SIDEBAR ================== -->
+  <aside class="sidebar">
+    <!-- Sidebar content would go here -->
+  </aside>
 
-  <!-- ================== ROW 1 STAT CARDS ================== -->
-  <div class="flex items-center gap-4 mb-4">
-    <label class="font-semibold">Row 1:</label>
-    <select [(ngModel)]="selectedRow1" class="border px-2 py-1 rounded">
-      <option value="approved">Approved</option>
-      <option value="denied">Denied</option>
-      <option value="pending">Pending</option>
-      <option value="under_review">Under Review</option>
-    </select>
-  </div>
-
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-    <div class="bg-white p-6 rounded-lg shadow text-center">
-      <p class="text-gray-500 text-sm">{{ formatStatName(selectedRow1) }} Today</p>
-      <h2 class="text-3xl font-bold text-blue-700">{{ stats[selectedRow1].today }}</h2>
+  <!-- ================== MAIN CONTENT ================== -->
+  <div class="admin-container">
+    
+    <!-- ================== ROW 1 STAT CARDS ================== -->
+    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+      <label style="font-weight: 600;">Row 1:</label>
+      <select [(ngModel)]="selectedRow1" style="border: 1px solid #ddd; padding: 8px; border-radius: 4px;">
+        <option value="approved">Approved</option>
+        <option value="denied">Denied</option>
+        <option value="pending">Pending</option>
+        <option value="under_review">Under Review</option>
+      </select>
     </div>
-    <div class="bg-white p-6 rounded-lg shadow text-center">
-      <p class="text-gray-500 text-sm">{{ formatStatName(selectedRow1) }} This Week</p>
-      <h2 class="text-3xl font-bold text-green-700">{{ stats[selectedRow1].week }}</h2>
+
+    <div class="statistics">
+      <div class="stat-card">
+        <h4>{{ formatStatName(selectedRow1) }} Today</h4>
+        <p>{{ stats[selectedRow1].today }}</p>
+      </div>
+      <div class="stat-card">
+        <h4>{{ formatStatName(selectedRow1) }} This Week</h4>
+        <p>{{ stats[selectedRow1].week }}</p>
+      </div>
+      <div class="stat-card">
+        <h4>{{ formatStatName(selectedRow1) }} This Month</h4>
+        <p>{{ stats[selectedRow1].month }}</p>
+      </div>
     </div>
-    <div class="bg-white p-6 rounded-lg shadow text-center">
-      <p class="text-gray-500 text-sm">{{ formatStatName(selectedRow1) }} This Month</p>
-      <h2 class="text-3xl font-bold text-purple-700">{{ stats[selectedRow1].month }}</h2>
+
+    <!-- ================== ROW 2 STAT CARDS ================== -->
+    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+      <label style="font-weight: 600;">Row 2:</label>
+      <select [(ngModel)]="selectedRow2" style="border: 1px solid #ddd; padding: 8px; border-radius: 4px;">
+        <option value="approved">Approved</option>
+        <option value="denied">Denied</option>
+        <option value="pending">Pending</option>
+        <option value="under_review">Under Review</option>
+      </select>
     </div>
-  </div>
 
-  <!-- ================== ROW 2 STAT CARDS ================== -->
-  <div class="flex items-center gap-4 mb-4">
-    <label class="font-semibold">Row 2:</label>
-    <select [(ngModel)]="selectedRow2" class="border px-2 py-1 rounded">
-      <option value="approved">Approved</option>
-      <option value="denied">Denied</option>
-      <option value="pending">Pending</option>
-      <option value="under_review">Under Review</option>
-    </select>
-  </div>
-
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-    <div class="bg-white p-6 rounded-lg shadow text-center">
-      <p class="text-gray-500 text-sm">{{ formatStatName(selectedRow2) }} Today</p>
-      <h2 class="text-3xl font-bold text-blue-700">{{ stats[selectedRow2].today }}</h2>
+    <div class="statistics">
+      <div class="stat-card">
+        <h4>{{ formatStatName(selectedRow2) }} Today</h4>
+        <p>{{ stats[selectedRow2].today }}</p>
+      </div>
+      <div class="stat-card">
+        <h4>{{ formatStatName(selectedRow2) }} This Week</h4>
+        <p>{{ stats[selectedRow2].week }}</p>
+      </div>
+      <div class="stat-card">
+        <h4>{{ formatStatName(selectedRow2) }} This Month</h4>
+        <p>{{ stats[selectedRow2].month }}</p>
+      </div>
     </div>
-    <div class="bg-white p-6 rounded-lg shadow text-center">
-      <p class="text-gray-500 text-sm">{{ formatStatName(selectedRow2) }} This Week</p>
-      <h2 class="text-3xl font-bold text-green-700">{{ stats[selectedRow2].week }}</h2>
+
+    <!-- ================== DOCUMENT REQUESTS ================== -->
+    <div style="margin-bottom: 20px; margin-top: 30px;">
+      <h3 style="font-size: 24px; font-weight: bold; color: #2a5a8a; display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
+        <i class="fa-solid fa-file-lines"></i>
+        DOCUMENT REQUESTS
+      </h3>
     </div>
-    <div class="bg-white p-6 rounded-lg shadow text-center">
-      <p class="text-gray-500 text-sm">{{ formatStatName(selectedRow2) }} This Month</p>
-      <h2 class="text-3xl font-bold text-purple-700">{{ stats[selectedRow2].month }}</h2>
+
+    <!-- ================== PENDING TABLE ================== -->
+    <div class="card">
+      <h3 class="dashboard-title">Pending</h3>
+      <table class="records-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Requested At</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        
+        <tbody>
+          <tr *ngFor="let doc of pending"
+              style="cursor: pointer;"
+              (click)="viewRequestDetail(doc)">
+            <td>{{ doc.name }}</td>
+            <td>{{ doc.date_created | date:'medium' }}</td>
+            <td class="status-pending">{{ doc.status }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-  </div>
 
-  <!-- ================== DOCUMENT REQUESTS ================== -->
-  <div class="mb-8 mt-12">
-    <h3 class="text-3xl font-bold text-blue-800 flex items-center gap-2 mb-8">
-      <i class="fa-solid fa-file-lines"></i>
-      DOCUMENT REQUESTS
-    </h3>
-  </div>
-
-  <!-- ================== PENDING TABLE ================== -->
-  <div class="overflow-x-auto rounded-lg shadow-md mb-8">
-    <h3 class="text-2xl font-bold mb-4">Pending</h3>
-    <table class="min-w-full bg-white rounded-lg text-gray-800 text-sm">
-      <thead class="bg-green-200 text-green-900">
-        <tr>
-          <th class="py-3 px-4 text-left font-semibold">Name</th>
-          <th class="py-3 px-4 text-left font-semibold">Requested At</th>
-          <th class="py-3 px-4 text-left font-semibold">Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let doc of getPaginatedItems(pending, currentPage1)"
-            class="border-b hover:bg-green-50 transition cursor-pointer"
-            (click)="viewRequestDetail(doc)">
-          <td class="py-3 px-4">{{ doc.name }}</td>
-          <td class="py-3 px-4">{{ doc.date_created | date:'medium' }}</td>
-          <td class="py-3 px-4 capitalize">{{ doc.status }}</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <!-- Pagination -->
-    <div class="flex justify-end mt-2 gap-2">
-      <button *ngFor="let page of getTotalPages(pending)"
-              (click)="currentPage1 = page"
-              [class.bg-blue-500]="currentPage1 === page"
-              [class.text-white]="currentPage1 === page"
-              class="px-3 py-1 border rounded hover:bg-blue-200">
-        {{ page }}
-      </button>
+    <!-- ================== UNDER REVIEW TABLE ================== -->
+    <div class="card">
+      <h3 class="dashboard-title">In Process</h3>
+      <table class="records-table">
+        <thead>
+          <tr>
+            <th>Recipient</th>
+            <th>Requested At</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let doc of under_review"
+              style="cursor: pointer;"
+              (click)="viewInProcessDetail(doc)">
+            <td>{{ doc.name }}</td>
+            <td>{{ doc.updated_at | date:'medium' }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-  </div>
 
-  <!-- ================== UNDER REVIEW TABLE ================== -->
-  <div class="overflow-x-auto rounded-lg shadow-md mb-8">
-    <h3 class="text-2xl font-bold mb-4">In Process</h3>
-    <table class="min-w-full bg-white rounded-lg text-gray-800 text-sm">
-      <thead class="bg-yellow-200 text-yellow-900">
-        <tr>
-          <th class="py-3 px-4 text-left font-semibold">Recipient</th>
-          <th class="py-3 px-4 text-left font-semibold">Requested At</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let doc of getPaginatedItems(under_review, currentPage2)"
-            class="border-b hover:bg-yellow-50 transition cursor-pointer"
-            (click)="viewInProcessDetail(doc)">
-          <td class="py-3 px-4">{{ doc.name }}</td>
-          <td class="py-3 px-4">{{ doc.updated_at | date:'medium' }}</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <!-- Pagination -->
-    <div class="flex justify-end mt-2 gap-2">
-      <button *ngFor="let page of getTotalPages(under_review)"
-              (click)="currentPage2 = page"
-              [class.bg-blue-500]="currentPage2 === page"
-              [class.text-white]="currentPage2 === page"
-              class="px-3 py-1 border rounded hover:bg-blue-200">
-        {{ page }}
-      </button>
+    <!-- ================== APPROVED TABLE ================== -->
+    <div class="card">
+      <h3 class="dashboard-title">Processed</h3>
+      <table class="records-table">
+        <thead>
+          <tr>
+            <th>Recipient</th>
+            <th>Processed At</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let doc of approved"
+              style="cursor: pointer;"
+              (click)="viewInProcessDetail(doc)">
+            <td>{{ doc.name }}</td>
+            <td>{{ doc.updated_at | date:'medium' }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-  </div>
 
-  <!-- ================== APPROVED TABLE ================== -->
-  <div class="overflow-x-auto rounded-lg shadow-md mb-8">
-    <h3 class="text-2xl font-bold mb-4">Processed</h3>
-    <table class="min-w-full bg-white rounded-lg text-gray-800 text-sm">
-      <thead class="bg-blue-200 text-blue-900">
-        <tr>
-          <th class="py-3 px-4 text-left font-semibold">Recipient</th>
-          <th class="py-3 px-4 text-left font-semibold">Processed At</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let doc of approved"
-            class="border-b hover:bg-yellow-50 transition cursor-pointer"
-            (click)="viewInProcessDetail(doc)">
-          <td class="py-3 px-4">{{ doc.name }}</td>
-          <td class="py-3 px-4">{{ doc.updated_at | date:'medium' }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+    <!-- ================== DENIED TABLE ================== -->
+    <div class="card">
+      <h3 class="dashboard-title">Denied</h3>
+      <table class="records-table">
+        <thead>
+          <tr>
+            <th>Recipient</th>
+            <th>Denied At</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let doc of denied">
+            <td>{{ doc.name }}</td>
+            <td>{{ doc.updated_at | date:'medium' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-  <!-- ================== DENIED TABLE ================== -->
-  <div class="overflow-x-auto rounded-lg shadow-md mb-8">
-    <h3 class="text-2xl font-bold mb-4">Denied</h3>
-    <table class="min-w-full bg-white rounded-lg text-gray-800 text-sm">
-      <thead class="bg-red-200 text-red-900">
-        <tr>
-          <th class="py-3 px-4 text-left font-semibold">Recipient</th>
-          <th class="py-3 px-4 text-left font-semibold">Denied At</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let doc of denied"
-            class="border-b hover:bg-red-50 transition">
-          <td class="py-3 px-4">{{ doc.name }}</td>
-          <td class="py-3 px-4">{{ doc.updated_at | date:'medium' }}</td>
-        </tr>
-      </tbody>
-    </table>
   </div>
-
-</body>
+</div>

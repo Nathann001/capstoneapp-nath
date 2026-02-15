@@ -1,96 +1,113 @@
-<body class="bg-gray-200 min-h-screen p-8 font-sans">
+<div class="app-container">
+  <!-- ================== SIDEBAR ================== -->
+  <aside class="sidebar">
+    <!-- Sidebar content would go here -->
+  </aside>
 
-  <!-- ================== ROW 1 STAT CARDS ================== -->
-  <div class="flex items-center gap-4 mb-4">
-    <label class="font-semibold">Row 1:</label>
-    <select [(ngModel)]="selectedRow1" class="border px-2 py-1 rounded">
-      <option value="approved">Approved</option>
-      <option value="denied">Denied</option>
-      <option value="pending">Pending</option>
-      <option value="under_review">Under Review</option>
-    </select>
-  </div>
-
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-    <div class="bg-white p-6 rounded-lg shadow text-center">
-      <p class="text-gray-500 text-sm">{{ formatStatName(selectedRow1) }} Today</p>
-      <h2 class="text-3xl font-bold text-blue-700">{{ stats[selectedRow1].today }}</h2>
+  <!-- ================== MAIN CONTENT ================== -->
+  <div class="admin-container">
+    
+    <!-- ================== ROW 1 STAT CARDS ================== -->
+    <h2 class="dashboard-title">Statistics Dashboard</h2>
+    
+    <div class="flex items-center gap-4 mb-4">
+      <label class="font-semibold">Row 1:</label>
+      <select [(ngModel)]="selectedRow1" class="border px-2 py-1 rounded">
+        <option value="approved">Approved</option>
+        <option value="denied">Denied</option>
+        <option value="pending">Pending</option>
+        <option value="under_review">Under Review</option>
+      </select>
     </div>
-    <div class="bg-white p-6 rounded-lg shadow text-center">
-      <p class="text-gray-500 text-sm">{{ formatStatName(selectedRow1) }} This Week</p>
-      <h2 class="text-3xl font-bold text-green-700">{{ stats[selectedRow1].week }}</h2>
-    </div>
-    <div class="bg-white p-6 rounded-lg shadow text-center">
-      <p class="text-gray-500 text-sm">{{ formatStatName(selectedRow1) }} This Month</p>
-      <h2 class="text-3xl font-bold text-purple-700">{{ stats[selectedRow1].month }}</h2>
-    </div>
-  </div>
 
-  <!-- ================== ROW 2 STAT CARDS ================== -->
-  <div class="flex items-center gap-4 mb-4">
-    <label class="font-semibold">Row 2:</label>
-    <select [(ngModel)]="selectedRow2" class="border px-2 py-1 rounded">
-      <option value="approved">Approved</option>
-      <option value="denied">Denied</option>
-      <option value="pending">Pending</option>
-      <option value="under_review">Under Review</option>
-    </select>
-  </div>
-
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-    <div class="bg-white p-6 rounded-lg shadow text-center">
-      <p class="text-gray-500 text-sm">{{ formatStatName(selectedRow2) }} Today</p>
-      <h2 class="text-3xl font-bold text-blue-700">{{ stats[selectedRow2].today }}</h2>
+    <div class="statistics">
+      <div class="stat-card">
+        <h4>{{ formatStatName(selectedRow1) }} Today</h4>
+        <p>{{ stats[selectedRow1].today }}</p>
+      </div>
+      <div class="stat-card">
+        <h4>{{ formatStatName(selectedRow1) }} This Week</h4>
+        <p>{{ stats[selectedRow1].week }}</p>
+      </div>
+      <div class="stat-card">
+        <h4>{{ formatStatName(selectedRow1) }} This Month</h4>
+        <p>{{ stats[selectedRow1].month }}</p>
+      </div>
     </div>
-    <div class="bg-white p-6 rounded-lg shadow text-center">
-      <p class="text-gray-500 text-sm">{{ formatStatName(selectedRow2) }} This Week</p>
-      <h2 class="text-3xl font-bold text-green-700">{{ stats[selectedRow2].week }}</h2>
+
+    <!-- ================== ROW 2 STAT CARDS ================== -->
+    <div class="flex items-center gap-4 mb-4">
+      <label class="font-semibold">Row 2:</label>
+      <select [(ngModel)]="selectedRow2" class="border px-2 py-1 rounded">
+        <option value="approved">Approved</option>
+        <option value="denied">Denied</option>
+        <option value="pending">Pending</option>
+        <option value="under_review">Under Review</option>
+      </select>
     </div>
-    <div class="bg-white p-6 rounded-lg shadow text-center">
-      <p class="text-gray-500 text-sm">{{ formatStatName(selectedRow2) }} This Month</p>
-      <h2 class="text-3xl font-bold text-purple-700">{{ stats[selectedRow2].month }}</h2>
+
+    <div class="statistics">
+      <div class="stat-card">
+        <h4>{{ formatStatName(selectedRow2) }} Today</h4>
+        <p>{{ stats[selectedRow2].today }}</p>
+      </div>
+      <div class="stat-card">
+        <h4>{{ formatStatName(selectedRow2) }} This Week</h4>
+        <p>{{ stats[selectedRow2].week }}</p>
+      </div>
+      <div class="stat-card">
+        <h4>{{ formatStatName(selectedRow2) }} This Month</h4>
+        <p>{{ stats[selectedRow2].month }}</p>
+      </div>
     </div>
-  </div>
 
-<!-- ================== TABLES WITH PAGINATION ================== -->
-<div *ngFor="let row of rows" class="overflow-x-auto rounded-lg shadow-md mb-8">
-  <h3 class="text-2xl font-bold mb-4">{{ formatStatName(row === 1 ? selectedRow1 : selectedRow2) }}</h3>
-  <table class="min-w-full bg-white rounded-lg text-gray-800 text-sm">
-    <thead class="bg-gray-200 text-gray-900">
-      <tr>
-        <th class="py-3 px-4 text-left font-semibold">Name</th>
-        <th class="py-3 px-4 text-left font-semibold">Date</th>
-        <th class="py-3 px-4 text-left font-semibold">Status</th>
-      </tr>
-    </thead>
-    <tbody>
-  <tr *ngFor="let doc of getPaginatedItems(row)"
-      class="border-b hover:bg-gray-50 transition"
-      (click)="doc.status === 'under_review' ? viewInProcessDetail(doc) : viewRequestDetail(doc)">
-    <td class="py-3 px-4">{{ doc.name }}</td>
-    <td class="py-3 px-4">{{ doc.updated_at || doc.date_created | date:'medium' }}</td>
-    <td class="py-3 px-4 capitalize">{{ doc.status === 'under_review' ? 'Under Review' : doc.status }}</td>
-    <td class="py-3 px-4">
-      <button *ngIf="doc.archived === 0"
-              (click)="archiveRequest(doc, $event)"
-              class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600">
-        Archive
-      </button>
-      <span *ngIf="doc.archived === 1" class="text-gray-500 italic">Archived</span>
-    </td>
-  </tr>
-</tbody>
+    <!-- ================== TABLES WITH PAGINATION ================== -->
+    <div class="table-grid">
+      <div *ngFor="let row of rows" class="card">
+        <h3 class="dashboard-title">{{ formatStatName(row === 1 ? selectedRow1 : selectedRow2) }}</h3>
+        
+        <table class="records-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let doc of getPaginatedItems(row)"
+                (click)="doc.status === 'under_review' ? viewInProcessDetail(doc) : viewRequestDetail(doc)"
+                style="cursor: pointer;">
+              <td>{{ doc.name }}</td>
+              <td>{{ doc.updated_at || doc.date_created | date:'medium' }}</td>
+              <td class="status-{{ doc.status === 'under_review' ? 'pending' : doc.status }}">
+                {{ doc.status === 'under_review' ? 'Under Review' : doc.status }}
+              </td>
+              <td>
+                <button *ngIf="doc.archived === 0"
+                        (click)="archiveRequest(doc, $event)"
+                        class="btn pending">
+                  Archive
+                </button>
+                <span *ngIf="doc.archived === 1">Archived</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
 
-  </table>
+        <!-- Pagination -->
+        <div style="display: flex; justify-content: flex-end; margin-top: 15px; gap: 5px;">
+          <button *ngFor="let page of getTotalPages(row)"
+                  (click)="changePage(row, page)"
+                  [style.backgroundColor]="(row === 1 ? currentPage1 : currentPage2) === page ? '#2a7ca8' : 'white'"
+                  [style.color]="(row === 1 ? currentPage1 : currentPage2) === page ? 'white' : '#333'"
+                  style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">
+            {{ page }}
+          </button>
+        </div>
+      </div>
+    </div>
 
-  <!-- Pagination -->
-  <div class="flex justify-end mt-2 gap-2">
-    <button *ngFor="let page of getTotalPages(row)"
-            (click)="changePage(row, page)"
-            [class.bg-blue-500]="(row === 1 ? currentPage1 : currentPage2) === page"
-            [class.text-white]="(row === 1 ? currentPage1 : currentPage2) === page"
-            class="px-3 py-1 border rounded hover:bg-blue-200">
-      {{ page }}
-    </button>
   </div>
 </div>

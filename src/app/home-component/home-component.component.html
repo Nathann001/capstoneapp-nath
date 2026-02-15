@@ -1,41 +1,128 @@
-<body class="bg-gray-200 min-h-screen p-8 font-sans">
+<div class="app-container">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
-  <div class="mb-12 mt-4">
-    <h2 class="text-3xl font-bold text-blue-800 flex items-center gap-2 mb-8">
-      <i class="fa-solid fa-certificate"></i>
-      DOCUMENTS
-    </h2>
+  
 
-    <!-- Types of Certificates -->
-    <div class="flex gap-4 mt-4 justify-center">
-      <a  class="block w-64">
-        <div class="bg-white border rounded-lg shadow-md p-4 flex flex-col items-center hover:shadow-lg   transition cursor-pointer" routerLink="/birth" routerLinkActive="active">
-          <img src="assets/images/angeles_city_logo.png" alt="icon" class="h-24 mb-4" routerLink="/birth" routerLinkActive="active">
-          <p class="font-semibold text-center" routerLink="/birth" routerLinkActive="active">Certificate of Live Birth</p>
-        </div>
-      </a>
+  <!-- MAIN CONTENT -->
+  <main class="home-bg">
+    <!-- HEADER -->
+    <header class="home-header">
+      <h1>ANGELES CITY</h1>
+      <p class="subtitle">WELCOME ANGELEÑOS</p>
+    </header>
 
-      <a  class="block w-64">
-        <div class="bg-white border rounded-lg shadow-md p-4 flex flex-col items-center hover:shadow-lg   transition cursor-pointer" routerLink="/attendance" routerLinkActive="active">
-          <img src="assets/images/angeles_city_logo.png" alt="icon" class="h-24 mb-4">
-          <p class="font-semibold text-center" routerLink="/death" routerLinkActive="active">Death Certificate</p>
-        </div>
-      </a>
-
-      <a  class="block w-64">
-        <div class="bg-white border rounded-lg shadow-md p-4 flex flex-col items-center hover:shadow-lg   transition cursor-pointer" routerLink="/attendance" routerLinkActive="active">
-          <img src="assets/images/angeles_city_logo.png" alt="icon" class="h-24 mb-4">
-          <p class="font-semibold text-center" routerLink="/marriage" routerLinkActive="active">Marriage Certificate</p>
-        </div>
-      </a>
+    <!-- HERO BANNER -->
+    <div class="hero-banner">
+      <h2>DIGITAL SERVICES FOR EVERY ANGELEÑO</h2>
+      <p>Access city services anytime, anywhere.</p>
     </div>
 
-    <div class="flex justify-end">
-      <a>
-        <img src="assets/images/more.png" alt="icon" class="h-6 mt-4 cursor-pointer"  routerLink="/certificates" routerLinkActive="active">
-      </a>
+    <div class="dashboard-grid">
+      <!-- LATEST UPDATES -->
+      <div class="grid-column">
+        <div class="section-anchor red-pill">
+          <i class="fas fa-bullhorn"></i> Latest Updates
+        </div>
+
+        <div class="info-card">
+          <img src="/assets/images/announcement1.jpg" alt="PTRO Ops" />
+          <div class="card-content">
+            <h4>PTRO Conducts Proactive Operations for Safer Roads</h4>
+            <span class="date">January 12, 2026</span>
+            <p>Another proactive step by the City Government of Angeles through the PTRO to ensure safe, orderly, and compliant public transport for all Angeleños.</p>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <img src="/assets/images/community2.jpg" alt="Community News" />
+          <div class="card-content">
+            <span class="category-tag">Community</span>
+            <h4>Dog Impounding Operations in Brgy. Sto. Domingo</h4>
+            <span class="date">January 9, 2026</span>
+            <p>Led by the City Veterinary Office in support of responsible pet ownership and community safety initiatives.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- CITIZEN’S CHARTER -->
+      <div class="grid-column">
+        <div class="section-anchor red-pill">
+          <i class="fas fa-scroll"></i> Citizen’s Charter
+        </div>
+
+        <div class="charter-container">
+          <div class="white-block">
+            <h3>Vision Statement</h3>
+            <p>By 2028, Angeles City is the heart and haven of quality socio-economic services that are globally competitive and environment friendly.</p>
+
+            <h3>Mission Statement</h3>
+            <p>To achieve this vision, we commit to:</p>
+            <ul>
+              <li>Delivery of prompt, responsive, effective and efficient basic services.</li>
+              <li>Unified and concerted efforts for customer satisfaction.</li>
+              <li>Transparency and accountability in all reforms.</li>
+            </ul>
+          </div>
+
+          <div class="white-block registry">
+            <h3>Registration & Civil Documents</h3>
+            <div class="document-list">
+              <div class="doc-item"><span>Registration of Birth Certificate</span> <a href="/assets/documents/registration-of-birth-on-time.pdf">Download <i class="fas fa-download"></i></a></div>
+              <div class="doc-item"><span>Registration of Death Certificate</span> <a href="/assets/documents/registration-of-death-on-time.pdf">Download <i class="fas fa-download"></i></a></div>
+              <div class="doc-item"><span>Registration of Marriage Certificate</span> <a href="/assets/documents/registration-of-marriage-on-time.pdf">Download <i class="fas fa-download"></i></a></div>
+              <div class="doc-item"><span>Issuance of Certified True Copy of Birth, Marriage, Death and Other Registry Documents</span> <a href="/assets/documents/issuance-of-certified-copy-of-birth-others.pdf">Download <i class="fas fa-download"></i></a></div>
+              <div class="doc-item"><span>Issuance of Marriage License</span> <a href="/assets/documents/issuance-of-marriage-license.pdf">Download <i class="fas fa-download"></i></a></div>
+              <div class="doc-item"><span>Delayed Registration of Birth Certificate</span> <a href="/assets/documents/delayed-registration-of-birth.pdf">Download <i class="fas fa-download"></i></a></div>
+              <div class="doc-item"><span>Delayed Registration of Marriage Certificate</span> <a href="/assets/documents/delayed-registration-of-marriage.pdf">Download <i class="fas fa-download"></i></a></div>
+              <div class="doc-item"><span>Delayed Registration of Death Certificate</span> <a href="/assets/documents/delayed-registration-of-death.pdf">Download <i class="fas fa-download"></i></a></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
 
+    <!-- EMERGENCY HOTLINES -->
+    <section class="hotline-section">
+      <div class="section-anchor red-pill">
+        <i class="fas fa-phone"></i> Emergency Hotlines
+      </div>
 
-</body>
+      <div class="charter-container">
+        <div class="white-block hotline-block">
+          <p class="hotline-note">
+            Call immediately during emergencies. Lines are open 24/7.
+          </p>
+
+          <div class="hotline-list">
+            <div class="hotline-card" *ngFor="let hotline of hotlines">
+              <div class="hotline-icon">
+                <i class="fa-solid {{ hotline.icon }}"></i>
+              </div>
+
+              <div class="hotline-info">
+                <h4>{{ hotline.name }}</h4>
+
+                <a *ngFor="let num of hotline.numbers" href="tel:{{ num }}">
+                  📱 {{ num }}
+                </a>
+
+                <a *ngIf="hotline.landline" href="tel:{{ hotline.landline }}">
+                  ☎️ {{ hotline.landline }}
+                </a>
+
+                <a *ngIf="hotline.messenger" [href]="hotline.messenger" target="_blank" rel="noopener">
+                  💬 Message us on Facebook
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="home-footer">
+      © 2026 Angeles City Government. All rights reserved.
+    </footer>
+  </main>
+</div>

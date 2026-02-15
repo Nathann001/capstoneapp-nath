@@ -1,0 +1,470 @@
+/* =========================================
+   GLOBAL RESET
+========================================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+/* =========================================
+   APP LAYOUT
+========================================= */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+
+
+/* =========================================
+   MAIN CONTENT
+========================================= */
+.home-bg {
+  flex: 1;
+  background: #d3cdcd;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Watermark */
+.home-bg::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: url('/assets/images/angeles_city_logo.png') center/50% no-repeat;
+  opacity: 0.12;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* =========================================
+   HEADER
+========================================= */
+.home-header {
+  text-align: center;
+  margin: 40px 0 20px;
+  z-index: 1;
+}
+
+.home-header img {
+  width: 80px;
+  margin-bottom: 10px;
+}
+
+.home-header h1 {
+  font-size: 48px;
+  color: #f44336;
+  font-family: 'Gill Sans', Calibri, sans-serif;
+}
+
+.subtitle {
+  font-size: 30px;
+  font-weight: 700;
+}
+
+/* =========================================
+   HERO BANNER
+========================================= */
+.hero-banner {
+  background: #f44336;
+  color: #fff;
+  padding: 15px;
+  width: 95%;
+  max-width: 1300px;
+  margin: 0 auto 30px;
+  text-align: center;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 1;
+}
+
+.hero-banner h2 {
+  font-size: 20px;
+  letter-spacing: 1px;
+}
+
+/* =========================================
+   DASHBOARD GRID
+========================================= */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 30px;
+  width: 95%;
+  max-width: 1350px;
+  margin: 0 auto 50px;
+  z-index: 1;
+}
+
+.grid-column {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+/* Section pill */
+.section-anchor {
+  background: #f44336;
+  color: #fff;
+  padding: 10px 25px;
+  border-radius: 50px;
+  font-weight: bold;
+  align-self: center;
+}
+
+/* =========================================
+   ANNOUNCEMENT CARDS
+========================================= */
+.info-card {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.info-card img {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+}
+
+.card-content {
+  padding: 20px;
+}
+
+.card-content h4 {
+  color: #b30000;
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+
+.date {
+  font-size: 12px;
+  color: #888;
+  display: block;
+  margin-bottom: 10px;
+}
+
+/* =========================================
+   CITIZEN'S CHARTER
+========================================= */
+.charter-container {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.white-block {
+  background: #fff;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  border-top: 4px solid #b30000;
+}
+
+.white-block h3 {
+  font-size: 17px;
+  color: #b30000;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+}
+
+.white-block p,
+.white-block li {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.5;
+}
+
+/* Documents */
+.document-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.doc-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.doc-item:last-child {
+  border-bottom: none;
+}
+
+.doc-item span {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.doc-item a {
+  color: #f44336;
+  font-size: 12px;
+  font-weight: bold;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.doc-item a:hover {
+  color: #b30000;
+}
+
+/* =========================================
+   VISION & MISSION TEXT
+========================================= */
+
+
+/* Section titles */
+.white-block h3 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #b30000;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+/* Vision paragraph */
+.white-block p {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #333;
+  margin-bottom: 18px;
+  text-align: justify;
+  font-weight: bold;
+}
+
+/* Mission list */
+.white-block ul {
+  margin-top: 10px;
+  padding-left: 22px;
+  font-weight: bold;
+}
+
+/* Mission bullet items */
+.white-block li {
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: #444;
+  margin-bottom: 10px;
+  text-align: justify;
+}
+
+/* Custom bullet color */
+.white-block li::marker {
+  color: #f44336;
+  font-weight: bold;
+}
+
+/* Subtle emphasis for key words  */
+.white-block strong {
+  color: #b30000;
+  font-weight: 700;
+}
+
+/* =========================================
+   CATEGORY TAG
+========================================= */
+.category-tag {
+  display: inline-block;
+  background: rgba(244, 67, 54, 0.12); /* soft red */
+  color: #b30000;
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+}
+
+
+/* === EMERGENCY HOTLINES ======== */
+  
+
+.hotline-section {
+  width: 95%;
+  max-width: 1350px;
+  margin: 50px auto 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hotline-section .section-anchor {
+  margin-bottom: 25px;
+  text-align: center;
+  align-self: center;
+}
+
+.hotline-block {
+  width: 100%;
+  max-width: 1000px;
+  background: #fff; 
+  padding: 25px;
+  border-radius: 12px;
+  border-top: 4px solid #b30000;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center; 
+  position: relative;
+  z-index: 1;
+  
+}
+
+/* Note text */
+.hotline-note {
+  font-size: 24px;
+  color: #555;
+  font-weight: 600;
+  margin-bottom: 20px;
+  text-align: center;
+  width: auto;
+}
+
+/* Hotline cards container */
+.hotline-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center; 
+  gap: 20px;
+  width: 100%;
+}
+
+/* Individual hotline card */
+.hotline-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center; 
+  padding: 18px 20px;
+  width: 300px;
+  background: #f0eded;
+  border-radius: 12px;
+  border-left: 4px solid #f44336;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  transition: transform 0.2s;
+  text-align: center; 
+}
+
+.hotline-card:hover {
+  transform: translateY(-5px);
+}
+
+/* Icon */
+.hotline-icon {
+  width: 50px;
+  height: 50px;
+  background: rgba(244, 67, 54, 0.12);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.hotline-icon i {
+  color: #b30000;
+  font-size: 20px;
+}
+
+/* Info */
+.hotline-info h4 {
+  font-size: 20px;
+  color: #b30000;
+  margin-bottom: 8px;
+}
+
+.hotline-info a {
+  display: block;
+  font-size: 18px;
+  color: #333;
+  text-decoration: none;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.hotline-info a:hover {
+  color: #f44336;
+  text-decoration: underline;
+}
+
+/* =========================================
+   RESPONSIVE HOTLINES
+========================================= */
+@media (max-width: 768px) {
+  .hotline-card {
+    width: 100%;
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 12px;
+  }
+
+  .hotline-icon {
+    margin-bottom: 0;
+    margin-right: 12px;
+  }
+
+  .hotline-info h4,
+  .hotline-info a {
+    text-align: left;
+  }
+
+  .hotline-block {
+    text-align: left; 
+    align-items: flex-start;
+  }
+}
+
+
+
+/* =========================================
+   FOOTER
+========================================= */
+.home-footer {
+  padding: 20px;
+  font-size: 12px;
+  text-align: center;
+  background: rgba(255,255,255,0.85);
+  border-top: 1px solid #ccc;
+  margin-top: auto;
+  z-index: 1;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+@media (max-width: 1100px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 95px;
+  }
+
+  .side-btn {
+    padding: 22px 0;
+    font-size: 15px;
+  }
+
+  .home-header h1 {
+    font-size: 28px;
+  }
+
+  .subtitle {
+    font-size: 20px;
+  }
+}

@@ -1,0 +1,193 @@
+/* ================= GLOBAL RESET ================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+/* ================= APP LAYOUT ================= */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+
+/* ================= DOCUMENTS PAGE ================= */
+.documents-page {
+  flex: 1;
+  padding: 60px 40px;
+  position: relative;
+}
+
+/* Watermark */
+.documents-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url('/assets/images/angeles_city_logo.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 40%;
+  opacity: 0.08;
+  z-index: -1;
+}
+
+.page-title {
+  text-align: center;
+  font-size: 48px;
+  color: #b30000;
+  margin-bottom: 50px;
+}
+
+/* ================= DOCUMENT LIST ================= */
+.documents-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 35px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ================= DOCUMENT CARD ================= */
+.document-card {
+  background: #f5f5f5;
+  border-radius: 14px;
+  padding: 35px 30px;
+  text-align: center;
+  border-left: 6px solid #f44336;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.document-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 14px 30px rgba(244, 67, 54, 0.3);
+}
+
+.document-card h3 {
+  font-size: 22px;
+  color: #b30000;
+  margin-bottom: 15px;
+}
+
+.document-card p {
+  font-size: 15px;
+  color: #333;
+  margin-bottom: 25px;
+}
+
+/* ================= ACTION BUTTONS ================= */
+.document-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+/* View Requirements */
+.view-btn {
+  flex: 1;
+  background: #f44336;
+  color: #fff;
+  border: none;
+  padding: 14px 18px;
+  font-size: 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.2s ease;
+}
+
+.view-btn:hover {
+  background: #c62828;
+  transform: scale(1.04);
+}
+
+/* Apply Button */
+.apply-btn {
+  flex: 1;
+  background: #0a6cff;
+  color: #fff;
+  border: none;
+  padding: 14px 18px;
+  font-size: 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.2s ease;
+}
+
+.apply-btn:hover {
+  background: #084fc1;
+  transform: scale(1.04);
+}
+
+/* ================= MOBILE ================= */
+@media screen and (max-width: 768px) {
+  .sidebar {
+    width: 95px;
+  }
+
+  .side-btn {
+    font-size: 14px;
+    padding: 20px 0;
+  }
+
+  .side-btn i {
+    font-size: 20px;
+  }
+
+  .documents-page {
+    padding: 40px 20px;
+  }
+
+  .page-title {
+    font-size: 28px;
+  }
+
+  .document-card {
+    padding: 25px 20px;
+  }
+
+  .document-card h3 {
+    font-size: 18px;
+  }
+
+  .document-actions {
+    flex-direction: column;
+  }
+
+  .view-btn,
+  .apply-btn {
+    width: 100%;
+    font-size: 14px;
+    padding: 12px;
+  }
+}
+
+/* ================= TABLET ================= */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+  .sidebar {
+    width: 100px;
+  }
+
+  .page-title {
+    font-size: 36px;
+  }
+
+  .view-btn,
+  .apply-btn {
+    font-size: 14px;
+    padding: 12px 14px;
+  }
+}
+
+/* ================= DESKTOP ================= */
+@media screen and (min-width: 1025px) {
+  .page-title {
+    font-size: 48px;
+  }
+
+  .view-btn,
+  .apply-btn {
+    font-size: 16px;
+  }
+}

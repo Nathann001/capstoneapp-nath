@@ -1,163 +1,141 @@
-
+/* Background */
 .bg-image {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: url('/images/angeles_city_bg.png'); /* Replace with your image */
-    background-size: cover;
-    background-position: center;
-    filter: blur(10px); /* Adjust blur amount here */
-    transform: scale(1.1); /* Prevents white edges from the blur */
-    z-index: -1;
-  }
+  position: fixed;
+  inset: 0;
+  background-image: url('/assets/images/angeles_city_bg.png');
+  background-size: cover;
+  background-position: center;
+  filter: blur(10px);
+  transform: scale(1.1);
+  z-index: -1;
+}
 
-  /* 2. Main Container Centering */
-  .page-container {
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 40px 20px;
-    font-family: 'Arial', sans-serif;
-    font-size: 45;
-  }
+/* Page container */
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+  font-family: Arial, sans-serif;
+}
 
-  /* Center the entire container on the page */
-  .page-container {
-    width: 80%;
-    max-width: 1000px;
-    margin: 40px auto;
-    padding: 40px 0;
-    text-align: center
-  }
+/* Content */
+.content-wrapper {
+  width: 100%;
+  max-width: 700px;
+  text-align: center;
+}
 
-  /* Stack branding and form vertically */
-  .content-wrapper {
-    display: flex;
-    flex-direction: column; /* This stacks them vertically */
-    align-items: center;    /* This centers them horizontally */
-    gap: 20px;
-  }
+/* Branding */
+.city-name {
+  font-size: 2.6rem;
+  color: #b12025;
+  font-family: serif;
+  font-weight: bold;
+  text-shadow:
+    -1.5px -1.5px 0 #fff,
+     1.5px -1.5px 0 #fff,
+    -1.5px  1.5px 0 #fff,
+     1.5px  1.5px 0 #fff;
+}
 
-  /* Branding Section at the top */
-  .branding {
-    width: 100%;
-    margin-bottom: 20px;
-  }
+.logo {
+  width: 120px;
+  margin: 15px auto;
+  display: block;
+}
 
-  .city-name {
-    color: #b12025;
-    font-family: serif;
-    font-size: 2.8rem;
-    margin: 0 0 15px 0;
-    font-weight: bold;
-    text-shadow:
-      -1.5px -1.5px 0 #fff,
-       1.5px -1.5px 0 #fff,
-      -1.5px  1.5px 0 #fff,
-       1.5px  1.5px 0 #fff;
-  }
-  .logo {
-    width: 130px;
-    height: auto;
-    display: block;
-    margin: 0 auto 15px auto; /* Centers the image */
-  }
+.form-title {
+  font-family: monospace;
+  font-size: 1.4rem;
+  margin-bottom: 30px;
+  text-shadow:
+    -1px -1px 0 #fff,
+     1px -1px 0 #fff,
+    -1px  1px 0 #fff,
+     1px  1px 0 #fff;
+}
 
-  .form-title {
-    font-family: monospace;
-    font-size: 1.4rem;
-    letter-spacing: 1px;
-    margin-bottom: 20px;
-    text-shadow:
-      -1.5px -1.5px 0 #fff,
-       1.5px -1.5px 0 #fff,
-      -1.5px  1.5px 0 #fff,
-       1.5px  1.5px 0 #fff;
-  }
+/* Signup Card */
+.signup-card {
+  background: #f44336;
+  border-radius: 14px;
+  padding: 40px;
+  color: white;
+}
 
+.signup-header {
+  font-size: 1.5rem;
+  margin-bottom: 30px;
+  letter-spacing: 2px;
+}
 
-  /* Centered Red Form Card */
-  .signup-card {
-    width: 100%; /* Adjust width as needed */
-    max-width: 700px;
-    background-color: #f44336;
-    border-radius: 10px;
-    padding: 40px;
-    color: white;
-  }
+/* 🔥 VERTICAL FORM (ALL SCREENS) */
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
 
-  .signup-header {
-    margin-bottom: 40px;
-    font-size: 1.5rem;
-    letter-spacing: 2px;
-  }
+/* Inputs */
+.input-group {
+  width: 100%;
+}
 
-  /* Grid for the inputs */
-  .form-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 30px 15px;
-  }
+.input-group input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid white;
+  color: white;
+  padding: 12px 5px;
+  font-size: 16px;
+  outline: none;
+}
 
-  /* Row 1: 3 columns */
-  .form-grid .input-group:nth-child(1),
-  .form-grid .input-group:nth-child(2),
-  .form-grid .input-group:nth-child(3) {
-    grid-column: span 2;
-  }
+.input-group input::placeholder {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: bold;
+  text-transform: uppercase;
+}
 
-  /* Other Rows: 2 columns */
-  .form-grid .input-group:nth-child(n+4) {
-    grid-column: span 3;
-  }
+/* Password eye toggle */
+.password-group {
+  position: relative;
+}
 
-  /* Underline-only inputs */
-  input {
-    width: 100%;
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid white;
-    color: white;
-    text-align: center;
-    padding: 8px 0;
-    outline: none;
-    font-size: 0.9rem;
-    font-size: 15px;
-  }
+.toggle-icon {
+  position: absolute;
+  right: 5px;
+  bottom: 10px;
+  cursor: pointer;
+  color: white;
+  font-size: 18px;
+}
 
-  input::placeholder {
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 0.9rem;
-    font-weight: bold;
-    text-transform: uppercase;
-  }
+.toggle-icon:hover {
+  opacity: 0.7;
+}
 
-  /* Button & Footer */
-  .register-btn {
-    margin-top: 35px;
-    background-color: #c9a4a4;
-    border: none;
-    padding: 12px 60px;
-    border-radius: 25px;
-    font-weight: bold;
-    color: #333;
-    cursor: pointer;
-    transition: opacity 0.2s;
-  }
+/* Actions */
+.actions {
+  margin-top: 35px;
+}
 
-  .register-btn:hover {
-    opacity: 0.9;
-  }
+.register-btn {
+  border: none;
+  padding: 12px 60px;
+  border-radius: 25px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.login-link {
+  margin-top: 20px;
+  font-size: 1.2rem;
+}
 
-  .login-link {
-    margin-top: 20px;
-    font-size: 1.50rem;
-  }
-
-  .login-link a {
-    color: #000000;
-    font-weight: bold;
-  }
+.login-link a {
+  color: #000;
+  font-weight: bold;
+}

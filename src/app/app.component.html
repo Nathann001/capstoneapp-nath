@@ -1,109 +1,53 @@
-<div class="flex">
-  <!-- Sidebar -->
-  <aside
-    id="default-sidebar"
-    *ngIf="showSidebar"
-    class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform"
-    aria-label="Sidebar"
-  >
-    <div class="h-full px-3 py-4 overflow-y-auto nav-bg flex flex-col justify-between">
+<div class="app-container">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
-      <!-- Logo -->
-      <ul class="space-y-2 font-medium">
-        <li>
-          <a href="#" class="flex items-center text-gray-900 rounded-lg text-white group">
-            <img src="assets/images/angeles_city_logo.png"
-                 style="width:60%; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
-          </a>
-          <p class="text-center text-gray-900 rounded-lg text-white group text-xl mb-20 text-sm font-bold">
-            Angeles City
-          </p>
-        </li>
+  <aside class="sidebar" *ngIf="showSidebar">
+    <div class="sidebar-logo">
+      <img src="assets/images/angeles_city_logo.png" alt="Logo" />
+    </div>
 
-        <!-- Home (only for non-admin, non-staff users) -->
-<li *ngIf="!isAdmin && !isStaff">
-  <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-700 group text-2xl mb-5"
-     routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-    <i class="fa-solid fa-house"></i>
-    <span class="flex-1 ms-3 whitespace-nowrap pl-2">Home</span>
-  </a>
-</li>
+    <ng-container *ngIf="!isAdmin && !isStaff">
+      <a class="side-btn" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+        <i class="fas fa-house"></i><span>Home</span>
+      </a>
+      <a class="side-btn" routerLink="/documents" routerLinkActive="active">
+        <i class="fas fa-file"></i><span>Documents</span>
+      </a>
+      <a class="side-btn" routerLink="/my-requests" routerLinkActive="active">
+        <i class="fa-solid fa-envelope-open-text"></i><span>Requests</span>
+      </a>
+    </ng-container>
 
-<!-- My Requests (only for regular users, role 3) -->
-<li *ngIf="!isAdmin && !isStaff">
-  <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-700 group mb-5 text-2xl"
-     routerLink="/my-requests" routerLinkActive="active">
-    <i class="fa-solid fa-envelope-open-text"></i>
-    <span class="flex-1 ms-3 whitespace-nowrap pl-2">My Requests</span>
-  </a>
-</li>
+    <ng-container *ngIf="isStaff">
+      <a class="side-btn" routerLink="/home-staff" routerLinkActive="active">
+        <i class="fas fa-house"></i><span>Staff Home</span>
+      </a>
+    </ng-container>
 
+    <ng-container *ngIf="isAdmin">
+      <a class="side-btn" routerLink="/admin" routerLinkActive="active">
+        <i class="fa-solid fa-chart-line"></i><span>Admin</span>
+      </a>
 
-        <!-- Admin Links (role 1) -->
-<ng-container *ngIf="isAdmin">
-  <li>
-    <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-700 group mb-5 text-2xl"
-       routerLink="/admin" routerLinkActive="active">
-      <i class="fa-solid fa-chart-line"></i>
-      <span class="flex-1 ms-3 whitespace-nowrap pl-2">Admin Dashboard</span>
-    </a>
-  </li>
-  <li>
-    <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-700 group mb-5 text-2xl"
-       routerLink="/admin-users" routerLinkActive="active">
-      <i class="fa-solid fa-users"></i>
-      <span class="flex-1 ms-3 whitespace-nowrap pl-2">Manage Users</span>
-    </a>
-  </li>
-  <!-- Archives Link -->
-  <li>
-    <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-700 group mb-5 text-2xl"
-       routerLink="/archives" routerLinkActive="active">
-      <i class="fa-solid fa-archive"></i>
-      <span class="flex-1 ms-3 whitespace-nowrap pl-2">Archives</span>
-    </a>
-  </li>
-</ng-container>
+      <a class="side-btn" routerLink="/admin-users" routerLinkActive="active">
+        <i class="fa-solid fa-users"></i><span>Users</span>
+      </a>
+      <a class="side-btn" routerLink="/archives" routerLinkActive="active">
+        <i class="fa-solid fa-archive"></i><span>Archives</span>
+      </a>
+    </ng-container>
 
-<!-- Staff Links (role 2) -->
-<ng-container *ngIf="isStaff">
-  <li>
-    <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-700 group mb-5 text-2xl"
-       routerLink="/home-staff" routerLinkActive="active">
-      <i class="fa-solid fa-house"></i>
-      <span class="flex-1 ms-3 whitespace-nowrap pl-2">Staff Home</span>
-    </a>
-  </li>
-</ng-container>
-
-
-      </ul>
-
-      <!-- Bottom Links (all users) -->
-      <ul>
-        <li>
-          <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-700 group"
-             routerLink="/account">
-            <i class="fa-solid fa-user"></i>
-            <span class="flex-1 ms-3 whitespace-nowrap font-bold pl-1">Account Settings</span>
-          </a>
-        </li>
-        <li>
-          <a class="flex items-center p-2 text-gray-900 rounded-lg text-white hover:bg-gray-700 group">
-            <i class="fa-solid fa-right-from-bracket"></i>
-            <span class="flex-1 ms-3 whitespace-nowrap font-bold">
-              <button type="button" class="LogoutB" (click)="logout()">Log out</button>
-            </span>
-          </a>
-        </li>
-      </ul>
-
+    <div class="sidebar-bottom">
+      <a class="side-btn" routerLink="/account" routerLinkActive="active">
+        <i class="fa-solid fa-user"></i><span>Account</span>
+      </a>
+      <a class="side-btn" (click)="logout()" style="cursor:pointer;">
+        <i class="fa-solid fa-right-from-bracket"></i><span>Logout</span>
+      </a>
     </div>
   </aside>
 
-  <!-- Main Content -->
-  <div class="flex-1 p-4 transition-all duration-300"
-       [ngClass]="{'ml-0': !showSidebar, 'ml-64': showSidebar}">
+  <main class="content-area" [ngClass]="{'no-sidebar': !showSidebar}">
     <router-outlet></router-outlet>
-  </div>
+  </main>
 </div>

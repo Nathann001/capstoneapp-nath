@@ -15,6 +15,10 @@
   const sgMail = require('@sendgrid/mail');
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
+
+
+
+  
   // OTP EMAIL
   function sendOtpEmail(to, otp) {
     const msg = {
@@ -92,6 +96,8 @@ function sendRequestStatusEmail(to, status, reason = null, documentType = '') {
 }
 
   const app = express();
+    // Add this after const app = express();
+app.use(express.static(path.join(__dirname, 'public')));
 
   app.use(cors({
     origin: ['http://localhost:4200', 'http://localhost:4000'],
@@ -302,7 +308,7 @@ function checkRoles(allowedRoles) {
         return res.status(400).json({ message: 'OTP expired' });
       }
 
-      if (pendingUser.otp !== otp) {
+      if (String(pendingUser.otp) !== String(otp)) {
         return res.status(400).json({ message: 'Invalid OTP' });
       }
 
@@ -342,15 +348,15 @@ function checkRoles(allowedRoles) {
 
     // Check last OTP sent time
     const now = new Date();
-    const lastSent = new Date(pendingUser.otp_expires_at.getTime() - 10*60*1000); // original sent time
-    const cooldown = 60 * 1000; // 1 minute cooldown
+    const lastSent = new Date(pendingUser.otp_expires_at.getTime() - 10*60*1000); 
+    const cooldown = 60 * 1000; 
     if (now - lastSent < cooldown) {
       return res.status(429).json({ message: `Please wait ${Math.ceil((cooldown - (now - lastSent))/1000)} seconds before resending OTP` });
     }
 
     // Generate new OTP
     const otp = Math.floor(100000 + Math.random() * 900000);
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); 
 
     db.query(
       'UPDATE pending_users SET otp = ?, otp_expires_at = ? WHERE id = ?',

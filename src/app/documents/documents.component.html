@@ -1,0 +1,30 @@
+<div class="app-container">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- DOCUMENTS CONTENT -->
+  <section class="documents-page">
+    <h2 class="page-title">Available Documents</h2>
+  
+    <div class="documents-list">
+      <div *ngFor="let doc of documents" class="document-card">
+  
+        <h3>{{ doc.name }}</h3>
+  
+        <div class="document-actions">
+          <button class="view-btn"
+                  (click)="viewDocument(doc.file)">
+            View Requirements
+          </button>
+  
+          <button class="apply-btn"
+                  (click)="applyForDocument(doc.applyRoute)">
+            Apply
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
