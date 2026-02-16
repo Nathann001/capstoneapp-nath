@@ -72,6 +72,7 @@
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
+            "outputPath": "dist/static",
             "polyfills": [
               "zone.js",
               "zone.js/testing"
