@@ -17,10 +17,6 @@ require('dotenv').config();
   const sgMail = require('@sendgrid/mail');
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-
-
-
-
   // OTP EMAIL
   function sendOtpEmail(to, otp) {
     const msg = {
@@ -78,7 +74,7 @@ function sendRequestStatusEmail(to, status, reason = null, documentType = '') {
     `,
     approved: `
       <p>Hello,</p>
-      <p>Your request for <b>${documentType}</b> has been <b>Approved and processed</b>.</p>
+      <p>Your request for <b>${documentType}</b> has been <b>Approved</b>.</p>
     `,
     denied: `
       <p>Hello,</p>
@@ -99,10 +95,9 @@ function sendRequestStatusEmail(to, status, reason = null, documentType = '') {
 
   const app = express();
   app.use(helmet({
-  contentSecurityPolicy: false, // Can be enabled if needed
+  contentSecurityPolicy: false,
 }));
   app.use(compression());
-//app.use(express.static(path.join(__dirname, 'public')));
 
   app.use(cors({
   origin: process.env.NODE_ENV === 'production'
@@ -125,37 +120,22 @@ const db = mysql.createPool({
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-// Debug version - add this right after const db = mysql.createPool({...})
-
 console.log('Database Configuration:');
 console.log('Host:', process.env.DB_HOST);
 console.log('User:', process.env.DB_USER);
 console.log('Database:', process.env.DB_NAME);
 console.log('Port:', process.env.DB_PORT || 3306);
 
-// Test the pool with a simple query
 db.query('SELECT 1', (err, results) => {
   if (err) {
     console.error('❌ Database connection test FAILED');
     console.error('Error Code:', err.code);
     console.error('Error Message:', err.message);
-    console.error('Full Error:', JSON.stringify(err, null, 2));
-  } else {
-    console.log('✅ Connected to MySQL');
-    console.log('Test query result:', results);
-  }
-});
-
-// Test the pool with a simple query
-db.query('SELECT 1', (err) => {
-  if (err) {
-    console.error('❌ Database connection test failed:', err.message);
   } else {
     console.log('✅ Connected to MySQL');
   }
 });
 
-// Handle database pool errors
 db.on('error', (err) => {
   console.error('Database pool error:', err.code, err.message);
   if (err.code === 'PROTOCOL_CONNECTION_LOST') console.error('Database connection was closed.');
@@ -181,7 +161,6 @@ db.on('error', (err) => {
     });
   }
 
-
 // Serve the uploads folder statically
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -198,7 +177,6 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
     }
   }
 
-  // Create or update user details for first-time login
   app.post('/api/user/details', verifyToken, (req, res) => {
   const userId = req.user.id;
   const { firstName, middleName, lastName, address, contactNo } = req.body;
@@ -207,43 +185,35 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
     return res.status(400).json({ message: 'All fields are required' });
   }
 
-  // Check if user details already exist
   db.query('SELECT * FROM user_details WHERE UserID = ?', [userId], (err, results) => {
     if (err) return res.status(500).json({ message: 'Database error' });
 
-    const fullName = `${firstName} ${middleName || ''} ${lastName}`.trim();
-
     if (results.length === 0) {
-      // Insert new details
-db.query(
-  `INSERT INTO user_details
-    (UserID, User_FName, User_MName, User_LName, User_Address, User_ContactNo)
-   VALUES (?, ?, ?, ?, ?, ?)`,
-  [userId, firstName, middleName || null, lastName, address, contactNo],
-  (err) => {
-    if (err) return res.status(500).json({ message: 'Failed to save details', error: err.message });
-    res.json({ message: 'Details saved successfully' });
-  }
-);
-
+      db.query(
+        `INSERT INTO user_details
+          (UserID, User_FName, User_MName, User_LName, User_Address, User_ContactNo)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [userId, firstName, middleName || null, lastName, address, contactNo],
+        (err) => {
+          if (err) return res.status(500).json({ message: 'Failed to save details', error: err.message });
+          res.json({ message: 'Details saved successfully' });
+        }
+      );
     } else {
-      // Update existing details
-db.query(
-  `UPDATE user_details
-  SET User_FName = ?, User_MName = ?, User_LName = ?, User_Address = ?, User_ContactNo = ?
-  WHERE UserID = ?`,
-  [firstName, middleName || null, lastName, address, contactNo, userId],
-  (err) => {
-    if (err) return res.status(500).json({ message: 'Failed to update details', error: err.message });
-    res.json({ message: 'Details updated successfully' });
-  }
-);
-
+      db.query(
+        `UPDATE user_details
+        SET User_FName = ?, User_MName = ?, User_LName = ?, User_Address = ?, User_ContactNo = ?
+        WHERE UserID = ?`,
+        [firstName, middleName || null, lastName, address, contactNo, userId],
+        (err) => {
+          if (err) return res.status(500).json({ message: 'Failed to update details', error: err.message });
+          res.json({ message: 'Details updated successfully' });
+        }
+      );
     }
   });
 });
 
-// Optional: fetch user details for pre-fill
 app.get('/api/user/details', verifyToken, (req, res) => {
   const userId = req.user.id;
   db.query('SELECT * FROM user_details WHERE UserID = ?', [userId], (err, results) => {
@@ -253,8 +223,6 @@ app.get('/api/user/details', verifyToken, (req, res) => {
   });
 });
 
-
-  // Middleware to check allowed roles
 function checkRoles(allowedRoles) {
   return (req, res, next) => {
     if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
@@ -324,8 +292,6 @@ function checkRoles(allowedRoles) {
     }
   });
 
-
-
   app.post('/api/auth/verify-otp', (req, res) => {
     const { email, phone, otp } = req.body;
 
@@ -352,14 +318,12 @@ function checkRoles(allowedRoles) {
         return res.status(400).json({ message: 'Invalid OTP' });
       }
 
-      // Move user to main users table
       db.query(
         'INSERT INTO users (email, phone, password, role, created_at) VALUES (?, ?, ?, ?, NOW())',
         [pendingUser.email, pendingUser.phone, pendingUser.password, 3],
         (err) => {
           if (err) return res.status(500).json({ message: 'Failed to create user' });
 
-          // Delete from pending_users
           db.query('DELETE FROM pending_users WHERE id = ?', [pendingUser.id], () => {});
 
           res.json({ message: 'Registration successful' });
@@ -386,7 +350,6 @@ function checkRoles(allowedRoles) {
 
     const pendingUser = results[0];
 
-    // Check last OTP sent time
     const now = new Date();
     const lastSent = new Date(pendingUser.otp_expires_at.getTime() - 10*60*1000);
     const cooldown = 60 * 1000;
@@ -394,7 +357,6 @@ function checkRoles(allowedRoles) {
       return res.status(429).json({ message: `Please wait ${Math.ceil((cooldown - (now - lastSent))/1000)} seconds before resending OTP` });
     }
 
-    // Generate new OTP
     const otp = Math.floor(100000 + Math.random() * 900000);
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
@@ -415,9 +377,6 @@ function checkRoles(allowedRoles) {
   });
 });
 
-
-
-
 app.post('/api/auth/login', (req, res) => {
   const { email, password } = req.body;
   if (!email || !password)
@@ -431,7 +390,6 @@ app.post('/api/auth/login', (req, res) => {
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(400).json({ message: 'Invalid credentials' });
 
-    // Check if user details exist
     db.query('SELECT * FROM user_details WHERE UserID = ?', [user.id], (err, details) => {
       if (err) return res.status(500).json({ message: 'Database error' });
 
@@ -456,7 +414,6 @@ app.post('/api/auth/login', (req, res) => {
     });
   });
 });
-
 
   app.post('/api/auth/reset-password', async (req, res) => {
     const { email, newPassword } = req.body;
@@ -608,10 +565,8 @@ app.get('/api/admin/users/:id', verifyToken, checkRoles([1]), (req, res) => {
   });
 });
 
-
-
 app.put('/api/admin/users/:id', verifyToken, checkRoles([1]), (req, res) => {
-  const { email, role } = req.body; // remove username
+  const { email, role } = req.body;
   const userId = req.params.id;
 
   if (![1, 2, 3].includes(role)) {
@@ -629,7 +584,6 @@ app.put('/api/admin/users/:id', verifyToken, checkRoles([1]), (req, res) => {
     res.json({ message: 'User updated successfully' });
   });
 });
-
 
 app.put('/api/admin/users/:id/password', verifyToken, checkRoles([1]), async (req, res) => {
   const { newPassword } = req.body;
@@ -656,41 +610,74 @@ app.delete('/api/admin/users/:id', verifyToken, checkRoles([1]), (req, res) => {
     return res.status(400).json({ message: 'You cannot delete your own account' });
   }
 
-  db.beginTransaction(err => {
-    if (err) return res.status(500).json({ message: 'Transaction start failed' });
+  db.getConnection((err, connection) => {
+    if (err) return res.status(500).json({ message: 'Failed to get database connection' });
 
-    db.query(`
-      DELETE rsh FROM request_status_history rsh
-      JOIN document_request dr ON rsh.RequestID = dr.RequestID
-      WHERE dr.user_id = ?
-    `, [userId], err => {
+    connection.beginTransaction(err => {
+      if (err) {
+        connection.release();
+        return res.status(500).json({ message: 'Transaction start failed' });
+      }
 
-      if (err) return db.rollback(() => res.status(500).json({ message: 'Failed deleting history', error: err.message }));
+      connection.query(`
+        DELETE rsh FROM request_status_history rsh
+        JOIN document_request dr ON rsh.RequestID = dr.RequestID
+        WHERE dr.user_id = ?
+      `, [userId], err => {
 
-      db.query('DELETE FROM document_request WHERE user_id = ?', [userId], err => {
+        if (err) {
+          return connection.rollback(() => {
+            connection.release();
+            res.status(500).json({ message: 'Failed deleting history', error: err.message });
+          });
+        }
 
-        if (err) return db.rollback(() => res.status(500).json({ message: 'Failed deleting requests', error: err.message }));
+        connection.query('DELETE FROM document_request WHERE user_id = ?', [userId], err => {
 
-        db.query('DELETE FROM user_details WHERE UserID = ?', [userId], err => {
-
-          if (err) return db.rollback(() => res.status(500).json({ message: 'Failed deleting user details', error: err.message }));
-
-          db.query('DELETE FROM users WHERE id = ?', [userId], err => {
-
-            if (err) return db.rollback(() => res.status(500).json({ message: 'Failed deleting user', error: err.message }));
-
-            db.commit(err => {
-              if (err) return db.rollback(() => res.status(500).json({ message: 'Commit failed' }));
-              res.json({ message: 'User deleted successfully' });
+          if (err) {
+            return connection.rollback(() => {
+              connection.release();
+              res.status(500).json({ message: 'Failed deleting requests', error: err.message });
             });
+          }
 
+          connection.query('DELETE FROM user_details WHERE UserID = ?', [userId], err => {
+
+            if (err) {
+              return connection.rollback(() => {
+                connection.release();
+                res.status(500).json({ message: 'Failed deleting user details', error: err.message });
+              });
+            }
+
+            connection.query('DELETE FROM users WHERE id = ?', [userId], err => {
+
+              if (err) {
+                return connection.rollback(() => {
+                  connection.release();
+                  res.status(500).json({ message: 'Failed deleting user', error: err.message });
+                });
+              }
+
+              connection.commit(err => {
+                if (err) {
+                  return connection.rollback(() => {
+                    connection.release();
+                    res.status(500).json({ message: 'Commit failed' });
+                  });
+                }
+
+                connection.release();
+                res.json({ message: 'User deleted successfully' });
+              });
+
+            });
           });
         });
       });
     });
   });
 });
-
 
   app.get('/api/admin/staff', verifyToken, checkRoles([1]), (req, res) => {
     db.query('SELECT id, email, username, role, created_at FROM users WHERE role = 2', (err, results) => {
@@ -708,9 +695,6 @@ app.delete('/api/admin/users/:id', verifyToken, checkRoles([1]), (req, res) => {
     });
   });
 
-
-
-// Get all document requests
 app.get('/api/document_request', verifyToken, checkRoles([1, 2]), (req, res) => {
   const staffId = req.user.id;
 
@@ -728,14 +712,12 @@ app.get('/api/document_request', verifyToken, checkRoles([1, 2]), (req, res) => 
   });
 });
 
-
-// Get a single document request by ID
 app.get('/api/document_request/:id', verifyToken, (req, res) => {
   const requestId = parseInt(req.params.id, 10);
 
   const sql = `
     SELECT dr.RequestID, dr.name, dr.date_created, dr.status, dr.updated_at,
-    dr.file_path,      -- ADD THIS LINE
+    dr.file_path,
     u.email,
     CONCAT(ud.User_FName, ' ', ud.User_LName) AS full_name
     FROM document_request dr
@@ -756,9 +738,8 @@ app.get('/api/document_request/:id', verifyToken, (req, res) => {
   });
 });
 
-// Admin: Get document request statistics (filterable by status)
 app.get('/api/admin/document_request/statistics', verifyToken, checkRoles([1]), (req, res) => {
-  const { status } = req.query; // optional: pending, under_review, approved, denied
+  const { status } = req.query;
 
   let sql = `SELECT status, COUNT(*) AS count FROM document_request`;
   const params = [];
@@ -776,8 +757,6 @@ app.get('/api/admin/document_request/statistics', verifyToken, checkRoles([1]), 
   });
 });
 
-
-// ===== Mark request as "In Process" =====
 app.post('/api/document_request/:id/process', verifyToken, checkRoles([1, 2]), async (req, res) => {
   const requestId = parseInt(req.params.id, 10);
   if (isNaN(requestId)) return res.status(400).json({ message: 'Invalid request ID' });
@@ -806,7 +785,6 @@ app.post('/api/document_request/:id/process', verifyToken, checkRoles([1, 2]), a
       if (userData && userData.email) {
         await sendRequestStatusEmail(userData.email, 'under_review', null, userData.document_type);
 
-        // Log to history
         const emailMsg = `Your request for ${userData.document_type} is now In Process.`;
         db.query(
           'INSERT INTO request_status_history (RequestID, status, email_message) VALUES (?, ?, ?)',
@@ -822,8 +800,6 @@ app.post('/api/document_request/:id/process', verifyToken, checkRoles([1, 2]), a
   });
 });
 
-
-// ===== Mark request as "Approved" =====
 app.post('/api/document_request/:id/approved', verifyToken, checkRoles([1, 2]), (req, res) => {
   const requestId = req.params.id;
   const staffId = req.user.id;
@@ -837,7 +813,6 @@ app.post('/api/document_request/:id/approved', verifyToken, checkRoles([1, 2]), 
     if (err) return res.status(500).json({ message: 'Failed to process request', error: err.message });
     if (result.affectedRows === 0) return res.status(404).json({ message: 'Request not found' });
 
-    // Get user email and document type
     db.query(
       'SELECT u.email, dr.document_type FROM document_request dr JOIN users u ON dr.user_id = u.id WHERE dr.RequestID = ?',
       [requestId],
@@ -861,7 +836,6 @@ app.post('/api/document_request/:id/approved', verifyToken, checkRoles([1, 2]), 
   });
 });
 
-// ===== Mark request as "Denied" =====
 app.put('/api/document_request/:id/deny', verifyToken, checkRoles([1, 2]), (req, res) => {
   const requestId = req.params.id;
   const staffId = req.user.id;
@@ -878,7 +852,6 @@ app.put('/api/document_request/:id/deny', verifyToken, checkRoles([1, 2]), (req,
     if (err) return res.status(500).json({ message: 'Failed to update request', error: err.message });
     if (result.affectedRows === 0) return res.status(404).json({ message: 'Request not found' });
 
-    // Get user email and document type
     db.query(
       'SELECT u.email, dr.document_type FROM document_request dr JOIN users u ON dr.user_id = u.id WHERE dr.RequestID = ?',
       [requestId],
@@ -902,7 +875,6 @@ app.put('/api/document_request/:id/deny', verifyToken, checkRoles([1, 2]), (req,
   });
 });
 
-// Admin: Get all document requests
 app.get('/api/admin/document_request', verifyToken, checkRoles([1]), (req, res) => {
   const sql = `
     SELECT RequestID, name, date_created, status, updated_at, archived
@@ -914,7 +886,6 @@ app.get('/api/admin/document_request', verifyToken, checkRoles([1]), (req, res) 
     res.json(results);
   });
 });
-
 
 app.put('/api/document_request/:id/archive', verifyToken, checkRoles([1]), (req, res) => {
   const requestId = req.params.id;
@@ -951,8 +922,6 @@ app.put('/api/document_request/:id/archive', verifyToken, checkRoles([1]), (req,
   });
 });
 
-
-// Get requests for logged in user
 app.get('/api/my/requests', verifyToken, checkRoles([3]), (req, res) => {
   const userId = req.user.id;
   const sql = `
@@ -967,7 +936,6 @@ app.get('/api/my/requests', verifyToken, checkRoles([3]), (req, res) => {
   });
 });
 
-// Get history for specific request
 app.get('/api/my/requests/:id/history', verifyToken, checkRoles([3]), (req, res) => {
   const requestId = req.params.id;
   const userId = req.user.id;
@@ -996,13 +964,9 @@ app.get('/api/my/requests/:id/download', verifyToken, checkRoles([3]), (req, res
   });
 });
 
+const uploadDocMultiple = multer({ storage: multer.memoryStorage() }).array('files', 5);
 
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-
-// Use multer memory storage for upload
-// Use multer memory storage for multiple file upload
-const uploadDocMultiple = multer({ storage: multer.memoryStorage() }).array('files', 5); // allow max 5 files
-
+// CORRECTED ENDPOINT - Uses Cloudinary for file uploads
 app.post('/api/document_request', verifyToken, checkRoles([3]), (req, res) => {
   uploadDocMultiple(req, res, async (err) => {
     if (err) return res.status(500).json({ error: 'File upload failed', details: err.message });
@@ -1016,34 +980,37 @@ app.post('/api/document_request', verifyToken, checkRoles([3]), (req, res) => {
 
     let savedFiles = [];
 
+    // Upload files to Cloudinary
     if (req.files && req.files.length > 0) {
-      const uploadsDir = path.join(__dirname, 'uploads');
-      if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
-
-      req.files.forEach(file => {
-        const filename = Date.now() + '-' + file.originalname;
-        const fullPath = path.join(uploadsDir, filename);
-        try {
-          fs.writeFileSync(fullPath, file.buffer);
-          savedFiles.push('uploads/' + filename);
-        } catch (err) {
-          console.error('Failed to save file:', err);
+      try {
+        for (const file of req.files) {
+          try {
+            console.log(`Uploading file: ${file.originalname}`);
+            const uploaded = await uploadToCloudinary(file.buffer, 'document_requests');
+            savedFiles.push(uploaded.secure_url);
+            console.log(`✓ Uploaded ${file.originalname} to Cloudinary`);
+          } catch (uploadErr) {
+            console.error(`✗ Failed to upload ${file.originalname}:`, uploadErr.message);
+          }
         }
-      });
+      } catch (err) {
+        console.error('Error uploading files:', err);
+        return res.status(500).json({ error: 'File upload failed', details: err.message });
+      }
     }
 
-    const filePathString = savedFiles.join(','); // save all files in 1 column
+    const filePathString = savedFiles.length > 0 ? savedFiles.join(',') : '';
 
     const sql = 'INSERT INTO document_request (name, document_type, file_path, user_id) VALUES (?, ?, ?, ?)';
     db.query(sql, [name, document_type, filePathString, userId], async (err, result) => {
       if (err) {
         console.error('Database error:', err);
-        return res.status(500).json({ error: 'Database insert failed' });
+        return res.status(500).json({ error: 'Database insert failed', details: err.message });
       }
 
       const requestId = result.insertId;
+      console.log(`Created request ID: ${requestId}`);
 
-      // Send "pending" email to user
       try {
         const userEmailResults = await new Promise((resolve, reject) => {
           db.query('SELECT email FROM users WHERE id = ?', [userId], (err, results) => {
@@ -1053,10 +1020,13 @@ app.post('/api/document_request', verifyToken, checkRoles([3]), (req, res) => {
         });
 
         if (userEmailResults.length > 0 && userEmailResults[0].email) {
-          await sendRequestStatusEmail(userEmailResults[0].email, 'pending', null, document_type);
+          const userEmail = userEmailResults[0].email;
+          console.log(`Sending pending email to: ${userEmail}`);
+          await sendRequestStatusEmail(userEmail, 'pending', null, document_type);
+          console.log(`✓ Email sent`);
         }
       } catch (emailErr) {
-        console.error('Failed to send pending email:', emailErr);
+        console.error('Failed to send pending email:', emailErr.message);
       }
 
       res.status(201).json({
@@ -1068,25 +1038,6 @@ app.post('/api/document_request', verifyToken, checkRoles([3]), (req, res) => {
   });
 });
 
-
-
-/* START SERVER */
-
-// Serve static files from Angular build
-// app.use(express.static(path.join(__dirname, 'public/browser')));
-
-// Handle Angular routing - catch-all route for all non-API routes
-// app.get(/^(?!\/api).*/, (req, res) => {
-//   res.sendFile(path.join(__dirname, 'public/browser/index.html'));
-// });
-
-//app.use(express.static(path.join(__dirname, 'dist/DRT')));
-
-//app.get(/^(?!\/api).*/, (req, res) => {
-   // res.sendFile(path.join(__dirname, 'dist/DRT/index.html'));
-//});
-
-// Global error handler (optional, for catching any errors)
 app.use((err, req, res, next) => {
   console.error('Error:', err);
   res.status(err.status || 500).json({
@@ -1099,10 +1050,8 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`Open http://localhost:${PORT} in your browser`);
-  console.log(process.env.NODE_ENV);
 });
 
-// Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('SIGTERM received. Closing server gracefully...');
   db.end();

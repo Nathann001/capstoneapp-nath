@@ -54,10 +54,21 @@ export class ProcessRequestComponent implements OnInit {
           this.request = data;
           console.log('Loaded request (process view):', this.request);
 
+          // Convert file_path into fileUrls for HTML display
           if (this.request?.file_path) {
             this.request.fileUrls = this.request.file_path
               .split(',')
-              .map((p: string) => this.backendUrl + '/' + p.trim());
+              .map((p: string) => {
+                const trimmed = p.trim();
+
+                // If already a full URL (from Cloudinary), use as-is
+                if (trimmed.startsWith('http')) {
+                  return trimmed;
+                }
+
+                // Otherwise, construct local file path (for backward compatibility)
+                return this.backendUrl + '/' + trimmed;
+              });
           } else {
             this.request.fileUrls = [];
           }
@@ -147,5 +158,15 @@ export class ProcessRequestComponent implements OnInit {
   cancelDeny() {
     this.showDenyModal = false;
     this.denialOptions.forEach(opt => opt.selected = false);
+  }
+
+  // Helper method to check if URL is an image
+  isImageUrl(url: string): boolean {
+    return /\.(png|jpe?g)$/i.test(url);
+  }
+
+  // Helper method to check if URL is a PDF
+  isPdfUrl(url: string): boolean {
+    return url.endsWith('.pdf');
   }
 }

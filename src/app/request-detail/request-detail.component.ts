@@ -58,11 +58,26 @@ export class RequestDetailComponent implements OnInit {
     next: (data) => {
       this.request = data;
 
-      // 🔥 IMPORTANT: split multiple files
+      // 🔥 Convert file_path into fileUrls for HTML display
       if (this.request?.file_path) {
         this.request.fileUrls = this.request.file_path
           .split(',')
-          .map((p: string) => `${this.backendUrl}/${p.trim()}`);
+          .map((p: string) => {
+            const trimmed = p.trim();
+
+            // If already a full URL, use as-is
+            if (trimmed.startsWith('http')) return trimmed;
+
+            // Determine file extension
+            let ext = 'png'; // default
+            const lower = trimmed.toLowerCase();
+            if (lower.endsWith('.pdf')) ext = 'pdf';
+            else if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) ext = 'jpg';
+            else if (lower.endsWith('.png')) ext = 'png';
+            // Otherwise keep default or you can store type in DB
+
+            return `https://res.cloudinary.com/defkwtxbm/image/upload/${trimmed}.${ext}`;
+          });
       } else {
         this.request.fileUrls = [];
       }
@@ -76,6 +91,7 @@ export class RequestDetailComponent implements OnInit {
     }
   });
 }
+
 
   processRequest() {
   let headers: HttpHeaders;

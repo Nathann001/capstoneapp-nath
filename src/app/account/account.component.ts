@@ -133,7 +133,6 @@ export class AccountComponent implements OnInit {
     contactNo: this.profileForm.get('contactNo')?.value
   };
 
-  // 🔹 MUST be POST (not PUT)
   this.http.post('https://drtbackend-2cw3.onrender.com/api/user/details', body, { headers })
     .subscribe({
       next: () => {
@@ -148,25 +147,46 @@ export class AccountComponent implements OnInit {
     });
 }
 
-  // 🔹 Delete account
-  deleteAccount(): void {
-    const confirmDelete = confirm('Are you sure you want to delete your account?');
-    if (!confirmDelete) return;
+deleteAccount(): void {
+  const confirmDelete = confirm('Are you sure you want to delete your account?');
+  if (!confirmDelete) return;
 
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
-    this.http.delete('https://drtbackend-2cw3.onrender.com/api/admin/users/${userId}', { headers })
-      .subscribe({
-        next: () => {
-          alert('Account deleted.');
-          this.logout();
-        },
-        error: () => {
-          alert('Failed to delete account.');
-        }
-      });
+  const token = localStorage.getItem('token');
+  if (!token) {
+    alert('No authentication token found. Please log in again.');
+    return;
   }
+
+  const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+  // Get user ID from localStorage
+  const storedUser = localStorage.getItem('user');
+  const userId = storedUser ? JSON.parse(storedUser).id : null;
+
+  if (!userId) {
+    alert('Unable to delete account: User ID not found.');
+    return;
+  }
+
+  console.log('Deleting user ID:', userId); // ✅ Debug log
+
+  this.http.delete(`https://drtbackend-2cw3.onrender.com/api/admin/users/${userId}`, { headers })
+  .subscribe({
+    next: (res: any) => {
+      console.log('Delete response:', res); // logs success
+      alert(res.message || 'Account deleted.');
+      this.logout();
+    },
+    error: (err) => {
+      console.error('Delete error full object:', err); // logs full error
+      if (err.error && err.error.message) {
+        alert(`Failed to delete account: ${err.error.message}`);
+      } else {
+        alert(`Failed to delete account. Status: ${err.status} ${err.statusText}`);
+      }
+    }
+  });
+
+}
+
 }

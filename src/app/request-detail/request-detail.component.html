@@ -20,20 +20,28 @@
   <p><strong>Files:</strong></p>
 
   <div *ngFor="let file of request.fileUrls" class="mb-4">
-    <!-- Clickable link -->
+  <!-- Clickable link for all file types -->
+  <p>
     <a [href]="file" target="_blank" class="text-blue-600 hover:underline">
       Open file
     </a>
+  </p>
 
-    <!-- Image preview -->
-    <div class="mt-2">
-      <img *ngIf="file.endsWith('.png') || file.endsWith('.jpg') || file.endsWith('.jpeg')"
-           [src]="file"
-           alt="Document File"
-           class="max-w-full border rounded" />
-    </div>
-  </div>
+  <!-- Image Preview -->
+  <img *ngIf="file.match(/\.(png|jpe?g)$/i)"
+       [src]="file"
+       alt="Document File"
+       class="max-w-full border rounded mt-2" />
+
+  <!-- PDF Preview -->
+  <iframe *ngIf="file.endsWith('.pdf')"
+          [src]="file"
+          class="w-full h-64 border rounded mt-2">
+  </iframe>
 </div>
+
+<p *ngIf="!request.fileUrls?.length" class="text-gray-500">No files attached.</p>
+
 
     <button class="px-4 py-2 bg-green-600 text-white rounded" (click)="processRequest()">Process</button>
 <button class="px-4 py-2 bg-red-600 text-white rounded" (click)="denyRequest()">Deny</button>
