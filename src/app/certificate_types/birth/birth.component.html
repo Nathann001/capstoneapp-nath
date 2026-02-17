@@ -2,6 +2,8 @@
   <h2>Birth Certificate Request</h2>
 
   <form [formGroup]="documentForm" (ngSubmit)="submitDocumentRequest()">
+
+    <!-- Recipient Name -->
     <div class="form-group">
       <label>Recipient Name*</label>
       <input type="text" formControlName="name" />
@@ -10,11 +12,11 @@
       </div>
     </div>
 
-    <!-- File 1: Affidavit of Admission of Paternity (Optional) -->
-    <div class="form-group">
+    <!-- File 1: Affidavit of Admission of Paternity (NOW REQUIRED) -->
+    <div class="form-group required-field">
       <label>
         Affidavit of Admission of Paternity
-        <span class="badge optional">Optional</span>
+        <span class="badge required">Required</span>
       </label>
       <small>Affidavit of Acknowledgment/Admission of Paternity</small>
       <input
@@ -22,38 +24,42 @@
         (change)="onFileSelected($event, 1)"
         accept="image/*,.pdf"
       />
-      <div class="file-status" *ngIf="files[1]">
+      <div class="file-status" *ngIf="isFileSelected(1); else notUploaded1">
         <span class="success">✓ {{ getFileName(1) }}</span>
       </div>
-      <div class="file-status" *ngIf="!files[1]">
-        <span class="muted">○ Not uploaded</span>
-      </div>
+      <ng-template #notUploaded1>
+        <div class="file-status">
+          <span class="error">✗ This document is required</span>
+        </div>
+      </ng-template>
     </div>
 
-    <!-- File 2: Affidavit to Use the Surname of the Father (Optional) -->
-    <div class="form-group">
+    <!-- File 2: Affidavit to Use the Surname of the Father (NOW REQUIRED) -->
+    <div class="form-group required-field">
       <label>
         Affidavit to Use the Surname of the Father
-        <span class="badge optional">Optional</span>
+        <span class="badge required">Required</span>
       </label>
-      <small>Affidavit to Use the Surname of the Father</small>
+      <small>Affidavit to Use the Surname of the Father (RA 9255)</small>
       <input
         type="file"
         (change)="onFileSelected($event, 2)"
         accept="image/*,.pdf"
       />
-      <div class="file-status" *ngIf="files[2]">
+      <div class="file-status" *ngIf="isFileSelected(2); else notUploaded2">
         <span class="success">✓ {{ getFileName(2) }}</span>
       </div>
-      <div class="file-status" *ngIf="!files[2]">
-        <span class="muted">○ Not uploaded</span>
-      </div>
+      <ng-template #notUploaded2>
+        <div class="file-status">
+          <span class="error">✗ This document is required</span>
+        </div>
+      </ng-template>
     </div>
 
     <!-- File 3: Birth Certificate (REQUIRED) -->
     <div class="form-group required-field">
       <label>
-        Birth Certificate*
+        Birth Certificate
         <span class="badge required">Required</span>
       </label>
       <small>Upload a copy of the duly accomplished birth certificate</small>
@@ -61,21 +67,22 @@
         type="file"
         (change)="onFileSelected($event, 3)"
         accept="image/*,.pdf"
-        required
       />
-      <div class="file-status" *ngIf="files[3]">
+      <div class="file-status" *ngIf="isFileSelected(3); else notUploaded3">
         <span class="success">✓ {{ getFileName(3) }}</span>
       </div>
-      <div class="file-status" *ngIf="!files[3]">
-        <span class="error">✗ Birth certificate is required</span>
-      </div>
+      <ng-template #notUploaded3>
+        <div class="file-status">
+          <span class="error">✗ This document is required</span>
+        </div>
+      </ng-template>
     </div>
 
     <!-- Status Message -->
     <div class="status-message" [ngClass]="areRequiredFilesSelected() ? 'success' : 'warning'">
       <strong>Status:</strong>
-      <span *ngIf="areRequiredFilesSelected()">✓ All required documents uploaded - Ready to submit</span>
-      <span *ngIf="!areRequiredFilesSelected()">✗ Please upload the birth certificate</span>
+      <span *ngIf="areRequiredFilesSelected()">✓ All required documents uploaded — Ready to submit</span>
+      <span *ngIf="!areRequiredFilesSelected()">✗ Please upload all 3 required documents</span>
     </div>
 
     <div class="button-group">
@@ -94,99 +101,6 @@
         Clear All
       </button>
     </div>
+
   </form>
 </div>
-
-<style>
-  .badge {
-    display: inline-block;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    margin-left: 8px;
-  }
-
-  .badge.required {
-    background-color: #dc3545;
-    color: white;
-  }
-
-  .badge.optional {
-    background-color: #6c757d;
-    color: white;
-  }
-
-  .required-field {
-    border-left: 4px solid #dc3545;
-    padding-left: 12px;
-    background-color: #fff5f5;
-    padding: 12px;
-    border-radius: 4px;
-  }
-
-  .file-status {
-    margin-top: 8px;
-    font-size: 0.9rem;
-  }
-
-  .file-status .success {
-    color: #28a745;
-    font-weight: 500;
-  }
-
-  .file-status .error {
-    color: #dc3545;
-    font-weight: 500;
-  }
-
-  .file-status .muted {
-    color: #6c757d;
-  }
-
-  .status-message {
-    padding: 12px;
-    border-radius: 4px;
-    margin: 16px 0;
-    font-weight: 500;
-  }
-
-  .status-message.success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-  }
-
-  .status-message.warning {
-    background-color: #fff3cd;
-    color: #856404;
-    border: 1px solid #ffeeba;
-  }
-
-  .form-group small {
-    display: block;
-    color: #6c757d;
-    margin-top: 4px;
-    margin-bottom: 8px;
-    font-size: 0.85rem;
-  }
-
-  .button-group button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .btn-secondary {
-    background-color: #6c757d;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-left: 8px;
-  }
-
-  .btn-secondary:hover {
-    background-color: #5a6268;
-  }
-</style>

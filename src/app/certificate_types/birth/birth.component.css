@@ -11,7 +11,9 @@ html, body {
   font-family: "Lato", sans-serif;
 }
 
-/* EDITOR LAYOUT */
+/* =========================================
+   EDITOR LAYOUT
+========================================= */
 .editor-preview-container {
   display: flex;
   gap: 2rem;
@@ -20,7 +22,9 @@ html, body {
   background-color: #f5f9fc;
 }
 
-/* FORM PANEL */
+/* =========================================
+   FORM PANEL
+========================================= */
 .form-panel {
   flex: 0 0 400px;
   padding: 1.5rem;
@@ -40,7 +44,9 @@ html, body {
   padding-bottom: 0.75rem;
 }
 
-/* FORM GROUPS */
+/* =========================================
+   FORM GROUPS
+========================================= */
 .form-group {
   margin-bottom: 1.25rem;
 }
@@ -51,6 +57,14 @@ html, body {
   font-weight: 600;
   color: #2c3e50;
   font-size: 0.95rem;
+}
+
+.form-group small {
+  display: block;
+  color: #6c757d;
+  margin-top: 4px;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
 }
 
 .form-group input,
@@ -71,6 +85,56 @@ html, body {
   box-shadow: 0 0 0 3px rgba(42, 124, 168, 0.15);
 }
 
+/* All file upload groups now share the required style */
+.required-field {
+  border-left: 4px solid #dc3545;
+  background-color: #fff5f5;
+  padding: 12px;
+  border-radius: 4px;
+}
+
+/* =========================================
+   BADGES
+========================================= */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.badge.required {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* =========================================
+   FILE STATUS
+========================================= */
+.file-status {
+  margin-top: 8px;
+  font-size: 0.9rem;
+}
+
+.file-status .success {
+  color: #28a745;
+  font-weight: 500;
+}
+
+.file-status .error {
+  color: #dc3545;
+  font-weight: 500;
+}
+
+.file-status .muted {
+  color: #6c757d;
+}
+
+/* =========================================
+   ERROR TEXT
+========================================= */
 .error {
   color: #e53e3e;
   font-size: 0.75rem;
@@ -78,7 +142,31 @@ html, body {
   font-weight: 500;
 }
 
-/* BUTTONS */
+/* =========================================
+   STATUS MESSAGE
+========================================= */
+.status-message {
+  padding: 12px;
+  border-radius: 4px;
+  margin: 16px 0;
+  font-weight: 500;
+}
+
+.status-message.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.status-message.warning {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+}
+
+/* =========================================
+   BUTTONS
+========================================= */
 .button-group {
   display: flex;
   gap: 0.75rem;
@@ -98,29 +186,42 @@ html, body {
   color: #fff;
 }
 
-.btn.secondary {
-  background: #6c757d;
-  color: #fff;
-}
-
-.btn.secondary:hover {
-  background: #5a6268;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
 .btn-req {
   background-color: #2a7ca8;
   color: #fff;
 }
 
-.btn-req:hover {
+.btn-req:hover:not(:disabled) {
   background-color: #1e5a7a;
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* PREVIEW PANEL */
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.button-group button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================================
+   PREVIEW PANEL
+========================================= */
 .preview-panel {
   flex: 1;
   display: flex;
@@ -130,7 +231,9 @@ html, body {
   position: relative;
 }
 
-/* CERTIFICATE (Letter size, landscape) */
+/* =========================================
+   CERTIFICATE
+========================================= */
 .certificate {
   width: 11in !important;
   height: 8.5in !important;
@@ -149,7 +252,6 @@ html, body {
   background-color: #fff;
 }
 
-/* CERTIFICATE CONTENT */
 .certificate-content {
   width: 100%;
   height: 100%;
@@ -159,20 +261,15 @@ html, body {
   justify-content: space-between;
 }
 
-/* CERTIFICATE LOGO */
 .cert-logo {
   width: 120px;
   margin: 0 auto 1rem auto;
 }
 
-/* CERTIFICATE HEADINGS */
 .certificate h1 {
   font-size: 48px;
   font-family: "Noto Serif", serif;
-  font-optical-sizing: auto;
   font-weight: bold;
-  font-style: normal;
-  font-variation-settings: "wdth" 100;
   margin: 0.5rem 0 0 0;
   color: #2c3e50;
 }
@@ -180,10 +277,7 @@ html, body {
 .certificate h2 {
   font-size: 36px;
   font-family: "Noto Serif", serif;
-  font-optical-sizing: auto;
   font-weight: bold;
-  font-style: normal;
-  font-variation-settings: "wdth" 100;
   color: #0355a1;
   margin: 0.5rem 0 1rem 0;
 }
@@ -197,22 +291,16 @@ html, body {
   padding: 10px 0;
   border-radius: 20px;
   font-family: "Noto Serif", serif;
-  font-optical-sizing: auto;
   font-weight: bold;
-  font-style: normal;
-  font-variation-settings: "wdth" 100;
 }
 
-/* CERTIFICATE TEXT */
 .certificate-text {
   line-height: 1.6;
   font-family: "Lato", sans-serif;
-  font-style: normal;
   font-weight: 600;
   color: #2c3e50;
 }
 
-/* ISSUANCE DETAILS */
 .issuance {
   font-weight: bold;
   margin-top: 1rem;
@@ -224,7 +312,9 @@ html, body {
   font-weight: 700;
 }
 
-/* SIGNATURE SECTION */
+/* =========================================
+   SIGNATURES
+========================================= */
 .signatures {
   display: flex;
   justify-content: space-around;
@@ -244,11 +334,8 @@ html, body {
 
 .sig-names {
   text-transform: uppercase;
-  font-family: "Noto Serif", serif !important;
-  font-optical-sizing: auto !important;
+  font-family: "Noto Serif", serif;
   font-weight: bold;
-  font-style: normal;
-  font-variation-settings: "wdth" 100 !important;
   color: #001b6b;
   font-size: 18px;
   margin-bottom: 0.25rem;
@@ -260,7 +347,9 @@ html, body {
   font-size: 14px;
 }
 
-/* POPUP MODAL */
+/* =========================================
+   POPUP MODAL
+========================================= */
 .popup-overlay {
   position: fixed;
   top: 0;
@@ -292,7 +381,9 @@ html, body {
   margin: 0;
 }
 
-/* RESPONSIVE DESIGN */
+/* =========================================
+   RESPONSIVE
+========================================= */
 @media (max-width: 1024px) {
   .editor-preview-container {
     gap: 1.5rem;
@@ -341,18 +432,9 @@ html, body {
     font-size: 1.25rem;
   }
 
-  .certificate h1 {
-    font-size: 36px;
-  }
-
-  .certificate h2 {
-    font-size: 28px;
-  }
-
-  .certificate h3 {
-    font-size: 18px;
-    width: 70%;
-  }
+  .certificate h1 { font-size: 36px; }
+  .certificate h2 { font-size: 28px; }
+  .certificate h3 { font-size: 18px; width: 70%; }
 
   .signatures {
     padding: 0 1rem;

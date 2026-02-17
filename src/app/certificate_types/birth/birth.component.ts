@@ -18,11 +18,11 @@ export class BirthComponent {
     3: null
   };
 
-  // Define the 3 documents (only #3 Birth Certificate is required)
+  // All 3 documents are now required
   fileRequirements = [
-    { number: 1, label: 'Affidavit of Admission of Paternity', hint: 'Affidavit of Acknowledgment/Admission of Paternity', required: false },
-    { number: 2, label: 'Affidavit to Use the Surname of the Father', hint: 'Affidavit to Use the Surname of the Father', required: false },
-    { number: 3, label: 'Birth Certificate', hint: 'Upload a copy of the duly accomplished birth certificate', required: true }
+    { number: 1, label: 'Affidavit of Admission of Paternity',       hint: 'Affidavit of Acknowledgment/Admission of Paternity',            required: true },
+    { number: 2, label: 'Affidavit to Use the Surname of the Father', hint: 'Affidavit to Use the Surname of the Father (RA 9255)',           required: true },
+    { number: 3, label: 'Birth Certificate',                          hint: 'Upload a copy of the duly accomplished birth certificate',       required: true }
   ];
 
   constructor(private fb: FormBuilder, private http: HttpClient) {
@@ -43,9 +43,16 @@ export class BirthComponent {
     }
   }
 
-  // Check if all REQUIRED files are uploaded (only file #3)
+  // Now checks that ALL three files are uploaded
   areRequiredFilesSelected(): boolean {
-    return this.files[3] !== null; // Only birth certificate (#3) is required
+    return this.files[1] !== null &&
+           this.files[2] !== null &&
+           this.files[3] !== null;
+  }
+
+  // Returns true if a specific file slot has been filled
+  isFileSelected(fileNumber: number): boolean {
+    return this.files[fileNumber] !== null;
   }
 
   // Get file name for display
@@ -59,9 +66,9 @@ export class BirthComponent {
       return;
     }
 
-    // Check if birth certificate (file #3) is uploaded
+    // Check all 3 required files are uploaded
     if (!this.areRequiredFilesSelected()) {
-      alert('Please upload the birth certificate (required document)');
+      alert('Please upload all required documents before submitting.');
       return;
     }
 
@@ -79,7 +86,7 @@ export class BirthComponent {
     formData.append('name', this.documentForm.value.name);
     formData.append('document_type', this.documentType);
 
-    // Append all files (optional ones are skipped if not selected)
+    // Append all 3 files
     for (let i = 1; i <= 3; i++) {
       if (this.files[i]) {
         formData.append('files', this.files[i]!, this.files[i]!.name);
@@ -103,7 +110,7 @@ export class BirthComponent {
       });
   }
 
-  // Reset all files
+  // Reset all files and form
   resetFiles() {
     this.files = { 1: null, 2: null, 3: null };
     this.documentForm.reset();
