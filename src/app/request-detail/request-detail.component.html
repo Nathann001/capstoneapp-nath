@@ -1,73 +1,150 @@
 <!-- request-detail.component.html -->
-<div class="p-8 bg-gray-100 min-h-screen">
-  <button class="mb-4 text-blue-600 hover:underline" routerLink="/home-staff">
-    ← Back to Requests
-  </button>
+<div class="rd-page">
 
-  <h2 class="text-3xl font-bold text-blue-800 mb-6">Document Request Details</h2>
-
-  <div *ngIf="loading">Loading...</div>
-  <div *ngIf="errorMessage" class="text-red-600">{{ errorMessage }}</div>
-
-  <div *ngIf="request" class="bg-white p-6 rounded-lg shadow-md space-y-4">
-    <p><strong>Request ID:</strong> {{ request.RequestID }}</p>
-    <p><strong>Name:</strong> {{ request.name }}</p>
-    <p><strong>Status:</strong> {{ request.status }}</p>
-    <p><strong>Requested At:</strong> {{ request.date_created | date:'medium' }}</p>
-    <p *ngIf="request.updated_at"><strong>Last Updated:</strong> {{ request.updated_at | date:'medium' }}</p>
-
-    <div *ngIf="request.fileUrls?.length">
-  <p><strong>Files:</strong></p>
-
-  <div *ngFor="let file of request.fileUrls" class="mb-4">
-  <!-- Clickable link for all file types -->
-  <p>
-    <a [href]="file" target="_blank" class="text-blue-600 hover:underline">
-      Open file
-    </a>
-  </p>
-
-  <!-- Image Preview -->
-  <img *ngIf="file.match(/\.(png|jpe?g)$/i)"
-       [src]="file"
-       alt="Document File"
-       class="max-w-full border rounded mt-2" />
-
-  <!-- PDF Preview -->
-  <iframe *ngIf="file.endsWith('.pdf')"
-          [src]="file"
-          class="w-full h-64 border rounded mt-2">
-  </iframe>
-</div>
-
-<p *ngIf="!request.fileUrls?.length" class="text-gray-500">No files attached.</p>
-
-
-    <button class="px-4 py-2 bg-green-600 text-white rounded" (click)="processRequest()">Process</button>
-<button class="px-4 py-2 bg-red-600 text-white rounded" (click)="denyRequest()">Deny</button>
+  <!-- Header -->
+  <div class="rd-header">
+    <button class="rd-back-btn" routerLink="/home-staff">
+      <span class="rd-back-arrow">←</span> Back to Requests
+    </button>
+    <h1 class="rd-title">Request Details</h1>
   </div>
-</div>
 
-<!-- DENY MODAL -->
-<div *ngIf="showDenyModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-  <div class="bg-white rounded-lg p-6 w-96 relative">
-    <h3 class="text-xl font-bold mb-4">Deny Request</h3>
+  <!-- Loading -->
+  <div *ngIf="loading" class="rd-loading">
+    <div class="rd-spinner"></div>
+    <p>Loading request...</p>
+  </div>
 
-    <div *ngFor="let option of denialOptions" class="mb-2">
-      <label class="flex items-center gap-2">
-        <input type="checkbox" [checked]="option.selected" (change)="toggleReason($event, option)">
-        {{ option.label }}
-      </label>
-      <div *ngIf="option.selected" class="mt-1">
-        <textarea [(ngModel)]="option.details"
-                  placeholder="Provide details (optional)"
-                  class="w-full p-2 border rounded"></textarea>
+  <!-- Error -->
+  <div *ngIf="errorMessage" class="rd-error">
+    <span class="rd-error-icon">⚠</span> {{ errorMessage }}
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="request" class="rd-content">
+
+    <!-- Info Card -->
+    <div class="rd-card rd-info-card">
+      <div class="rd-card-header">
+        <span class="rd-card-icon">📋</span>
+        <h2 class="rd-card-title">Request Information</h2>
+        <span class="rd-status-badge rd-status-{{ request.status }}">{{ request.status | titlecase }}</span>
+      </div>
+
+      <div class="rd-info-grid">
+        <div class="rd-info-item">
+          <span class="rd-info-label">Request ID</span>
+          <span class="rd-info-value rd-id">#{{ request.RequestID }}</span>
+        </div>
+        <div class="rd-info-item">
+          <span class="rd-info-label">Applicant Name</span>
+          <span class="rd-info-value">{{ request.name }}</span>
+        </div>
+        <div class="rd-info-item">
+          <span class="rd-info-label">Document Type</span>
+          <span class="rd-info-value">{{ request.document_type || '—' }}</span>
+        </div>
+        <div class="rd-info-item">
+          <span class="rd-info-label">Requested At</span>
+          <span class="rd-info-value">{{ request.date_created | date:'MMM d, y · h:mm a' }}</span>
+        </div>
+        <div class="rd-info-item" *ngIf="request.updated_at">
+          <span class="rd-info-label">Last Updated</span>
+          <span class="rd-info-value">{{ request.updated_at | date:'MMM d, y · h:mm a' }}</span>
+        </div>
       </div>
     </div>
 
-    <div class="flex justify-end mt-4 gap-2">
-      <button class="px-4 py-2 bg-gray-300 rounded" (click)="cancelDeny()">Cancel</button>
-      <button class="px-4 py-2 bg-red-600 text-white rounded" (click)="confirmDeny()">Submit</button>
+    <!-- Files Card -->
+    <div class="rd-card rd-files-card">
+      <div class="rd-card-header">
+        <span class="rd-card-icon">📎</span>
+        <h2 class="rd-card-title">Attached Documents</h2>
+        <span class="rd-file-count" *ngIf="request.fileUrls?.length">{{ request.fileUrls.length }} file(s)</span>
+      </div>
+
+      <div *ngIf="request.fileUrls?.length; else noFiles" class="rd-files-grid">
+        <div *ngFor="let file of request.fileUrls; let i = index" class="rd-file-item">
+
+          <!-- Image Thumbnail -->
+          <div *ngIf="file.match(/\.(png|jpe?g)$/i)" class="rd-thumbnail-wrap" (click)="openLightbox(file)">
+            <img [src]="file" alt="Document {{ i + 1 }}" class="rd-thumbnail" />
+            <div class="rd-thumbnail-overlay">
+              <span class="rd-zoom-icon">🔍</span>
+              <span>Click to view</span>
+            </div>
+          </div>
+
+          <!-- PDF Preview -->
+          <div *ngIf="file.endsWith('.pdf')" class="rd-pdf-wrap">
+            <iframe [src]="file" class="rd-pdf-frame"></iframe>
+          </div>
+
+          <div class="rd-file-footer">
+            <span class="rd-file-label">Document {{ i + 1 }}</span>
+            <a [href]="file" target="_blank" class="rd-open-link">↗ Open original</a>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #noFiles>
+        <div class="rd-no-files">
+          <span class="rd-no-files-icon">📭</span>
+          <p>No files attached to this request.</p>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="rd-actions">
+      <button class="rd-btn rd-btn-process" (click)="processRequest()">
+        <span>✓</span> Process Request
+      </button>
+      <button class="rd-btn rd-btn-deny" (click)="denyRequest()">
+        <span>✕</span> Deny Request
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Lightbox ── -->
+<div *ngIf="lightboxImage" class="rd-lightbox-overlay" (click)="closeLightbox()">
+  <div class="rd-lightbox-box" (click)="$event.stopPropagation()">
+    <button class="rd-lightbox-close" (click)="closeLightbox()">✕</button>
+    <img [src]="lightboxImage" alt="Full Preview" class="rd-lightbox-img" />
+    <a [href]="lightboxImage" target="_blank" class="rd-lightbox-link">↗ Open original</a>
+  </div>
+</div>
+
+<!-- ── Deny Modal ── -->
+<div *ngIf="showDenyModal" class="rd-modal-overlay" (click)="cancelDeny()">
+  <div class="rd-modal-box" (click)="$event.stopPropagation()">
+    <div class="rd-modal-header">
+      <h3 class="rd-modal-title">Deny Request</h3>
+      <p class="rd-modal-subtitle">Select the reason(s) for denial</p>
+    </div>
+
+    <div class="rd-denial-options">
+      <div *ngFor="let option of denialOptions" class="rd-denial-item">
+        <label class="rd-denial-label">
+          <input type="checkbox" [checked]="option.selected" (change)="toggleReason($event, option)" class="rd-checkbox" />
+          <span class="rd-denial-text">{{ option.label }}</span>
+        </label>
+        <div *ngIf="option.selected" class="rd-denial-detail">
+          <textarea
+            [(ngModel)]="option.details"
+            placeholder="Provide details (optional)"
+            class="rd-textarea"
+            rows="2"
+          ></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="rd-modal-actions">
+      <button class="rd-btn rd-btn-cancel" (click)="cancelDeny()">Cancel</button>
+      <button class="rd-btn rd-btn-confirm-deny" (click)="confirmDeny()">Confirm Denial</button>
     </div>
   </div>
 </div>

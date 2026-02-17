@@ -99,7 +99,8 @@
       <table class="records-table">
         <thead>
           <tr>
-            <th>Recipient</th>
+            <th>Name</th>
+            <th>Document Type</th>
             <th>Requested At</th>
           </tr>
         </thead>
@@ -108,6 +109,7 @@
               style="cursor: pointer;"
               (click)="viewInProcessDetail(doc)">
             <td>{{ doc.name }}</td>
+            <td>{{ doc.document_type }}</td>
             <td>{{ doc.updated_at | date:'medium' }}</td>
           </tr>
         </tbody>
@@ -120,7 +122,8 @@
       <table class="records-table">
         <thead>
           <tr>
-            <th>Recipient</th>
+            <th>Name</th>
+            <th>Document Type</th>
             <th>Approved At</th>
           </tr>
         </thead>
@@ -129,6 +132,7 @@
               style="cursor: pointer;"
               (click)="viewInProcessDetail(doc)">
             <td>{{ doc.name }}</td>
+            <td>{{ doc.document_type }}</td>
             <td>{{ doc.updated_at | date:'medium' }}</td>
           </tr>
         </tbody>
@@ -141,13 +145,15 @@
       <table class="records-table">
         <thead>
           <tr>
-            <th>Recipient</th>
+            <th>Name</th>
+            <th>Document Type</th>
             <th>Denied At</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let doc of denied">
             <td>{{ doc.name }}</td>
+            <td>{{ doc.document_type }}</td>
             <td>{{ doc.updated_at | date:'medium' }}</td>
           </tr>
         </tbody>
