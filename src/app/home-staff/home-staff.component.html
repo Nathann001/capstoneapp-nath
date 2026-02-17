@@ -69,12 +69,13 @@
 
     <!-- ================== PENDING TABLE ================== -->
     <div class="card">
-      <h3 class="dashboard-title">Pending</h3>
+      <h3 class="dashboard-title"><strong>PENDING</strong></h3>
       <table class="records-table">
         <thead>
           <tr>
             <th>Name</th>
-            <th>Requested At</th>
+            <th>Document Type</th>
+            <th>Time Requested</th>
             <th>Status</th>
           </tr>
         </thead>
@@ -84,6 +85,7 @@
               style="cursor: pointer;"
               (click)="viewRequestDetail(doc)">
             <td>{{ doc.name }}</td>
+            <td>{{ doc.document_type }}</td>
             <td>{{ doc.date_created | date:'medium' }}</td>
             <td class="status-pending">{{ doc.status }}</td>
           </tr>
@@ -93,7 +95,7 @@
 
     <!-- ================== UNDER REVIEW TABLE ================== -->
     <div class="card">
-      <h3 class="dashboard-title">In Process</h3>
+      <h3 class="dashboard-title"><strong>UNDER REVIEW</strong></h3>
       <table class="records-table">
         <thead>
           <tr>
@@ -114,7 +116,7 @@
 
     <!-- ================== APPROVED TABLE ================== -->
     <div class="card">
-      <h3 class="dashboard-title">Approved</h3>
+      <h3 class="dashboard-title"><strong>APPROVED</strong></h3>
       <table class="records-table">
         <thead>
           <tr>
@@ -135,7 +137,7 @@
 
     <!-- ================== DENIED TABLE ================== -->
     <div class="card">
-      <h3 class="dashboard-title">Denied</h3>
+      <h3 class="dashboard-title"><strong>DENIED</strong></h3>
       <table class="records-table">
         <thead>
           <tr>
