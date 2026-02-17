@@ -1,56 +1,90 @@
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<div class="page-container">
-  <div class="bg-image"></div>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-  <main class="content-wrapper">
-    <div class="branding">
-      <h1 class="city-name">ANGELES CITY</h1>
-      <img src="/assets/images/angeles_city_logo.png" class="logo" />
-      <h2 class="form-title">CREATE YOUR ACCOUNT NOW</h2>
+<div class="login-bg">
+    <div class="bg-image"></div>
+
+    <!-- Title -->
+    <h1 class="city-title">ANGELES CITY DOCUMENT REQUEST</h1>
+
+    <!-- Logo -->
+    <img src="/assets/images/angeles_city_logo.png" alt="Angeles City Logo" class="logo" />
+
+    <!-- Subtitle -->
+    <p class="welcome-text">CREATE YOUR ACCOUNT NOW</p>
+
+    <!-- Register Card -->
+    <div class="login-container">
+        <div class="login-box">
+
+            <!-- Registration Form -->
+            <form *ngIf="!isOtpSent" [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="form-box">
+
+                <h3 class="login-title">SIGN UP</h3>
+
+                <!-- Email -->
+                <div class="input-with-icon">
+                    <input type="email" formControlName="email" placeholder="Email Address" />
+                </div>
+
+                <!-- Password -->
+                <div class="input-with-icon">
+                    <input [type]="showPassword ? 'text' : 'password'"
+                           formControlName="password"
+                           placeholder="Password" />
+                    <span class="password-toggle" (click)="showPassword = !showPassword">
+                        <i [class]="showPassword ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash'"></i>
+                    </span>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="input-with-icon">
+                    <input [type]="showConfirmPassword ? 'text' : 'password'"
+                           formControlName="confirmPassword"
+                           placeholder="Confirm Password" />
+                    <span class="password-toggle" (click)="showConfirmPassword = !showConfirmPassword">
+                        <i [class]="showConfirmPassword ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash'"></i>
+                    </span>
+                </div>
+
+                <!-- Register Button -->
+                <button type="submit" class="login-btn" [disabled]="registerForm.invalid">REGISTER</button>
+
+                <!-- Already have an account -->
+                <p class="register-text">
+                    Already have an account?
+                    <a routerLink="/login">Log in</a>
+                </p>
+
+            </form>
+
+            <!-- OTP Verification Section -->
+            <div *ngIf="isOtpSent" class="form-box">
+
+                <h3 class="login-title">VERIFY YOUR ACCOUNT</h3>
+
+                <p class="otp-text">
+                    An OTP has been sent to {{ registerForm.value.email }}
+                </p>
+
+                <!-- OTP Input -->
+                <div class="input-with-icon">
+                    <input type="text"
+                           [(ngModel)]="otpCode"
+                           [ngModelOptions]="{standalone: true}"
+                           placeholder="Enter 6-digit OTP"
+                           maxlength="6" />
+                </div>
+
+                <!-- Verify Button -->
+                <button type="button" (click)="onVerifyOtp()" class="login-btn">VERIFY ACCOUNT</button>
+
+                <!-- Back link -->
+                <p class="register-text">
+                    <a (click)="isOtpSent = false" style="cursor:pointer; color:#ffd6d1;">
+                        ← Back to edit info
+                    </a>
+                </p>
+            </div>
+        </div>
     </div>
-
-    <div class="signup-card">
-      <h3 class="signup-header">SIGN UP</h3>
-
-      <form *ngIf="!isOtpSent" [formGroup]="registerForm" (ngSubmit)="onSubmit()">
-        <div class="input-group">
-          <input type="email" formControlName="email" placeholder="EMAIL ADDRESS" />
-        </div>
-
-        <div class="input-group password-group">
-          <input [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="PASSWORD" />
-          <span class="toggle-icon" (click)="togglePassword()">
-            <i class="fa-solid" [ngClass]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
-          </span>
-        </div>
-
-        <div class="input-group password-group">
-          <input [type]="showConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword" placeholder="CONFIRM PASSWORD" />
-          <span class="toggle-icon" (click)="toggleConfirmPassword()">
-            <i class="fa-solid" [ngClass]="showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
-          </span>
-        </div>
-
-        <div class="actions">
-          <button type="submit" class="register-btn">REGISTER</button>
-          <p class="login-link">Already have an account? <a routerLink="/login">Log in</a></p>
-        </div>
-      </form>
-
-      <div *ngIf="isOtpSent">
-        <p style="color: white; text-align: center; margin-bottom: 20px;">
-          An OTP has been sent to {{ registerForm.value.email }}
-        </p>
-        <div class="input-group">
-          <input type="text" [(ngModel)]="otpCode" placeholder="ENTER 6-DIGIT OTP" maxlength="6" style="text-align: center; letter-spacing: 5px;" />
-        </div>
-        <div class="actions">
-          <button type="button" (click)="onVerifyOtp()" class="register-btn">VERIFY ACCOUNT</button>
-          <button type="button" (click)="isOtpSent = false" style="background: none; border: none; color: white; cursor: pointer; margin-top: 10px;">
-            Back to edit info
-          </button>
-        </div>
-      </div>
-    </div>
-  </main>
 </div>
