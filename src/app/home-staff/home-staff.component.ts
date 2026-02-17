@@ -46,7 +46,7 @@ export class HomeStaffComponent implements OnInit {
     const token = localStorage.getItem('token');
     if (!token) return console.error('No token found. User might not be logged in.');
 
-    this.http.get<any[]>('http://localhost:4000/api/document_request', {
+    this.http.get<any[]>('https://drtbackend-2cw3.onrender.com/api/document_request', {
       headers: { Authorization: `Bearer ${token}` }
     }).subscribe({
       next: (data) => {

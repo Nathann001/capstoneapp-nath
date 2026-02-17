@@ -46,7 +46,7 @@ export class AdminComponent implements OnInit {
     const token = localStorage.getItem('token');
     if (!token) return console.error('No token found. Please log in.');
 
-    this.http.get<any[]>('http://localhost:4000/api/admin/document_request', {
+    this.http.get<any[]>('https://drtbackend-2cw3.onrender.com/api/admin/document_request', {
       headers: { Authorization: `Bearer ${token}` }
     }).subscribe({
       next: (data) => {
@@ -125,7 +125,7 @@ export class AdminComponent implements OnInit {
   const token = localStorage.getItem('token');
   if (!token) return console.error('No token found. Please log in.');
 
-  this.http.put(`http://localhost:4000/api/document_request/${doc.RequestID}/archive`, {}, {
+  this.http.put(`https://drtbackend-2cw3.onrender.com/api/document_request/${doc.RequestID}/archive`, {}, {
     headers: { Authorization: `Bearer ${token}` }
   }).subscribe({
     next: (res: any) => {

@@ -22,7 +22,7 @@ export class ArchivesComponent implements OnInit {
     const token = localStorage.getItem('token');
     if (!token) return console.error('No token found. Please log in.');
 
-    this.http.get<any[]>('http://localhost:4000/api/admin/document_request', {
+    this.http.get<any[]>('https://drtbackend-2cw3.onrender.com/api/admin/document_request', {
       headers: { Authorization: `Bearer ${token}` }
     }).subscribe({
       next: (data) => {

@@ -65,7 +65,7 @@ export class AccountComponent implements OnInit {
     }
 
     // Load user details from DB
-    this.http.get<UserDetails>('http://localhost:4000/api/user/details', { headers })
+    this.http.get<UserDetails>('https://drtbackend-2cw3.onrender.com/api/user/details', { headers })
       .subscribe({
         next: (details) => {
           this.profileForm.patchValue({
@@ -134,7 +134,7 @@ export class AccountComponent implements OnInit {
   };
 
   // 🔹 MUST be POST (not PUT)
-  this.http.post('http://localhost:4000/api/user/details', body, { headers })
+  this.http.post('https://drtbackend-2cw3.onrender.com/api/user/details', body, { headers })
     .subscribe({
       next: () => {
         alert('Profile details updated successfully!');
@@ -158,7 +158,7 @@ export class AccountComponent implements OnInit {
 
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
-    this.http.delete('https://its-certificate-generator.onrender.com/api/user/delete', { headers })
+    this.http.delete('https://drtbackend-2cw3.onrender.com/api/admin/users/${userId}', { headers })
       .subscribe({
         next: () => {
           alert('Account deleted.');

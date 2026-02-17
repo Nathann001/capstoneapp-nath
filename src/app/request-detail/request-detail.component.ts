@@ -30,7 +30,7 @@ export class RequestDetailComponent implements OnInit {
     { key: 'other', label: 'Other', details: '', selected: false }
   ];
 
-  backendUrl = 'http://localhost:4000';
+  backendUrl = 'https://drtbackend-2cw3.onrender.com';
 
   constructor(private route: ActivatedRoute, private http: HttpClient, private router: Router) {}
 

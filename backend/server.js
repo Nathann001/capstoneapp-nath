@@ -1,4 +1,4 @@
-  require('dotenv').config();
+require('dotenv').config();
   console.log('SENDGRID_FROM:', process.env.SENDGRID_FROM);
   console.log('SENDGRID_API_KEY loaded:', !!process.env.SENDGRID_API_KEY);
   const express = require('express');
@@ -106,34 +106,61 @@ function sendRequestStatusEmail(to, status, reason = null, documentType = '') {
 
   app.use(cors({
   origin: process.env.NODE_ENV === 'production'
-    ? ['https://angelescitydrt.org', 'https://www.angelescitydrt.org']
+    ? ['https://angelescitydrt.org', 'https://www.angelescitydrt.org', 'https://drtbackend-2cw3.onrender.com']
     : ['http://localhost:4200', 'http://localhost:4000'],
   credentials: true
 }));
 
   app.use(express.json());
-
-  const db = mysql.createConnection({
+const db = mysql.createPool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT || 3306,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  connectTimeout: 10000
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+  enableKeepAlive: true,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-db.connect(err => {
+// Debug version - add this right after const db = mysql.createPool({...})
+
+console.log('Database Configuration:');
+console.log('Host:', process.env.DB_HOST);
+console.log('User:', process.env.DB_USER);
+console.log('Database:', process.env.DB_NAME);
+console.log('Port:', process.env.DB_PORT || 3306);
+
+// Test the pool with a simple query
+db.query('SELECT 1', (err, results) => {
   if (err) {
-    console.error('❌ Database connection failed:', err);
-    process.exit(1);
+    console.error('❌ Database connection test FAILED');
+    console.error('Error Code:', err.code);
+    console.error('Error Message:', err.message);
+    console.error('Full Error:', JSON.stringify(err, null, 2));
+  } else {
+    console.log('✅ Connected to MySQL');
+    console.log('Test query result:', results);
   }
-  console.log('✅ Connected to MySQL');
 });
 
-// Handle database errors
+// Test the pool with a simple query
+db.query('SELECT 1', (err) => {
+  if (err) {
+    console.error('❌ Database connection test failed:', err.message);
+  } else {
+    console.log('✅ Connected to MySQL');
+  }
+});
+
+// Handle database pool errors
 db.on('error', (err) => {
-  console.error('Database error:', err);
+  console.error('Database pool error:', err.code, err.message);
+  if (err.code === 'PROTOCOL_CONNECTION_LOST') console.error('Database connection was closed.');
+  if (err.code === 'PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR') console.error('Database had a fatal error.');
+  if (err.code === 'PROTOCOL_ENQUEUE_AFTER_AQUIRE_TIMEOUT') console.error('Database acquired connection timeout.');
 });
 
   cloudinary.config({
@@ -1053,11 +1080,11 @@ app.post('/api/document_request', verifyToken, checkRoles([3]), (req, res) => {
 //   res.sendFile(path.join(__dirname, 'public/browser/index.html'));
 // });
 
-app.use(express.static(path.join(__dirname, 'dist/DRT')));
+//app.use(express.static(path.join(__dirname, 'dist/DRT')));
 
-app.get(/^(?!\/api).*/, (req, res) => {
-    res.sendFile(path.join(__dirname, 'dist/DRT/index.html'));
-});
+//app.get(/^(?!\/api).*/, (req, res) => {
+   // res.sendFile(path.join(__dirname, 'dist/DRT/index.html'));
+//});
 
 // Global error handler (optional, for catching any errors)
 app.use((err, req, res, next) => {
@@ -1072,6 +1099,7 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`Open http://localhost:${PORT} in your browser`);
+  console.log(process.env.NODE_ENV);
 });
 
 // Graceful shutdown

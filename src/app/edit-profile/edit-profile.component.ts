@@ -39,7 +39,7 @@ export class EditProfileComponent {
     const token = localStorage.getItem('token') || '';
     const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
 
-    this.http.post('http://localhost:4000/api/user/details', this.profileForm.value, { headers })
+    this.http.post('https://drtbackend-2cw3.onrender.com/api/user/details', this.profileForm.value, { headers })
       .subscribe({
         next: (res: any) => {
           alert(res.message || 'Profile saved successfully!');

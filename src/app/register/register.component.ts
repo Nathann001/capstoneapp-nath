@@ -11,7 +11,7 @@ import { AuthService } from '../services/auth.service';
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.css'],
   // Added RouterModule to imports so routerLink works
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterModule] 
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterModule]
 })
 export class RegisterComponent {
   registerForm: FormGroup;
@@ -29,7 +29,7 @@ export class RegisterComponent {
   ) {
     this.registerForm = this.fb.group({
       // Changed 'contact' to 'email' to match your HTML formControlName
-      email: ['', [Validators.required, Validators.email]], 
+      email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
       confirmPassword: ['', Validators.required]
     });
@@ -67,10 +67,10 @@ export class RegisterComponent {
   onVerifyOtp() {
     const payload = {
       email: this.registerForm.value.email,
-      otp: parseInt(this.otpCode) 
+      otp: parseInt(this.otpCode)
     };
 
-    this.http.post('http://localhost:4000/api/auth/verify-otp', payload).subscribe({
+    this.http.post('https://drtbackend-2cw3.onrender.com/api/auth/verify-otp', payload).subscribe({
       next: (res: any) => {
         alert('Account verified! Redirecting to login...');
         this.router.navigate(['/login']);

@@ -22,7 +22,7 @@ export interface User {
   providedIn: 'root'
 })
 export class AdminService {
-  private apiUrl = 'http://localhost:4000/api/admin';
+  private apiUrl = 'https://drtbackend-2cw3.onrender.com/api/admin';
 
   constructor(private http: HttpClient) {}
 

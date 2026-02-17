@@ -26,7 +26,7 @@ export class ProcessRequestComponent implements OnInit {
     { key: 'other', label: 'Other', details: '', selected: false }
   ];
 
-  backendUrl = 'http://localhost:4000';
+  backendUrl = 'https://drtbackend-2cw3.onrender.com';
 
   constructor(private route: ActivatedRoute, private router: Router, private http: HttpClient) {}
 
@@ -76,10 +76,10 @@ export class ProcessRequestComponent implements OnInit {
     if (!confirm('Approve this request?')) return;
 
     let headers: HttpHeaders;
-    try { 
-      headers = this.getAuthHeaders(); 
-    } catch { 
-      return; 
+    try {
+      headers = this.getAuthHeaders();
+    } catch {
+      return;
     }
 
     this.http.post(this.backendUrl + '/api/document_request/' + this.requestId + '/approved', {}, { headers })
@@ -119,10 +119,10 @@ export class ProcessRequestComponent implements OnInit {
     const finalReason = reasonStrings.join('; ');
 
     let headers: HttpHeaders;
-    try { 
-      headers = this.getAuthHeaders(); 
-    } catch { 
-      return; 
+    try {
+      headers = this.getAuthHeaders();
+    } catch {
+      return;
     }
 
     this.http.put(

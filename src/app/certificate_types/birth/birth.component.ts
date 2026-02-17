@@ -60,7 +60,7 @@ export class BirthComponent {
     if (this.file1) formData.append('files', this.file1, this.file1.name);
     if (this.file2) formData.append('files', this.file2, this.file2.name);
 
-    this.http.post('http://localhost:4000/api/document_request', formData, { headers })
+    this.http.post('https://drtbackend-2cw3.onrender.com/api/document_request', formData, { headers })
       .subscribe({
         next: (res: any) => {
           alert('Document request submitted successfully! Request ID: ' + res.requestId);
