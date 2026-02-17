@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-marriage',
@@ -12,69 +13,116 @@ import { CommonModule } from '@angular/common';
 })
 export class MarriageComponent {
   documentForm: FormGroup;
-    file1: File | null = null;
-      file2: File | null = null;
+  file1: File | null = null;
 
-      constructor(private fb: FormBuilder, private http: HttpClient) {
-        this.documentForm = this.fb.group({
-          name: ['', [Validators.required, Validators.maxLength(50)]]
-        });
-      }
+  // Modal state
+  modal: {
+    visible: boolean;
+    type: 'success' | 'error' | 'warning';
+    title: string;
+    message: string;
+    requestId?: string;
+  } = {
+    visible: false,
+    type: 'success',
+    title: '',
+    message: ''
+  };
 
-      documentType = 'Marriage Certificate';
+  isSubmitting = false;
 
-      get f() {
-        return this.documentForm.controls;
-      }
+  documentType = 'Marriage Certificate';
 
-      onFileSelected(event: any, fileNumber: number) {
-        if (event.target.files.length > 0) {
-          if (fileNumber === 1) {
-            this.file1 = event.target.files[0];
-          } else if (fileNumber === 2) {
-            this.file2 = event.target.files[0];
+  constructor(private fb: FormBuilder, private http: HttpClient, private router: Router) {
+    this.documentForm = this.fb.group({
+      name: ['', [Validators.required, Validators.maxLength(50)]]
+    });
+  }
+
+  get f() {
+    return this.documentForm.controls;
+  }
+
+  onFileSelected(event: any) {
+    if (event.target.files.length > 0) {
+      this.file1 = event.target.files[0];
+    }
+  }
+
+  isFileSelected(): boolean {
+    return this.file1 !== null;
+  }
+
+  getFileName(): string {
+    return this.file1?.name || 'No file selected';
+  }
+
+  showModal(type: 'success' | 'error' | 'warning', title: string, message: string, requestId?: string) {
+    this.modal = { visible: true, type, title, message, requestId };
+  }
+
+  closeModal() {
+    const wasSuccess = this.modal.type === 'success';
+    this.modal.visible = false;
+    if (wasSuccess) {
+      this.router.navigate(['/documents']);
+    }
+  }
+
+  submitDocumentRequest() {
+    if (this.documentForm.invalid) {
+      this.documentForm.markAllAsTouched();
+      return;
+    }
+
+    if (!this.isFileSelected()) {
+      this.showModal('warning', 'Missing Document', 'Please upload the required document before submitting.');
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      this.showModal('error', 'Not Logged In', 'You are not logged in. Please log in and try again.');
+      return;
+    }
+
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`
+    });
+
+    const formData = new FormData();
+    formData.append('name', this.documentForm.value.name);
+    formData.append('document_type', this.documentType);
+    formData.append('files', this.file1!, this.file1!.name);
+
+    this.isSubmitting = true;
+
+    this.http.post('https://drtbackend-2cw3.onrender.com/api/document_request', formData, { headers })
+      .subscribe({
+        next: (res: any) => {
+          this.isSubmitting = false;
+          this.documentForm.reset();
+          this.file1 = null;
+          this.showModal(
+            'success',
+            'Request Submitted!',
+            'Your document request has been successfully submitted.',
+            res.requestId
+          );
+        },
+        error: (err: any) => {
+          this.isSubmitting = false;
+          if (err.status === 401) {
+            this.showModal('error', 'Unauthorized', 'Your session has expired. Please log in again.');
+          } else {
+            this.showModal('error', 'Submission Failed', 'Failed to submit your request. ' + (err.error?.message || err.message));
           }
         }
-      }
+      });
+  }
 
-      submitDocumentRequest() {
-        if (this.documentForm.invalid) {
-          this.documentForm.markAllAsTouched();
-          return;
-        }
-
-        const token = localStorage.getItem('token'); // get token from localStorage
-        if (!token) {
-          alert('You are not logged in!');
-          return;
-        }
-
-        const headers = new HttpHeaders({
-          Authorization: `Bearer ${token}`
-        });
-
-        const formData = new FormData();
-        formData.append('name', this.documentForm.value.name);
-        formData.append('document_type', this.documentType);
-
-        if (this.file1) formData.append('files', this.file1, this.file1.name);
-        if (this.file2) formData.append('files', this.file2, this.file2.name);
-
-        this.http.post('https://drtbackend-2cw3.onrender.com/api/document_request', formData, { headers })
-          .subscribe({
-            next: (res: any) => {
-              alert('Document request submitted successfully! Request ID: ' + res.requestId);
-              this.documentForm.reset();
-              this.file1 = null;
-              this.file2 = null;
-            },
-            error: (err: any) => {
-              if (err.status === 401) {
-                alert('Unauthorized! Please log in again.');
-              } else {
-                alert('Failed to submit document request. Error: ' + (err.error?.message || err.message));
-              }
-            }
-          });
-      }
-    }
+  resetFiles() {
+    this.file1 = null;
+    this.documentForm.reset();
+  }
+}

@@ -98,12 +98,12 @@ html, body {
   color: #fff;
 }
 
-.btn.secondary {
+.btn-secondary {
   background: #6c757d;
   color: #fff;
 }
 
-.btn.secondary:hover {
+.btn-secondary:hover {
   background: #5a6268;
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);

@@ -2,6 +2,8 @@
   <h2>Marriage Certificate Request</h2>
 
   <form [formGroup]="documentForm" (ngSubmit)="submitDocumentRequest()">
+
+    <!-- Recipient Name -->
     <div class="form-group">
       <label>Recipient Name*</label>
       <input type="text" formControlName="name" />
@@ -10,18 +12,71 @@
       </div>
     </div>
 
-    <div class="form-group">
-      <label>Upload File 1</label>
-      <input type="file" (change)="onFileSelected($event, 1)" />
+    <!-- File 1: Marriage Certificate (Required) -->
+    <div class="form-group required-field">
+      <label>
+        Duly accomplished and signed Marriage Certificate
+        <span class="badge required">Required</span>
+      </label>
+      <input type="file" (change)="onFileSelected($event)" accept="image/*,.pdf" />
+      <div class="file-status" *ngIf="isFileSelected(); else notUploaded">
+        <span class="success">✓ {{ getFileName() }}</span>
+      </div>
+      <ng-template #notUploaded>
+        <div class="file-status">
+          <span class="error">✗ This document is required</span>
+        </div>
+      </ng-template>
     </div>
 
-    <div class="form-group">
-      <label>Upload File 2</label>
-      <input type="file" (change)="onFileSelected($event, 2)" />
+    <!-- Status Message -->
+    <div class="status-message" [ngClass]="isFileSelected() ? 'success' : 'warning'">
+      <strong>Status:</strong>
+      <span *ngIf="isFileSelected()">✓ Document uploaded — Ready to submit</span>
+      <span *ngIf="!isFileSelected()">✗ Please upload the required document</span>
     </div>
 
     <div class="button-group">
-      <button type="submit" class="btn btn-req">Submit</button>
+      <button
+        type="submit"
+        class="btn btn-req"
+        [disabled]="!isFileSelected() || isSubmitting"
+      >
+        {{ isSubmitting ? 'Submitting...' : 'Submit' }}
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="resetFiles()">
+        Clear All
+      </button>
     </div>
+
   </form>
+</div>
+
+<!-- ── Modal Dialog ── -->
+<div class="modal-overlay" *ngIf="modal.visible" (click)="closeModal()">
+  <div class="modal-box" [ngClass]="modal.type" (click)="$event.stopPropagation()">
+
+    <div class="modal-icon">
+      <span *ngIf="modal.type === 'success'">✓</span>
+      <span *ngIf="modal.type === 'error'">✕</span>
+      <span *ngIf="modal.type === 'warning'">⚠</span>
+    </div>
+
+    <h3 class="modal-title">{{ modal.title }}</h3>
+    <p class="modal-message">{{ modal.message }}</p>
+
+    <div class="modal-request-id" *ngIf="modal.type === 'success' && modal.requestId">
+      <span>Request ID:</span>
+      <strong>{{ modal.requestId }}</strong>
+    </div>
+
+    <p class="modal-redirect-note" *ngIf="modal.type === 'success'">
+      You will be redirected to your documents page.
+    </p>
+
+    <button class="modal-close-btn" (click)="closeModal()">
+      {{ modal.type === 'success' ? 'Go to Documents' : 'Close' }}
+    </button>
+
+  </div>
 </div>
