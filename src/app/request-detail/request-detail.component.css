@@ -48,7 +48,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  max-width: 860px;
+  width: 100%;
 }
 
 /* ── Cards ── */
@@ -99,7 +99,7 @@
 /* ── Info Grid ── */
 .rd-info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 0;
   padding: 0.5rem 0;
 }
@@ -171,8 +171,8 @@
 /* ── Thumbnail ── */
 .rd-thumbnail-wrap {
   position: relative;
-  width: 180px;
-  height: 160px;
+  width: 280px;
+  height: 220px;
   cursor: pointer;
   overflow: hidden;
 }
@@ -215,12 +215,12 @@
 
 /* ── PDF Frame ── */
 .rd-pdf-wrap {
-  width: 260px;
+  width: 280px;
 }
 
 .rd-pdf-frame {
   width: 100%;
-  height: 180px;
+  height: 220px;
   border: none;
   display: block;
 }
@@ -357,7 +357,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  max-width: 860px;
+  width: 100%;
 }
 
 /* ── Lightbox ── */
@@ -550,6 +550,6 @@
   .rd-info-grid { grid-template-columns: 1fr; }
   .rd-actions { flex-direction: column; }
   .rd-btn { width: 100%; justify-content: center; }
-  .rd-thumbnail-wrap { width: 100%; height: 180px; }
+  .rd-thumbnail-wrap { width: 100%; height: 200px; }
   .rd-pdf-wrap { width: 100%; }
 }

@@ -16,6 +16,7 @@ import { Router } from '@angular/router';
 export class RequestDetailComponent implements OnInit {
   requestId!: number;
   request: any;
+  documentType: string = '';
   loading = true;
   errorMessage = '';
 
@@ -40,6 +41,7 @@ export class RequestDetailComponent implements OnInit {
   ngOnInit() {
     this.requestId = +this.route.snapshot.paramMap.get('id')!;
     this.fetchRequestDetail();
+    this.fetchDocumentType();
   }
 
   private getAuthHeaders() {
@@ -86,6 +88,25 @@ export class RequestDetailComponent implements OnInit {
         console.error('Failed to load document request:', err);
         this.errorMessage = 'Failed to load document request.';
         this.loading = false;
+      }
+    });
+  }
+
+  // Fetch document_type from document_request table
+  fetchDocumentType() {
+    const token = localStorage.getItem('token');
+
+    this.http.get<any[]>(`${this.backendUrl}/api/document_request`, {
+      headers: { Authorization: `Bearer ${token}` }
+    }).subscribe({
+      next: (data) => {
+        const match = data.find((r: any) => r.RequestID === this.requestId || r.id === this.requestId);
+        if (match) {
+          this.documentType = match.document_type || '—';
+        }
+      },
+      error: (err) => {
+        console.error('Failed to fetch document type:', err);
       }
     });
   }

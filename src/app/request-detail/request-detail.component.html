@@ -42,8 +42,9 @@
         </div>
         <div class="rd-info-item">
           <span class="rd-info-label">Document Type</span>
-          <span class="rd-info-value">{{ request.document_type || '—' }}</span>
+          <span class="rd-info-value">{{ documentType || '—' }}</span>
         </div>
+
         <div class="rd-info-item">
           <span class="rd-info-label">Requested At</span>
           <span class="rd-info-value">{{ request.date_created | date:'MMM d, y · h:mm a' }}</span>
