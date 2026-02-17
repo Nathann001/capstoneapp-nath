@@ -12,69 +12,51 @@
       </div>
     </div>
 
-    <!-- File 1: Affidavit of Admission of Paternity (NOW REQUIRED) -->
+    <!-- File 1: Affidavit of Admission of Paternity -->
     <div class="form-group required-field">
       <label>
         Affidavit of Admission of Paternity
         <span class="badge required">Required</span>
       </label>
       <small>Affidavit of Acknowledgment/Admission of Paternity</small>
-      <input
-        type="file"
-        (change)="onFileSelected($event, 1)"
-        accept="image/*,.pdf"
-      />
+      <input type="file" (change)="onFileSelected($event, 1)" accept="image/*,.pdf" />
       <div class="file-status" *ngIf="isFileSelected(1); else notUploaded1">
         <span class="success">✓ {{ getFileName(1) }}</span>
       </div>
       <ng-template #notUploaded1>
-        <div class="file-status">
-          <span class="error">✗ This document is required</span>
-        </div>
+        <div class="file-status"><span class="error">✗ This document is required</span></div>
       </ng-template>
     </div>
 
-    <!-- File 2: Affidavit to Use the Surname of the Father (NOW REQUIRED) -->
+    <!-- File 2: Affidavit to Use the Surname of the Father -->
     <div class="form-group required-field">
       <label>
         Affidavit to Use the Surname of the Father
         <span class="badge required">Required</span>
       </label>
       <small>Affidavit to Use the Surname of the Father (RA 9255)</small>
-      <input
-        type="file"
-        (change)="onFileSelected($event, 2)"
-        accept="image/*,.pdf"
-      />
+      <input type="file" (change)="onFileSelected($event, 2)" accept="image/*,.pdf" />
       <div class="file-status" *ngIf="isFileSelected(2); else notUploaded2">
         <span class="success">✓ {{ getFileName(2) }}</span>
       </div>
       <ng-template #notUploaded2>
-        <div class="file-status">
-          <span class="error">✗ This document is required</span>
-        </div>
+        <div class="file-status"><span class="error">✗ This document is required</span></div>
       </ng-template>
     </div>
 
-    <!-- File 3: Birth Certificate (REQUIRED) -->
+    <!-- File 3: Birth Certificate -->
     <div class="form-group required-field">
       <label>
         Birth Certificate
         <span class="badge required">Required</span>
       </label>
       <small>Upload a copy of the duly accomplished birth certificate</small>
-      <input
-        type="file"
-        (change)="onFileSelected($event, 3)"
-        accept="image/*,.pdf"
-      />
+      <input type="file" (change)="onFileSelected($event, 3)" accept="image/*,.pdf" />
       <div class="file-status" *ngIf="isFileSelected(3); else notUploaded3">
         <span class="success">✓ {{ getFileName(3) }}</span>
       </div>
       <ng-template #notUploaded3>
-        <div class="file-status">
-          <span class="error">✗ This document is required</span>
-        </div>
+        <div class="file-status"><span class="error">✗ This document is required</span></div>
       </ng-template>
     </div>
 
@@ -89,18 +71,45 @@
       <button
         type="submit"
         class="btn btn-req"
-        [disabled]="!areRequiredFilesSelected()"
+        [disabled]="!areRequiredFilesSelected() || isSubmitting"
       >
-        Submit
+        {{ isSubmitting ? 'Submitting...' : 'Submit' }}
       </button>
-      <button
-        type="button"
-        class="btn btn-secondary"
-        (click)="resetFiles()"
-      >
+      <button type="button" class="btn btn-secondary" (click)="resetFiles()">
         Clear All
       </button>
     </div>
 
   </form>
+</div>
+
+<!-- ── Modal Dialog ── -->
+<div class="modal-overlay" *ngIf="modal.visible" (click)="closeModal()">
+  <div class="modal-box" [ngClass]="modal.type" (click)="$event.stopPropagation()">
+
+    <!-- Icon -->
+    <div class="modal-icon">
+      <span *ngIf="modal.type === 'success'">✓</span>
+      <span *ngIf="modal.type === 'error'">✕</span>
+      <span *ngIf="modal.type === 'warning'">⚠</span>
+    </div>
+
+    <h3 class="modal-title">{{ modal.title }}</h3>
+    <p class="modal-message">{{ modal.message }}</p>
+
+    <!-- Show Request ID on success -->
+    <div class="modal-request-id" *ngIf="modal.type === 'success' && modal.requestId">
+      <span>Request ID:</span>
+      <strong>{{ modal.requestId }}</strong>
+    </div>
+
+    <p class="modal-redirect-note" *ngIf="modal.type === 'success'">
+      You will be redirected to your documents page.
+    </p>
+
+    <button class="modal-close-btn" (click)="closeModal()">
+      {{ modal.type === 'success' ? 'Go to Documents' : 'Close' }}
+    </button>
+
+  </div>
 </div>
