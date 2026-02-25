@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+
 @Component({
   selector: 'app-admin',
   standalone: true,
@@ -10,15 +11,12 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./admin.component.css']
 })
 export class AdminComponent implements OnInit {
-  // ---------- DATA ----------
   documentRequests: any[] = [];
   inProcess: any[] = [];
   approved: any[] = [];
   denied: any[] = [];
   rows: (1 | 2)[] = [1, 2];
 
-
-  // ---------- STATS ----------
   stats = {
     approved: { today: 0, week: 0, month: 0 },
     denied: { today: 0, week: 0, month: 0 },
@@ -26,14 +24,16 @@ export class AdminComponent implements OnInit {
     under_review: { today: 0, week: 0, month: 0 }
   };
 
-  // ---------- CURRENT SELECTION ----------
   selectedRow1: 'approved' | 'denied' | 'pending' | 'under_review' = 'approved';
   selectedRow2: 'approved' | 'denied' | 'pending' | 'under_review' = 'denied';
 
-  // ---------- PAGINATION ----------
   itemsPerPage = 6;
   currentPage1 = 1;
   currentPage2 = 1;
+
+  // Archive modal
+  showArchiveModal = false;
+  docToArchive: any = null;
 
   constructor(private http: HttpClient) {}
 
@@ -41,7 +41,6 @@ export class AdminComponent implements OnInit {
     this.loadRequests();
   }
 
-  // ---------- FETCH DATA ----------
   loadRequests() {
     const token = localStorage.getItem('token');
     if (!token) return console.error('No token found. Please log in.');
@@ -51,19 +50,16 @@ export class AdminComponent implements OnInit {
     }).subscribe({
       next: (data) => {
         const activeData = data.filter(d => d.archived === 0);
-
         this.documentRequests = activeData.filter(d => d.status === 'pending');
         this.inProcess = activeData.filter(d => d.status === 'under_review');
         this.approved = activeData.filter(d => d.status === 'approved');
         this.denied = activeData.filter(d => d.status === 'denied');
-
         this.calculateStats(data);
       },
       error: (err) => console.error('Failed to fetch document requests', err)
     });
   }
 
-  // ---------- HELPER FUNCTIONS ----------
   getTableForRow(row: 1 | 2) {
     const category = row === 1 ? this.selectedRow1 : this.selectedRow2;
     switch (category) {
@@ -92,21 +88,13 @@ export class AdminComponent implements OnInit {
     else this.currentPage2 = page;
   }
 
-  // ---------- NAVIGATION ----------
-  viewRequestDetail(doc: any) {
-    console.log('View Request Detail', doc);
-  }
+  viewRequestDetail(doc: any) { console.log('View Request Detail', doc); }
+  viewInProcessDetail(doc: any) { console.log('View In Process Detail', doc); }
 
-  viewInProcessDetail(doc: any) {
-    console.log('View In Process Detail', doc);
-  }
-
-  // ---------- STATS ----------
   calculateStats(data: any[]) {
     const now = new Date();
     const countByPeriod = (arr: any[], fn: (d: Date) => boolean) =>
       arr.filter(d => fn(new Date(d.updated_at || d.date_created))).length;
-
     const filterStatus = (status: string) => data.filter(d => d.status === status);
 
     for (const status of ['approved', 'denied', 'pending', 'under_review'] as const) {
@@ -117,41 +105,46 @@ export class AdminComponent implements OnInit {
     }
   }
 
-  archiveRequest(doc: any, event: Event) {
-  event.stopPropagation(); // Prevent row click
+  confirmArchive(doc: any, event: Event) {
+    event.stopPropagation();
+    this.docToArchive = doc;
+    this.showArchiveModal = true;
+  }
 
-  if (!confirm(`Are you sure you want to archive "${doc.name}"?`)) return;
+  archiveRequest() {
+    if (!this.docToArchive) return;
+    const token = localStorage.getItem('token');
+    if (!token) return console.error('No token found.');
 
-  const token = localStorage.getItem('token');
-  if (!token) return console.error('No token found. Please log in.');
+    this.http.put(`https://drtbackend-2cw3.onrender.com/api/document_request/${this.docToArchive.RequestID}/archive`, {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    }).subscribe({
+      next: () => {
+        const id = this.docToArchive.RequestID;
+        this.documentRequests = this.documentRequests.filter(d => d.RequestID !== id);
+        this.inProcess        = this.inProcess.filter(d => d.RequestID !== id);
+        this.approved         = this.approved.filter(d => d.RequestID !== id);
+        this.denied           = this.denied.filter(d => d.RequestID !== id);
+        this.showArchiveModal = false;
+        this.docToArchive = null;
+      },
+      error: (err) => console.error('Failed to archive request', err)
+    });
+  }
 
-  this.http.put(`https://drtbackend-2cw3.onrender.com/api/document_request/${doc.RequestID}/archive`, {}, {
-    headers: { Authorization: `Bearer ${token}` }
-  }).subscribe({
-    next: (res: any) => {
-      console.log(res.message || 'Archived successfully!');
-      doc.archived = 1;
+  closeArchiveModal() {
+    this.showArchiveModal = false;
+    this.docToArchive = null;
+  }
 
-      // Remove from current table
-      this.documentRequests = this.documentRequests.filter(d => d.RequestID !== doc.RequestID);
-      this.inProcess = this.inProcess.filter(d => d.RequestID !== doc.RequestID);
-      this.approved = this.approved.filter(d => d.RequestID !== doc.RequestID);
-      this.denied = this.denied.filter(d => d.RequestID !== doc.RequestID);
-    },
-    error: (err) => {
-      console.error('Failed to archive request', err);
-    }
-  });
-}
-
-getDocumentLabel(type: string): string {
-  const map: Record<string, string> = {
-    birth: 'Birth Certificate',
-    death: 'Death Certificate',
-    marriage: 'Marriage Certificate'
-  };
-  return map[type] || type;
-}
+  getDocumentLabel(type: string): string {
+    const map: Record<string, string> = {
+      birth: 'Birth Certificate',
+      death: 'Death Certificate',
+      marriage: 'Marriage Certificate'
+    };
+    return map[type] || type;
+  }
 
   isSameDay(a: Date, b: Date) { return a.toDateString() === b.toDateString(); }
   isSameWeek(a: Date, b: Date) { return Math.abs(a.getTime() - b.getTime()) / (24*60*60*1000) < 7; }

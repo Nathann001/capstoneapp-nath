@@ -13,6 +13,10 @@ export class ArchivesComponent implements OnInit {
   archivedRequests: any[] = [];
   private API = 'https://drtbackend-2cw3.onrender.com';
 
+  showRestoreModal = false;
+  showDeleteModal = false;
+  selectedDoc: any = null;
+
   constructor(private http: HttpClient) {}
 
   ngOnInit() { this.loadArchived(); }
@@ -28,26 +32,48 @@ export class ArchivesComponent implements OnInit {
     });
   }
 
-  restore(doc: any) {
-    if (!confirm(`Restore "${doc.name}"?`)) return;
+  confirmRestore(doc: any) {
+    this.selectedDoc = doc;
+    this.showRestoreModal = true;
+  }
 
-    this.http.put(`${this.API}/api/document_request/${doc.RequestID}/restore`, {}, {
+  confirmDelete(doc: any) {
+    this.selectedDoc = doc;
+    this.showDeleteModal = true;
+  }
+
+  restore() {
+    if (!this.selectedDoc) return;
+    this.http.put(`${this.API}/api/document_request/${this.selectedDoc.RequestID}/restore`, {}, {
       headers: { Authorization: `Bearer ${this.token}` }
     }).subscribe({
-      next: () => { this.archivedRequests = this.archivedRequests.filter(d => d.RequestID !== doc.RequestID); },
+      next: () => {
+        this.archivedRequests = this.archivedRequests.filter(d => d.RequestID !== this.selectedDoc.RequestID);
+        this.showRestoreModal = false;
+        this.selectedDoc = null;
+      },
       error: (err) => console.error('Failed to restore', err)
     });
   }
 
-  permanentDelete(doc: any) {
-    if (!confirm(`Permanently delete "${doc.name}"? This cannot be undone.`)) return;
-
-    this.http.delete(`${this.API}/api/document_request/${doc.RequestID}/permanent`, {
+  permanentDelete() {
+    if (!this.selectedDoc) return;
+    this.http.delete(`${this.API}/api/document_request/${this.selectedDoc.RequestID}/permanent`, {
       headers: { Authorization: `Bearer ${this.token}` }
     }).subscribe({
-      next: () => { this.archivedRequests = this.archivedRequests.filter(d => d.RequestID !== doc.RequestID); },
+      next: () => {
+        this.archivedRequests = this.archivedRequests.filter(d => d.RequestID !== this.selectedDoc.RequestID);
+        this.showDeleteModal = false;
+        this.selectedDoc = null;
+      },
       error: (err) => console.error('Failed to delete', err)
     });
+  }
+
+  closeModals() {
+    this.showRestoreModal = false;
+    this.showDeleteModal = false;
+    this.selectedDoc = null;
   }
 
   getDocumentLabel(type: string): string {

@@ -20,8 +20,8 @@
             <td>{{ doc.status }}</td>
             <td>{{ doc.updated_at | date:'mediumDate' }}</td>
             <td>
-              <button (click)="restore(doc)" class="btn pending">Restore</button>
-              <button (click)="permanentDelete(doc)" class="btn record">Delete</button>
+              <button (click)="confirmRestore(doc)" class="btn pending">Restore</button>
+              <button (click)="confirmDelete(doc)" class="btn record">Delete</button>
             </td>
           </tr>
           <tr *ngIf="archivedRequests.length === 0">
@@ -31,5 +31,42 @@
       </table>
     </div>
 
+  </div>
+</div>
+
+<!-- RESTORE MODAL -->
+<div *ngIf="showRestoreModal" class="modal-overlay" (click)="closeModals()">
+  <div class="modal-container modal-container--sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Restore Request</h3>
+      <button class="modal-close" (click)="closeModals()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin: 0 0 6px;">Are you sure you want to restore this request?</p>
+      <p style="margin: 0; font-weight: 600;">{{ selectedDoc?.name }}</p>
+      <div class="modal-actions" style="margin-top: 24px;">
+        <button type="button" (click)="closeModals()" class="btn pending">Cancel</button>
+        <button type="button" (click)="restore()" class="btn complete">Restore</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div *ngIf="showDeleteModal" class="modal-overlay" (click)="closeModals()">
+  <div class="modal-container modal-container--sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Delete Request</h3>
+      <button class="modal-close" (click)="closeModals()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin: 0 0 6px;">Are you sure you want to permanently delete this request?</p>
+      <p style="margin: 0; font-weight: 600;">{{ selectedDoc?.name }}</p>
+      <p style="margin: 8px 0 0; color: #888; font-size: 0.875rem;">This action cannot be undone.</p>
+      <div class="modal-actions" style="margin-top: 24px;">
+        <button type="button" (click)="closeModals()" class="btn pending">Cancel</button>
+        <button type="button" (click)="permanentDelete()" class="btn record">Delete</button>
+      </div>
+    </div>
   </div>
 </div>

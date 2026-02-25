@@ -11,7 +11,7 @@ import { RouterModule, Router } from '@angular/router';
 })
 export class HomeComponent implements OnInit {
 
-  isLoggedIn = !!localStorage.getItem('token'); // check login state
+  isLoggedIn = !!localStorage.getItem('token');
 
   hotlines = [
     {

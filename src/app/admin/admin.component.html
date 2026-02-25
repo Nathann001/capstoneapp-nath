@@ -1,8 +1,6 @@
 <div class="app-container">
-  <!-- ================== MAIN CONTENT ================== -->
   <div class="admin-container">
 
-    <!-- ================== ROW 1 STAT CARDS ================== -->
     <h2 class="dashboard-title">Statistics Dashboard</h2>
 
     <div class="flex items-center gap-4 mb-4">
@@ -30,7 +28,6 @@
       </div>
     </div>
 
-    <!-- ================== ROW 2 STAT CARDS ================== -->
     <div class="flex items-center gap-4 mb-4">
       <label class="font-semibold">Row 2:</label>
       <select [(ngModel)]="selectedRow2" class="border px-2 py-1 rounded">
@@ -56,7 +53,6 @@
       </div>
     </div>
 
-    <!-- ================== TABLES WITH PAGINATION ================== -->
     <div class="table-grid">
       <div *ngFor="let row of rows" class="card">
         <h3 class="dashboard-title">{{ formatStatName(row === 1 ? selectedRow1 : selectedRow2) }}</h3>
@@ -83,7 +79,7 @@
               </td>
               <td>
                 <button *ngIf="doc.archived === 0"
-                        (click)="archiveRequest(doc, $event)"
+                        (click)="confirmArchive(doc, $event)"
                         class="btn pending">
                   Archive
                 </button>
@@ -93,7 +89,6 @@
           </tbody>
         </table>
 
-        <!-- Pagination -->
         <div style="display: flex; justify-content: flex-end; margin-top: 15px; gap: 5px;">
           <button *ngFor="let page of getTotalPages(row)"
                   (click)="changePage(row, page)"
@@ -106,5 +101,23 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ARCHIVE MODAL -->
+<div *ngIf="showArchiveModal" class="modal-overlay" (click)="closeArchiveModal()">
+  <div class="modal-container modal-container--sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Archive Request</h3>
+      <button class="modal-close" (click)="closeArchiveModal()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin: 0 0 6px;">Are you sure you want to archive this request?</p>
+      <p style="margin: 0; font-weight: 600;">{{ docToArchive?.name }}</p>
+      <div class="modal-actions" style="margin-top: 24px;">
+        <button type="button" (click)="closeArchiveModal()" class="btn pending">Cancel</button>
+        <button type="button" (click)="archiveRequest()" class="btn complete">Archive</button>
+      </div>
+    </div>
   </div>
 </div>

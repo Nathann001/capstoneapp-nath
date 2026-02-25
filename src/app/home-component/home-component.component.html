@@ -1,146 +1,198 @@
+<!-- home-component.component.html (REDESIGNED) -->
 <div class="app-container">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
-
-
-  <!-- MAIN CONTENT -->
   <main class="home-bg">
-    <!-- HEADER -->
-    <header class="home-header">
-      <h1>ANGELES CITY</h1>
-      <p class="subtitle">WELCOME ANGELEÑOS</p>
+
+    <!-- ── HERO ─────────────────────────────────────────────────── -->
+    <header class="hero">
+      <div class="hero-bg-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+      </div>
+
+      <div class="hero-inner">
+        <div class="city-badge">
+          <img src="/assets/images/angeles_city_logo.png" alt="Angeles City Seal" class="city-seal" />
+        </div>
+
+        <div class="hero-text">
+          <p class="hero-eyebrow">Republic of the Philippines</p>
+          <h1 class="hero-title">Angeles City</h1>
+          <p class="hero-tagline">WELCOME, ANGELEÑOS</p>
+          <div class="hero-divider"></div>
+          <p class="hero-sub">Digital Services for Every Angeleño — Access city services anytime, anywhere.</p>
+        </div>
+      </div>
+
+      <!-- Guest CTA -->
+      <div class="hero-cta" *ngIf="!isLoggedIn">
+        <p class="cta-note">
+          Gusto mong mag-apply ng documents?
+          <span class="cta-link" (click)="navigateToRegister()">Mag-Register</span> o
+          <span class="cta-link" (click)="navigateToLogin()">Mag-Login</span> para magsimula.
+        </p>
+        <div class="cta-buttons">
+          <button class="btn-primary" (click)="navigateToLogin()">
+            <i class="fas fa-sign-in-alt"></i> Login
+          </button>
+          <button class="btn-secondary" (click)="navigateToRegister()">
+            <i class="fas fa-user-plus"></i> Register
+          </button>
+        </div>
+      </div>
+
+      <div class="hero-wave">
+        <svg viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0,30 C360,60 1080,0 1440,30 L1440,60 L0,60 Z" fill="#f0eeee"/>
+        </svg>
+      </div>
     </header>
 
-    <!-- HERO BANNER -->
-    <div class="hero-banner">
-      <h2>DIGITAL SERVICES FOR EVERY ANGELEÑO</h2>
-      <p>Access city services anytime, anywhere.</p>
-    </div>
+    <!-- ── BODY ──────────────────────────────────────────────────── -->
+    <div class="page-body">
 
-    <!-- LOGIN / REGISTER BUTTONS FOR GUESTS -->
-    <div class="landing-buttons-container" *ngIf="!isLoggedIn">
-      <p class="landing-instructions">
-        Gusto mong mag-apply ng documents?
-        <span class="landing-link" (click)="navigateToRegister()">Click Register</span>.<br>
-        Mayroon nang account?
-        <span class="landing-link" (click)="navigateToLogin()">Click Login</span>.
-      </p>
+      <div class="content-grid">
 
-      <div class="landing-buttons">
-        <button class="btn-login" (click)="navigateToLogin()">Login</button>
-        <button class="btn-register" (click)="navigateToRegister()">Register</button>
+        <!-- LEFT: Latest Updates -->
+        <section class="col-updates">
+          <div class="section-pill">
+            <i class="fas fa-bullhorn"></i> Latest Updates
+          </div>
+
+          <article class="news-card featured">
+            <div class="news-img-wrap">
+              <img src="/assets/images/announcement1.jpg" alt="PTRO Ops" />
+              <span class="news-badge">Official</span>
+            </div>
+            <div class="news-body">
+              <span class="news-date"><i class="fas fa-calendar-alt"></i> January 12, 2026</span>
+              <h3>PTRO Conducts Proactive Operations for Safer Roads</h3>
+              <p>Another proactive step by the City Government of Angeles through the PTRO to ensure safe, orderly, and compliant public transport for all Angeleños.</p>
+            </div>
+          </article>
+
+          <article class="news-card">
+            <div class="news-img-wrap">
+              <img src="/assets/images/community2.jpg" alt="Community News" />
+              <span class="news-badge community">Community</span>
+            </div>
+            <div class="news-body">
+              <span class="news-date"><i class="fas fa-calendar-alt"></i> January 9, 2026</span>
+              <h3>Dog Impounding Operations in Brgy. Sto. Domingo</h3>
+              <p>Led by the City Veterinary Office in support of responsible pet ownership and community safety initiatives.</p>
+            </div>
+          </article>
+        </section>
+
+        <!-- RIGHT: Citizen's Charter -->
+        <section class="col-charter">
+          <div class="section-pill">
+            <i class="fas fa-scroll"></i> Citizen's Charter
+          </div>
+
+          <div class="charter-card vision">
+            <div class="charter-icon-wrap"><i class="fas fa-eye"></i></div>
+            <div>
+              <h3>Vision Statement</h3>
+              <p>By 2028, Angeles City is the heart and haven of quality socio-economic services that are globally competitive and environment friendly.</p>
+            </div>
+          </div>
+
+          <div class="charter-card mission">
+            <div class="charter-icon-wrap"><i class="fas fa-bullseye"></i></div>
+            <div>
+              <h3>Mission Statement</h3>
+              <p>To achieve this vision, we commit to:</p>
+              <ul>
+                <li>Delivery of prompt, responsive, effective and efficient basic services.</li>
+                <li>Unified and concerted efforts for customer satisfaction.</li>
+                <li>Transparency and accountability in all reforms.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="charter-card docs">
+            <h3><i class="fas fa-file-alt"></i> Registration &amp; Civil Documents</h3>
+            <div class="doc-list">
+              <a href="/assets/documents/registration-of-birth-on-time.pdf" class="doc-row" target="_blank">
+                <span><i class="fas fa-baby doc-type-icon"></i> Registration of Birth Certificate</span>
+                <span class="dl-badge"><i class="fas fa-download"></i> PDF</span>
+              </a>
+              <a href="/assets/documents/registration-of-death-on-time.pdf" class="doc-row" target="_blank">
+                <span><i class="fas fa-cross doc-type-icon"></i> Registration of Death Certificate</span>
+                <span class="dl-badge"><i class="fas fa-download"></i> PDF</span>
+              </a>
+              <a href="/assets/documents/registration-of-marriage-on-time.pdf" class="doc-row" target="_blank">
+                <span><i class="fas fa-ring doc-type-icon"></i> Registration of Marriage Certificate</span>
+                <span class="dl-badge"><i class="fas fa-download"></i> PDF</span>
+              </a>
+              <a href="/assets/documents/issuance-of-certified-copy-of-birth-others.pdf" class="doc-row" target="_blank">
+                <span><i class="fas fa-copy doc-type-icon"></i> Issuance of Certified True Copy</span>
+                <span class="dl-badge"><i class="fas fa-download"></i> PDF</span>
+              </a>
+              <a href="/assets/documents/issuance-of-marriage-license.pdf" class="doc-row" target="_blank">
+                <span><i class="fas fa-certificate doc-type-icon"></i> Issuance of Marriage License</span>
+                <span class="dl-badge"><i class="fas fa-download"></i> PDF</span>
+              </a>
+              <a href="/assets/documents/delayed-registration-of-birth.pdf" class="doc-row" target="_blank">
+                <span><i class="fas fa-clock doc-type-icon"></i> Delayed Registration — Birth</span>
+                <span class="dl-badge"><i class="fas fa-download"></i> PDF</span>
+              </a>
+              <a href="/assets/documents/delayed-registration-of-marriage.pdf" class="doc-row" target="_blank">
+                <span><i class="fas fa-clock doc-type-icon"></i> Delayed Registration — Marriage</span>
+                <span class="dl-badge"><i class="fas fa-download"></i> PDF</span>
+              </a>
+              <a href="/assets/documents/delayed-registration-of-death.pdf" class="doc-row" target="_blank">
+                <span><i class="fas fa-clock doc-type-icon"></i> Delayed Registration — Death</span>
+                <span class="dl-badge"><i class="fas fa-download"></i> PDF</span>
+              </a>
+            </div>
+          </div>
+        </section>
+
       </div>
-    </div>
 
-    <!-- Full width divider -->
-    <hr class="landing-divider" />
-
-    <div class="dashboard-grid">
-      <!-- LATEST UPDATES -->
-      <div class="grid-column">
-        <div class="section-anchor red-pill">
-          <i class="fas fa-bullhorn"></i> Latest Updates
+      <!-- ── EMERGENCY HOTLINES ─────────────────────────────────── -->
+      <section class="hotlines-section">
+        <div class="section-pill centered">
+          <i class="fas fa-phone"></i> Emergency Hotlines
         </div>
+        <p class="hotlines-note">Lines are open <strong>24/7</strong>. Call immediately during emergencies.</p>
 
-        <div class="info-card">
-          <img src="/assets/images/announcement1.jpg" alt="PTRO Ops" />
-          <div class="card-content">
-            <h4>PTRO Conducts Proactive Operations for Safer Roads</h4>
-            <span class="date">January 12, 2026</span>
-            <p>Another proactive step by the City Government of Angeles through the PTRO to ensure safe, orderly, and compliant public transport for all Angeleños.</p>
-          </div>
-        </div>
-
-        <div class="info-card">
-          <img src="/assets/images/community2.jpg" alt="Community News" />
-          <div class="card-content">
-            <span class="category-tag">Community</span>
-            <h4>Dog Impounding Operations in Brgy. Sto. Domingo</h4>
-            <span class="date">January 9, 2026</span>
-            <p>Led by the City Veterinary Office in support of responsible pet ownership and community safety initiatives.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- CITIZEN’S CHARTER -->
-      <div class="grid-column">
-        <div class="section-anchor red-pill">
-          <i class="fas fa-scroll"></i> Citizen’s Charter
-        </div>
-
-        <div class="charter-container">
-          <div class="white-block">
-            <h3>Vision Statement</h3>
-            <p>By 2028, Angeles City is the heart and haven of quality socio-economic services that are globally competitive and environment friendly.</p>
-
-            <h3>Mission Statement</h3>
-            <p>To achieve this vision, we commit to:</p>
-            <ul>
-              <li>Delivery of prompt, responsive, effective and efficient basic services.</li>
-              <li>Unified and concerted efforts for customer satisfaction.</li>
-              <li>Transparency and accountability in all reforms.</li>
-            </ul>
-          </div>
-
-          <div class="white-block registry">
-            <h3>Registration & Civil Documents</h3>
-            <div class="document-list">
-              <div class="doc-item"><span>Registration of Birth Certificate</span> <a href="/assets/documents/registration-of-birth-on-time.pdf">Download <i class="fas fa-download"></i></a></div>
-              <div class="doc-item"><span>Registration of Death Certificate</span> <a href="/assets/documents/registration-of-death-on-time.pdf">Download <i class="fas fa-download"></i></a></div>
-              <div class="doc-item"><span>Registration of Marriage Certificate</span> <a href="/assets/documents/registration-of-marriage-on-time.pdf">Download <i class="fas fa-download"></i></a></div>
-              <div class="doc-item"><span>Issuance of Certified True Copy of Birth, Marriage, Death and Other Registry Documents</span> <a href="/assets/documents/issuance-of-certified-copy-of-birth-others.pdf">Download <i class="fas fa-download"></i></a></div>
-              <div class="doc-item"><span>Issuance of Marriage License</span> <a href="/assets/documents/issuance-of-marriage-license.pdf">Download <i class="fas fa-download"></i></a></div>
-              <div class="doc-item"><span>Delayed Registration of Birth Certificate</span> <a href="/assets/documents/delayed-registration-of-birth.pdf">Download <i class="fas fa-download"></i></a></div>
-              <div class="doc-item"><span>Delayed Registration of Marriage Certificate</span> <a href="/assets/documents/delayed-registration-of-marriage.pdf">Download <i class="fas fa-download"></i></a></div>
-              <div class="doc-item"><span>Delayed Registration of Death Certificate</span> <a href="/assets/documents/delayed-registration-of-death.pdf">Download <i class="fas fa-download"></i></a></div>
+        <div class="hotlines-grid">
+          <div class="hotline-card" *ngFor="let hotline of hotlines">
+            <div class="hotline-icon">
+              <i class="fa-solid {{ hotline.icon }}"></i>
+            </div>
+            <div class="hotline-info">
+              <h4>{{ hotline.name }}</h4>
+              <a *ngFor="let num of hotline.numbers" href="tel:{{ num }}">
+                <i class="fas fa-mobile-alt"></i> {{ num }}
+              </a>
+              <a *ngIf="hotline.landline" href="tel:{{ hotline.landline }}">
+                <i class="fas fa-phone"></i> {{ hotline.landline }}
+              </a>
+              <a *ngIf="hotline.messenger" [href]="hotline.messenger" target="_blank" rel="noopener" class="messenger-link">
+                <i class="fab fa-facebook-messenger"></i> Message on Facebook
+              </a>
             </div>
           </div>
         </div>
-      </div>
+      </section>
+
     </div>
 
-    <!-- EMERGENCY HOTLINES -->
-    <section class="hotline-section">
-      <div class="section-anchor red-pill">
-        <i class="fas fa-phone"></i> Emergency Hotlines
-      </div>
-
-      <div class="charter-container">
-        <div class="white-block hotline-block">
-          <p class="hotline-note">
-            Call immediately during emergencies. Lines are open 24/7.
-          </p>
-
-          <div class="hotline-list">
-            <div class="hotline-card" *ngFor="let hotline of hotlines">
-              <div class="hotline-icon">
-                <i class="fa-solid {{ hotline.icon }}"></i>
-              </div>
-
-              <div class="hotline-info">
-                <h4>{{ hotline.name }}</h4>
-
-                <a *ngFor="let num of hotline.numbers" href="tel:{{ num }}">
-                  📱 {{ num }}
-                </a>
-
-                <a *ngIf="hotline.landline" href="tel:{{ hotline.landline }}">
-                  ☎️ {{ hotline.landline }}
-                </a>
-
-                <a *ngIf="hotline.messenger" [href]="hotline.messenger" target="_blank" rel="noopener">
-                  💬 Message us on Facebook
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- FOOTER -->
+    <!-- ── FOOTER ─────────────────────────────────────────────────── -->
     <footer class="home-footer">
-      © 2026 Angeles City Government. All rights reserved.
+      <div class="footer-inner">
+        <img src="/assets/images/angeles_city_logo.png" alt="Seal" class="footer-seal" />
+        <div>
+          <p class="footer-city">City Government of Angeles</p>
+          <p class="footer-copy">© 2026 Angeles City Government. All rights reserved.</p>
+        </div>
+      </div>
     </footer>
+
   </main>
 </div>

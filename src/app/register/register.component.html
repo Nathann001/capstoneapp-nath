@@ -1,105 +1,145 @@
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<!-- register.component.html (REDESIGNED) -->
 
-<div class="login-bg">
-    <div class="bg-image"></div>
-
-    <h1 class="city-title">ANGELES CITY DOCUMENT REQUEST</h1>
-    <img src="/assets/images/angeles_city_logo.png" alt="Angeles City Logo" class="logo" />
-    <p class="welcome-text">CREATE YOUR ACCOUNT NOW</p>
-
-    <div class="login-container">
-        <div class="login-box">
-
-            <!-- Registration Form -->
-            <form *ngIf="!isOtpSent" [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="form-box">
-
-                <h3 class="login-title">SIGN UP</h3>
-
-                <div class="input-with-icon">
-                    <input type="email" formControlName="email" placeholder="Email Address" />
-                </div>
-
-                <div class="input-with-icon">
-                    <input [type]="showPassword ? 'text' : 'password'"
-                           formControlName="password"
-                           placeholder="Password" />
-                    <span class="password-toggle" (click)="showPassword = !showPassword">
-                        <i [class]="showPassword ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash'"></i>
-                    </span>
-                </div>
-
-                <div class="input-with-icon">
-                    <input [type]="showConfirmPassword ? 'text' : 'password'"
-                           formControlName="confirmPassword"
-                           placeholder="Confirm Password" />
-                    <span class="password-toggle" (click)="showConfirmPassword = !showConfirmPassword">
-                        <i [class]="showConfirmPassword ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash'"></i>
-                    </span>
-                </div>
-
-                <button type="submit" class="login-btn" [disabled]="registerForm.invalid || loading">
-                    {{ loading ? 'SENDING OTP...' : 'REGISTER' }}
-                </button>
-
-                <p class="register-text">
-                    Already have an account?
-                    <a routerLink="/login">Log in</a>
-                </p>
-
-            </form>
-
-            <!-- OTP Verification Section -->
-            <div *ngIf="isOtpSent" class="form-box">
-
-                <h3 class="login-title">VERIFY YOUR ACCOUNT</h3>
-
-                <p class="otp-text">
-                    An OTP has been sent to <strong>{{ registerForm.value.email }}</strong>
-                </p>
-
-                <div class="input-with-icon">
-                    <input type="text"
-                           [(ngModel)]="otpCode"
-                           [ngModelOptions]="{standalone: true}"
-                           placeholder="Enter 6-digit OTP"
-                           maxlength="6" />
-                </div>
-
-                <button type="button" (click)="onVerifyOtp()" class="login-btn"
-                        [disabled]="otpCode.length < 6 || verifying">
-                    {{ verifying ? 'VERIFYING...' : 'VERIFY ACCOUNT' }}
-                </button>
-
-                <div class="resend-container">
-                    <button type="button"
-                            class="resend-btn"
-                            (click)="resendOtp()"
-                            [disabled]="resendCooldown > 0">
-                        <i class="fa-solid fa-rotate-right"></i>
-                        {{ resendCooldown > 0 ? 'Resend OTP in ' + resendCooldown + 's' : 'Resend OTP' }}
-                    </button>
-
-                    <p class="resend-message" *ngIf="resendMessage">
-                        <i class="fa-solid fa-circle-check"></i> {{ resendMessage }}
-                    </p>
-                </div>
-
-            </div>
-        </div>
-    </div>
+<!-- OTP ERROR MODAL -->
+<div class="modal-overlay" *ngIf="showErrorModal" (click)="closeErrorModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-icon"><i class="fa-solid fa-circle-xmark"></i></div>
+    <h3 class="modal-title">Something went wrong</h3>
+    <p class="modal-message">{{ errorMessage }}</p>
+    <button class="modal-btn" (click)="closeErrorModal()">Try Again</button>
+  </div>
 </div>
 
-<!-- ===== OTP ERROR MODAL ===== -->
-<div class="modal-overlay" *ngIf="showErrorModal" (click)="closeErrorModal()">
-    <div class="modal-box" (click)="$event.stopPropagation()">
+<div class="register-page">
 
-        <div class="modal-icon">
-            <i class="fa-solid fa-circle-xmark"></i>
+  <!-- LEFT PANEL: Form -->
+  <div class="left-panel">
+    <div class="form-card">
+
+      <!-- Mobile header -->
+      <div class="mobile-header">
+        <img src="/assets/images/angeles_city_logo.png" alt="Angeles City Seal" class="mobile-seal" routerLink="/" style="cursor:pointer" />
+        <p class="mobile-title">Angeles City</p>
+      </div>
+
+      <!-- REGISTRATION FORM -->
+      <ng-container *ngIf="!isOtpSent">
+        <h2 class="form-title">Create Account</h2>
+        <p class="form-sub">Register to access city document services</p>
+
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="form-body">
+
+          <div class="field-group">
+            <label class="field-label">Email Address</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-envelope input-icon"></i>
+              <input type="email" formControlName="email" placeholder="you@example.com"
+                [class.input-invalid]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" />
+            </div>
+            <span class="field-error" *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched">
+              Please enter a valid email address.
+            </span>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Password</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-lock input-icon"></i>
+              <input [type]="showPassword ? 'text' : 'password'" formControlName="password"
+                placeholder="Create a password"
+                [class.input-invalid]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" />
+              <span class="toggle-pw" (click)="togglePassword()">
+                <i [class]="showPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
+              </span>
+            </div>
+            <span class="field-error" *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched">
+              Password is required.
+            </span>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Confirm Password</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-lock input-icon"></i>
+              <input [type]="showConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword"
+                placeholder="Repeat your password"
+                [class.input-invalid]="registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched" />
+              <span class="toggle-pw" (click)="toggleConfirmPassword()">
+                <i [class]="showConfirmPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
+              </span>
+            </div>
+            <span class="field-error" *ngIf="registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched">
+              Please confirm your password.
+            </span>
+          </div>
+
+          <button type="submit" class="btn-submit" [disabled]="registerForm.invalid || loading">
+            <span *ngIf="!loading"><i class="fa-solid fa-user-plus"></i> Register</span>
+            <span *ngIf="loading" class="btn-spinner-wrap">
+              <span class="spinner"></span> Sending OTP…
+            </span>
+          </button>
+
+        </form>
+
+        <div class="form-links">
+          <p>Already have an account? <a routerLink="/login" class="link-red">Sign in</a></p>
+        </div>
+      </ng-container>
+
+      <!-- OTP VERIFICATION -->
+      <ng-container *ngIf="isOtpSent">
+        <div class="otp-header">
+          <div class="otp-icon-wrap"><i class="fa-solid fa-envelope-open-text"></i></div>
+          <h2 class="form-title">Check your email</h2>
+          <p class="form-sub">
+            We sent a 6-digit code to<br>
+            <strong class="email-highlight">{{ registerForm.value.email }}</strong>
+          </p>
         </div>
 
-        <h3 class="modal-title">Invalid OTP</h3>
-        <p class="modal-message">{{ errorMessage }}</p>
+        <div class="field-group">
+          <label class="field-label">Verification Code</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-key input-icon"></i>
+            <input type="text" [(ngModel)]="otpCode" [ngModelOptions]="{standalone: true}"
+              placeholder="Enter 6-digit OTP" maxlength="6" class="otp-input" />
+          </div>
+        </div>
 
-        <button class="modal-close-btn" (click)="closeErrorModal()">Try Again</button>
+        <button type="button" class="btn-submit" (click)="onVerifyOtp()"
+          [disabled]="otpCode.length < 6 || verifying">
+          <span *ngIf="!verifying"><i class="fa-solid fa-circle-check"></i> Verify Account</span>
+          <span *ngIf="verifying" class="btn-spinner-wrap">
+            <span class="spinner"></span> Verifying…
+          </span>
+        </button>
+
+        <div class="resend-wrap">
+          <button type="button" class="btn-resend" (click)="resendOtp()" [disabled]="resendCooldown > 0">
+            <i class="fa-solid fa-rotate-right"></i>
+            {{ resendCooldown > 0 ? 'Resend in ' + resendCooldown + 's' : 'Resend OTP' }}
+          </button>
+          <p class="resend-ok" *ngIf="resendMessage">
+            <i class="fa-solid fa-circle-check"></i> {{ resendMessage }}
+          </p>
+        </div>
+      </ng-container>
+
     </div>
+  </div>
+
+  <!-- RIGHT PANEL: Photo + branding -->
+  <div class="right-panel">
+    <div class="panel-overlay"></div>
+    <div class="panel-content">
+      <img src="/assets/images/angeles_city_logo.png" alt="Angeles City Seal" class="seal" routerLink="/" style="cursor:pointer" />
+      <h1 class="panel-title">Angeles City</h1>
+      <p class="panel-eyebrow">Republic of the Philippines</p>
+      <div class="panel-rule"></div>
+      <p class="panel-desc">Join thousands of Angeleños accessing government services online — fast, easy, and secure.</p>
+    </div>
+    <div class="panel-footer">© 2026 City Government of Angeles</div>
+  </div>
+
 </div>

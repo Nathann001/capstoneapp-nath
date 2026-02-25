@@ -1,61 +1,103 @@
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<div class="login-bg">
-    <div class="bg-image"></div>
+<!-- login.component.html (REDESIGNED) -->
+<div class="login-page">
 
-    <h1 class="city-title">ANGELES CITY DOCUMENT REQUEST</h1>
+  <!-- LEFT PANEL: Background photo + branding -->
+  <div class="left-panel">
+    <div class="panel-overlay"></div>
 
-    <!-- LOGO -->
-    <img src="/assets/images/angeles_city_logo.png" alt="Angeles City Logo" class="logo" />
-
-    <!-- WELCOME TEXT -->
-    <p class="welcome-text">WELCOME ANGELEÑOS</p>
-
-    <!-- LOGIN CARD -->
-    <div class="login-container">
-        <div class="login-box">
-
-            <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="form-box">
-
-                <h3 class="login-title">LOGIN</h3>
-
-                <!-- EMAIL -->
-                <div class="input-with-icon">
-                    <input type="email" formControlName="email" placeholder="EMAIL" />
-                </div>
-
-                <!-- PASSWORD -->
-                <div class="input-with-icon">
-                    <input [type]="showPassword ? 'text' : 'password'" formControlName="password"
-                        placeholder="PASSWORD" />
-                    <span class="password-toggle" (click)="showPassword = !showPassword">
-                        <i [class]="showPassword ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash'"></i>
-                    </span>
-                </div>
-
-                <!-- LOGIN BUTTON -->
-                <button type="submit" class="login-btn" [disabled]="loginForm.invalid">LOGIN
-                </button>
-
-                <!-- LINKS -->
-                <div class="form-options">
-                    <a (click)="goToForgotPassword($event)">Forgot password?</a>
-                </div>
-
-                <p class="register-text">
-                    Don't have an account?
-                    <a routerLink="/register" style="cursor:pointer;">Register</a>
-                </p>
-
-                 <p>
-                  Not verified yet?
-                  <a (click)="goToOtp()" style="cursor:pointer;">Go to OTP Verification</a>
-                </p>
-
-            </form>
-        </div>
+    <div class="panel-content">
+      <img src="/assets/images/angeles_city_logo.png" alt="Angeles City Seal" class="seal" routerLink="/" style="cursor:pointer" />
+      <h1 class="panel-title">Angeles City</h1>
+      <p class="panel-eyebrow">Republic of the Philippines</p>
+      <div class="panel-rule"></div>
+      <p class="panel-desc">Digital Document Request System<br>— For Every Angeleño</p>
     </div>
 
+    <div class="panel-footer">
+      © 2026 City Government of Angeles
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL: Login form -->
+  <div class="right-panel">
+    <div class="form-card">
+
+      <!-- Top logo (mobile only) -->
+      <div class="mobile-header">
+        <img src="/assets/images/angeles_city_logo.png" alt="Angeles City Seal" class="mobile-seal" routerLink="/" style="cursor:pointer" />
+        <p class="mobile-title">Angeles City</p>
+      </div>
+
+      <h2 class="form-title">Welcome back</h2>
+      <p class="form-sub">Sign in to your account to continue</p>
+
+      <!-- Error message -->
+      <div class="error-msg" *ngIf="loginError">
+        <i class="fa-solid fa-circle-exclamation"></i> {{ loginError }}
+      </div>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="form-body">
+
+        <!-- EMAIL -->
+        <div class="field-group">
+          <label class="field-label">Email Address</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-envelope input-icon"></i>
+            <input
+              type="email"
+              formControlName="email"
+              placeholder="you@example.com"
+              [class.input-invalid]="email?.invalid && email?.touched"
+            />
+          </div>
+          <span class="field-error" *ngIf="email?.invalid && email?.touched">
+            Please enter a valid email address.
+          </span>
+        </div>
+
+        <!-- PASSWORD -->
+        <div class="field-group">
+          <label class="field-label">Password</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-lock input-icon"></i>
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="Enter your password"
+              [class.input-invalid]="password?.invalid && password?.touched"
+            />
+            <span class="toggle-pw" (click)="togglePassword()">
+              <i [class]="showPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
+            </span>
+          </div>
+          <span class="field-error" *ngIf="password?.invalid && password?.touched">
+            Password is required.
+          </span>
+        </div>
+
+        <!-- Forgot password -->
+        <div class="form-meta">
+          <a class="link-subtle" (click)="goToForgotPassword($event)">Forgot password?</a>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn-login" [disabled]="loginForm.invalid || loading">
+          <span *ngIf="!loading">
+            <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In
+          </span>
+          <span *ngIf="loading" class="btn-spinner-wrap">
+            <span class="spinner"></span> Signing in…
+          </span>
+        </button>
+
+      </form>
+
+      <div class="form-links">
+        <p>Don't have an account? <a routerLink="/register" class="link-red">Register here</a></p>
+        <p>Not verified yet? <a (click)="goToOtp()" class="link-red" style="cursor:pointer">Go to OTP Verification</a></p>
+      </div>
+
+    </div>
+  </div>
+
 </div>
-
-
-               
