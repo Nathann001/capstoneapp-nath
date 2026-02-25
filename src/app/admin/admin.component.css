@@ -135,7 +135,7 @@ html, body {
 
 
 /* BUTTONS */
-   
+
 .btn {
   padding: 6px 10px;
   min-width: 80px;
@@ -200,6 +200,33 @@ html, body {
   .stat-card {
     flex: 1 1 45%;
   }
+}
+
+/* Overlay covers entire screen */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+
+  background: rgba(0, 0, 0, 0.5);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 9999;
+}
+
+/* Modal box */
+.modal-container {
+  background: white;
+  width: 400px;
+  max-width: 90%;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 
 /*   MOBILE RESPONSIVE */
