@@ -1,5 +1,5 @@
 // ================================================================
-// appointment-booking.ts  (UPDATED)
+// appointment-booking.component.ts  (REDESIGNED)
 // ================================================================
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -33,8 +33,11 @@ export class AppointmentBookingComponent implements OnInit {
 
   // ---- Booking ----
   isBooking: boolean = false;
-  successMessage: string = '';
-  errorMessage: string = '';
+
+  // ---- Modal ----
+  modalVisible: boolean = false;
+  modalType: 'success' | 'error' = 'success';
+  modalMessage: string = '';
 
   constructor(private http: HttpClient) {}
 
@@ -45,10 +48,18 @@ export class AppointmentBookingComponent implements OnInit {
 
   get token() { return localStorage.getItem('token') || ''; }
 
+  showModal(type: 'success' | 'error', message: string) {
+    this.modalType = type;
+    this.modalMessage = message;
+    this.modalVisible = true;
+  }
+
+  closeModal() {
+    this.modalVisible = false;
+  }
+
   onDateChange() {
     this.selectedTime = '';
-    this.successMessage = '';
-    this.errorMessage = '';
     if (!this.selectedDate) { this.slots = []; return; }
     this.fetchSlots();
   }
@@ -59,25 +70,25 @@ export class AppointmentBookingComponent implements OnInit {
     this.http.get<any[]>(`${this.API}/api/appointments/slots?date=${this.selectedDate}`)
       .subscribe({
         next: (s) => { this.slots = s; this.loadingSlots = false; },
-        error: () => { this.loadingSlots = false; this.errorMessage = 'Failed to load time slots.'; }
+        error: () => {
+          this.loadingSlots = false;
+          this.showModal('error', 'Failed to load time slots. Please check your connection and try again.');
+        }
       });
   }
 
   selectTime(slot: any) {
     if (slot.full) return;
     this.selectedTime = slot.time;
-    this.errorMessage = '';
   }
 
   bookAppointment() {
     if (!this.selectedDate || !this.selectedTime || !this.selectedCertType || !this.selectedRegType) {
-      this.errorMessage = 'Please fill in all fields before confirming.';
+      this.showModal('error', 'Please fill in all fields — certificate type, registration type, date, and time slot — before confirming.');
       return;
     }
 
     this.isBooking = true;
-    this.errorMessage = '';
-    this.successMessage = '';
 
     this.http.post(`${this.API}/api/appointments`, {
       appt_date: this.selectedDate,
@@ -87,8 +98,9 @@ export class AppointmentBookingComponent implements OnInit {
     }, { headers: { Authorization: `Bearer ${this.token}` } })
     .subscribe({
       next: () => {
-        this.successMessage = 'Appointment booked! A confirmation email has been sent to you.';
         this.isBooking = false;
+        this.showModal('success', 'Your appointment has been successfully booked! A confirmation email has been sent to your registered address.');
+        // Reset form
         this.selectedDate = '';
         this.selectedTime = '';
         this.selectedCertType = '';
@@ -96,8 +108,8 @@ export class AppointmentBookingComponent implements OnInit {
         this.slots = [];
       },
       error: (err) => {
-        this.errorMessage = err.error?.message || 'Failed to book appointment. Please try again.';
         this.isBooking = false;
+        this.showModal('error', err.error?.message || 'Failed to book appointment. Please try again or contact the office.');
       }
     });
   }

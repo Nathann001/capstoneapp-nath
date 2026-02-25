@@ -90,13 +90,13 @@
               <button
                 (click)="selectUser(user)"
                 class="btn pending"
-                *ngIf="user.role !== 1 || currentUserCanEditAdmins">
+                *ngIf="user.role != 1 || currentUserCanEditAdmins">
                 Edit
               </button>
               <button
                 (click)="confirmDelete(user)"
                 class="btn record"
-                *ngIf="user.role !== 1 || currentUserCanDeleteAdmins">
+                *ngIf="user.role != 1 || currentUserCanDeleteAdmins">
                 Delete
               </button>
             </td>

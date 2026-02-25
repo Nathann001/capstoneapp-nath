@@ -1,43 +1,91 @@
 <!-- ================================================================ -->
-<!-- appointment-booking.component.html  (UPDATED)                   -->
+<!-- appointment-booking.component.html  (REDESIGNED)                -->
 <!-- ================================================================ -->
 <div class="app-container">
   <aside class="sidebar"></aside>
 
   <div class="admin-container">
-    <h2 class="dashboard-title">Book an Appointment</h2>
 
-    <!-- SUCCESS -->
-    <div *ngIf="successMessage" class="alert-success">
-      <i class="fa-solid fa-circle-check"></i> {{ successMessage }}
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+      <div class="header-icon">
+        <i class="fa-solid fa-calendar-check"></i>
+      </div>
+      <div>
+        <h2 class="dashboard-title">Book an Appointment</h2>
+        <p class="dashboard-subtitle">Schedule your civil registry visit in a few steps</p>
+      </div>
     </div>
 
-    <!-- ERROR -->
-    <div *ngIf="errorMessage" class="alert-error">
-      <i class="fa-solid fa-circle-exclamation"></i> {{ errorMessage }}
+    <!-- MODAL OVERLAY -->
+    <div class="modal-overlay" *ngIf="modalVisible" (click)="closeModal()">
+      <div class="modal-box" [class.modal-success]="modalType === 'success'" [class.modal-error]="modalType === 'error'" (click)="$event.stopPropagation()">
+        <div class="modal-icon">
+          <i class="fa-solid" [ngClass]="modalType === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'"></i>
+        </div>
+        <h3 class="modal-title">{{ modalType === 'success' ? 'Booking Confirmed!' : 'Something went wrong' }}</h3>
+        <p class="modal-message">{{ modalMessage }}</p>
+        <button class="modal-btn" (click)="closeModal()">{{ modalType === 'success' ? 'Great, thanks!' : 'Try Again' }}</button>
+      </div>
     </div>
 
+    <!-- MAIN CARD -->
     <div class="card">
 
+      <!-- PROGRESS INDICATOR -->
+      <div class="progress-steps">
+        <div class="step" [class.step-active]="selectedCertType" [class.step-done]="selectedCertType">
+          <div class="step-circle">
+            <i class="fa-solid fa-file-certificate" *ngIf="!selectedCertType"></i>
+            <i class="fa-solid fa-check" *ngIf="selectedCertType"></i>
+          </div>
+          <span>Certificate</span>
+        </div>
+        <div class="step-line" [class.step-line-done]="selectedCertType && selectedRegType"></div>
+        <div class="step" [class.step-active]="selectedRegType" [class.step-done]="selectedRegType">
+          <div class="step-circle">
+            <i class="fa-solid fa-list-check" *ngIf="!selectedRegType"></i>
+            <i class="fa-solid fa-check" *ngIf="selectedRegType"></i>
+          </div>
+          <span>Type</span>
+        </div>
+        <div class="step-line" [class.step-line-done]="selectedDate"></div>
+        <div class="step" [class.step-active]="selectedDate" [class.step-done]="selectedDate && selectedTime">
+          <div class="step-circle">
+            <i class="fa-solid fa-calendar" *ngIf="!selectedDate"></i>
+            <i class="fa-solid fa-check" *ngIf="selectedDate && selectedTime"></i>
+            <i class="fa-solid fa-calendar" *ngIf="selectedDate && !selectedTime"></i>
+          </div>
+          <span>Date & Time</span>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
       <!-- ROW 1: Certificate Type + Registration Type -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+      <div class="two-col-grid">
 
         <!-- Certificate Type -->
         <div class="form-group">
-          <label class="form-label">Certificate Type</label>
+          <label class="form-label">
+            <i class="fa-solid fa-file-lines label-icon"></i>
+            Certificate Type
+          </label>
           <div class="option-group">
             <div
               *ngFor="let type of certificateTypes"
               class="option-card"
               [class.option-selected]="selectedCertType === type"
               (click)="selectedCertType = type">
-              <i class="fa-solid"
-                 [ngClass]="{
-                   'fa-baby':       type === 'Birth',
-                   'fa-cross':      type === 'Death',
-                   'fa-ring':       type === 'Marriage'
-                 }">
-              </i>
+              <div class="option-icon-wrap">
+                <i class="fa-solid"
+                   [ngClass]="{
+                     'fa-baby':   type === 'Birth',
+                     'fa-cross':  type === 'Death',
+                     'fa-ring':   type === 'Marriage'
+                   }">
+                </i>
+              </div>
               <span>{{ type }}</span>
             </div>
           </div>
@@ -45,19 +93,24 @@
 
         <!-- Registration Type -->
         <div class="form-group">
-          <label class="form-label">Registration Type</label>
+          <label class="form-label">
+            <i class="fa-solid fa-clock label-icon"></i>
+            Registration Type
+          </label>
           <div class="option-group">
             <div
               *ngFor="let type of registrationTypes"
               class="option-card"
               [class.option-selected]="selectedRegType === type"
               (click)="selectedRegType = type">
-              <i class="fa-solid"
-                 [ngClass]="{
-                   'fa-clock':         type === 'On Time',
-                   'fa-clock-rotate-left': type === 'Delayed'
-                 }">
-              </i>
+              <div class="option-icon-wrap">
+                <i class="fa-solid"
+                   [ngClass]="{
+                     'fa-clock':             type === 'On Time',
+                     'fa-clock-rotate-left': type === 'Delayed'
+                   }">
+                </i>
+              </div>
               <span>{{ type }}</span>
             </div>
           </div>
@@ -65,23 +118,42 @@
 
       </div>
 
+      <div class="divider"></div>
+
       <!-- DATE PICKER -->
-      <div class="form-group" style="margin-bottom: 20px;">
-        <label class="form-label">Select Date</label>
-        <input
-          type="date"
-          class="form-control"
-          [(ngModel)]="selectedDate"
-          [min]="minDate"
-          (change)="onDateChange()"
-        />
+      <div class="form-group date-group">
+        <label class="form-label">
+          <i class="fa-solid fa-calendar-days label-icon"></i>
+          Select Date
+        </label>
+        <div class="date-input-wrap">
+          <input
+            type="date"
+            class="form-control date-input"
+            [(ngModel)]="selectedDate"
+            [min]="minDate"
+            (change)="onDateChange()"
+          />
+          <span class="date-hint" *ngIf="!selectedDate">Choose a date to see available slots</span>
+        </div>
       </div>
 
       <!-- TIME SLOTS -->
-      <div *ngIf="selectedDate" class="form-group">
-        <label class="form-label">Select Time Slot</label>
+      <div *ngIf="selectedDate" class="form-group slot-section">
+        <label class="form-label">
+          <i class="fa-solid fa-clock label-icon"></i>
+          Select Time Slot
+        </label>
 
-        <div *ngIf="loadingSlots" style="color:#999; padding: 10px 0;">Loading available slots...</div>
+        <div *ngIf="loadingSlots" class="slots-loading">
+          <div class="loading-spinner"></div>
+          <span>Loading available slots…</span>
+        </div>
+
+        <div *ngIf="!loadingSlots && slots.length === 0 && selectedDate" class="slots-empty">
+          <i class="fa-solid fa-calendar-xmark"></i>
+          <span>No slots available for this date.</span>
+        </div>
 
         <div *ngIf="!loadingSlots && slots.length > 0" class="slot-grid">
           <div
@@ -91,6 +163,9 @@
             [class.slot-full]="slot.full"
             (click)="selectTime(slot)">
             <span class="slot-time">{{ slot.label }}</span>
+            <div class="slot-bar-wrap" *ngIf="!slot.full">
+              <div class="slot-bar" [style.width.%]="((20 - slot.available) / 20) * 100"></div>
+            </div>
             <span class="slot-count">
               <ng-container *ngIf="!slot.full">{{ slot.available }} spot{{ slot.available !== 1 ? 's' : '' }} left</ng-container>
               <ng-container *ngIf="slot.full">Full</ng-container>
@@ -100,26 +175,33 @@
       </div>
 
       <!-- CONFIRM BUTTON -->
-      <div style="margin-top: 24px;">
+      <div class="confirm-wrap">
         <button
-          class="btn complete"
+          class="btn-confirm"
           (click)="bookAppointment()"
           [disabled]="isBooking"
-          style="min-width: 180px;">
-          {{ isBooking ? 'Booking...' : 'Confirm Appointment' }}
+          [class.btn-loading]="isBooking">
+          <span *ngIf="!isBooking">
+            <i class="fa-solid fa-calendar-check"></i>
+            Confirm Appointment
+          </span>
+          <span *ngIf="isBooking" class="btn-spinner-wrap">
+            <span class="btn-spinner"></span>
+            Booking…
+          </span>
         </button>
       </div>
 
     </div>
 
     <!-- INFO BANNER -->
-    <div class="card" style="margin-top: 16px; background: #f8fbff; border-left: 4px solid #2a7ca8;">
-      <p style="margin:0; font-size:13px; color:#555;">
-        <i class="fa-solid fa-circle-info" style="color:#2a7ca8; margin-right:6px;"></i>
-        Office hours are <b>8:00 AM – 5:00 PM</b>, Monday to Friday.
-        Each time slot accepts up to <b>20 appointments</b>.
+    <div class="info-banner">
+      <i class="fa-solid fa-circle-info info-icon"></i>
+      <div class="info-text">
+        Office hours are <strong>8:00 AM – 5:00 PM</strong>, Monday to Friday.
+        Each time slot accepts up to <strong>20 appointments</strong>.
         A confirmation email will be sent after booking, and a reminder email will be sent on the day of your appointment.
-      </p>
+      </div>
     </div>
 
   </div>
