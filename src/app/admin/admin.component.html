@@ -1,10 +1,10 @@
 <div class="app-container">
   <!-- ================== MAIN CONTENT ================== -->
   <div class="admin-container">
-    
+
     <!-- ================== ROW 1 STAT CARDS ================== -->
     <h2 class="dashboard-title">Statistics Dashboard</h2>
-    
+
     <div class="flex items-center gap-4 mb-4">
       <label class="font-semibold">Row 1:</label>
       <select [(ngModel)]="selectedRow1" class="border px-2 py-1 rounded">
@@ -60,7 +60,7 @@
     <div class="table-grid">
       <div *ngFor="let row of rows" class="card">
         <h3 class="dashboard-title">{{ formatStatName(row === 1 ? selectedRow1 : selectedRow2) }}</h3>
-        
+
         <table class="records-table">
           <thead>
             <tr>
@@ -74,7 +74,7 @@
             <tr *ngFor="let doc of getPaginatedItems(row)"
                 (click)="doc.status === 'under_review' ? viewInProcessDetail(doc) : viewRequestDetail(doc)"
                 style="cursor: pointer;">
-              <td>{{ doc.name }}</td>
+              <td>{{ doc.RequestID }}</td>
               <td>{{ doc.updated_at || doc.date_created | date:'medium' }}</td>
               <td class="status-{{ doc.status === 'under_review' ? 'pending' : doc.status }}">
                 {{ doc.status === 'under_review' ? 'Under Review' : doc.status }}

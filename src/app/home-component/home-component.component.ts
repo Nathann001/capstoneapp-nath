@@ -1,6 +1,6 @@
 import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 
 @Component({
   selector: 'app-home-component',
@@ -10,6 +10,8 @@ import { RouterModule } from '@angular/router';
   styleUrls: ['./home-component.component.css']
 })
 export class HomeComponent implements OnInit {
+
+  isLoggedIn = !!localStorage.getItem('token'); // check login state
 
   hotlines = [
     {
@@ -46,11 +48,19 @@ export class HomeComponent implements OnInit {
     }
   ];
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      console.log('Landing page loaded');
-    }
+  }
+
+  navigateToLogin() {
+    this.router.navigate(['/login']);
+  }
+
+  navigateToRegister() {
+    this.router.navigate(['/register']);
   }
 }

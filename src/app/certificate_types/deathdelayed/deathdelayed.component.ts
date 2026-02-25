@@ -4,7 +4,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'app-death',
+  selector: 'app-deathdelayed',
   standalone: true,
   imports: [ReactiveFormsModule, CommonModule],
   templateUrl: './deathdelayed.component.html',
@@ -43,7 +43,7 @@ export class DeathdelayedComponent {
         return;
       }
 
-      const token = localStorage.getItem('token'); // get token from localStorage
+      const token = localStorage.getItem('token');
       if (!token) {
         alert('You are not logged in!');
         return;

@@ -78,12 +78,18 @@ export class OtpVerificationComponent implements OnInit {
   resendOtp() {
     if (this.resendCooldown > 0) return;
 
-    this.authService.resendOtp(this.contact).subscribe({
+    const contact = this.otpForm.get('contact')?.value;
+
+    if (!contact) {
+      this.message = 'Please enter your email or phone number.';
+      return;
+    }
+
+    this.authService.resendOtp(contact).subscribe({
       next: () => {
         this.message = 'OTP resent successfully!';
         this.resendCooldown = 60;
 
-        // Use RxJS timer for countdown
         const countdown$ = timer(0, 1000);
         const sub = countdown$.subscribe((sec) => {
           this.resendCooldown = 60 - sec;
@@ -99,4 +105,5 @@ export class OtpVerificationComponent implements OnInit {
       }
     });
   }
+
 }

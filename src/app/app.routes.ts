@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { HomeComponent } from './home-component/home-component.component'; 
+import { HomeComponent } from './home-component/home-component.component';
 import { RegisterComponent } from './register/register.component';
 import { BirthComponent } from './certificate_types/birth/birth.component';
 import { AccountComponent } from './account/account.component';
@@ -31,12 +31,9 @@ import { BirthdelayedComponent } from './certificate_types/birthdelayed/birthdel
 import { MarriagelicenseComponent } from './certificate_types/marriagelicense/marriagelicense.component';
 import { OthersComponent } from './certificate_types/others/others.component';
 export const routes: Routes = [
-    { path: '', component: HomeComponent }, 
-    {
-      path: 'login',
-      loadComponent: () => import('./login/login.component').then(m => m.LoginComponent)
-    },
-    { path: 'register', component: RegisterComponent },
+    { path: '', component: HomeComponent },
+    { path: 'login', loadComponent: () => import('./login/login.component').then(m => m.LoginComponent), canActivate: [authGuard] },
+    { path: 'register', component: RegisterComponent, canActivate: [authGuard] },
     { path: 'otpverify', component: OtpVerificationComponent },
     { path: 'birth', component: BirthComponent },
     { path: 'account-settings', component: AccountComponent },
@@ -64,7 +61,7 @@ export const routes: Routes = [
     { path: 'deathdelayed', component: DeathdelayedComponent },
     { path: 'marriagedelayed', component: MarriagedelayedComponent },
     { path: 'birthdelayed', component: BirthdelayedComponent },
-    {path: 'marriagelicense', component: MarriagelicenseComponent },
+    { path: 'marriagelicense', component: MarriagelicenseComponent },
     { path: 'others', component: OthersComponent },
 
 ];

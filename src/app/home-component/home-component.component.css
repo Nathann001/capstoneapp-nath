@@ -86,6 +86,79 @@
   letter-spacing: 1px;
 }
 
+/* Landing page login/register buttons */
+.landing-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  margin: 30px 0 50px;
+  z-index: 2;
+}
+
+.landing-buttons .btn-login,
+.landing-buttons .btn-register {
+  padding: 15px 40px;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.landing-buttons .btn-login {
+  background-color: #f44336;
+  color: #fff;
+}
+
+.landing-buttons .btn-login:hover {
+  background-color: #b30000;
+}
+
+.landing-buttons .btn-register {
+  background-color: #fff;
+  color: #f44336;
+  border: 2px solid #f44336;
+}
+
+.landing-buttons .btn-register:hover {
+  background-color: #f44336;
+  color: #fff;
+}
+
+.landing-buttons-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.landing-instructions {
+  margin: 0;
+}
+
+.landing-link {
+  color: #f44336;
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.3s;
+}
+
+.landing-link:hover {
+  color: #b30000;
+}
+
+/* Line under buttons */
+.landing-divider {
+  width: calc(100% - 80px);
+  max-width: 1200px;
+  margin: 30px auto;
+  border: none;
+  border-top: 2px solid #f44336;
+}
+
 /* =========================================
    DASHBOARD GRID
 ========================================= */
@@ -288,7 +361,7 @@
 
 
 /* === EMERGENCY HOTLINES ======== */
-  
+
 
 .hotline-section {
   width: 95%;
@@ -308,7 +381,7 @@
 .hotline-block {
   width: 100%;
   max-width: 1000px;
-  background: #fff; 
+  background: #fff;
   padding: 25px;
   border-radius: 12px;
   border-top: 4px solid #b30000;
@@ -317,10 +390,10 @@
   flex-direction: column;
   align-items: center;
   gap: 20px;
-  text-align: center; 
+  text-align: center;
   position: relative;
   z-index: 1;
-  
+
 }
 
 /* Note text */
@@ -337,7 +410,7 @@
 .hotline-list {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center; 
+  justify-content: center;
   gap: 20px;
   width: 100%;
 }
@@ -346,7 +419,7 @@
 .hotline-card {
   display: flex;
   flex-direction: column;
-  align-items: center; 
+  align-items: center;
   padding: 18px 20px;
   width: 300px;
   background: #f0eded;
@@ -354,7 +427,7 @@
   border-left: 4px solid #f44336;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   transition: transform 0.2s;
-  text-align: center; 
+  text-align: center;
 }
 
 .hotline-card:hover {
@@ -422,11 +495,11 @@
     grid-template-columns: 1fr;
     width: 90%;
   }
-  
+
   .hero-banner {
     width: 90%;
   }
-  
+
   .hotline-section {
     width: 90%;
   }
@@ -478,7 +551,7 @@
   .home-header {
     margin: 20px 0 15px;
   }
-  
+
   .home-header h1 {
     font-size: 32px;
   }
@@ -486,109 +559,109 @@
   .subtitle {
     font-size: 18px;
   }
-  
+
   /* Hero Banner */
   .hero-banner {
     width: 90%;
     padding: 12px;
     margin-bottom: 20px;
   }
-  
+
   .hero-banner h2 {
     font-size: 16px;
   }
-  
+
   .hero-banner p {
     font-size: 13px;
   }
-  
+
   /* Dashboard Grid */
   .dashboard-grid {
     width: 90%;
     gap: 20px;
     margin-bottom: 30px;
   }
-  
+
   .grid-column {
     gap: 15px;
   }
-  
+
   /* Section Pills */
   .section-anchor {
     padding: 8px 20px;
     font-size: 14px;
   }
-  
+
   /* Info Cards */
   .info-card img {
     height: 180px;
   }
-  
+
   .card-content {
     padding: 15px;
   }
-  
+
   .card-content h4 {
     font-size: 16px;
   }
-  
+
   .card-content p {
     font-size: 13px;
   }
-  
+
   .category-tag {
     font-size: 11px;
     padding: 4px 10px;
   }
-  
+
   /* White Blocks */
   .white-block {
     padding: 18px;
   }
-  
+
   .white-block h3 {
     font-size: 15px;
   }
-  
+
   .white-block p,
   .white-block li {
     font-size: 13px;
   }
-  
+
   /* Document List */
   .doc-item {
     flex-direction: column;
     gap: 8px;
     padding: 10px 0;
   }
-  
+
   .doc-item span {
     font-size: 12px;
   }
-  
+
   .doc-item a {
     align-self: flex-start;
   }
-  
+
   /* Hotlines */
   .hotline-section {
     width: 90%;
     margin: 30px auto;
   }
-  
+
   .hotline-block {
     padding: 18px;
   }
-  
+
   .hotline-note {
     font-size: 16px;
     margin-bottom: 15px;
   }
-  
+
   .hotline-list {
     gap: 12px;
   }
-  
+
   .hotline-card {
     width: 100%;
     flex-direction: row;
@@ -602,7 +675,7 @@
     width: 45px;
     height: 45px;
   }
-  
+
   .hotline-icon i {
     font-size: 18px;
   }
@@ -611,17 +684,17 @@
     text-align: left;
     flex: 1;
   }
-  
+
   .hotline-info h4 {
     font-size: 16px;
     margin-bottom: 6px;
   }
-  
+
   .hotline-info a {
     font-size: 14px;
     margin-bottom: 4px;
   }
-  
+
   /* Footer */
   .home-footer {
     font-size: 11px;
@@ -634,24 +707,26 @@
   .home-header h1 {
     font-size: 26px;
   }
-  
+
   .subtitle {
     font-size: 16px;
   }
-  
+
   .hero-banner h2 {
     font-size: 14px;
   }
-  
+
   .info-card img {
     height: 150px;
   }
-  
+
   .white-block {
     padding: 15px;
   }
-  
+
   .hotline-note {
     font-size: 14px;
   }
+
+
 }
