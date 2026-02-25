@@ -48,7 +48,9 @@ function sendRequestStatusEmail(to, status, reason = null, documentType = '') {
     pending: 'Your document request has been submitted',
     under_review: 'Your document request is now Under Review',
     approved: 'Your document request has been Approved',
-    denied: 'Your document request was Denied'
+    denied: 'Your document request was Denied',
+    for_release: 'Your document is now For Release',
+    released: 'Document Released'
   };
 
   const messages = {
@@ -69,6 +71,16 @@ function sendRequestStatusEmail(to, status, reason = null, documentType = '') {
       <p>Hello,</p>
       <p>Unfortunately, your request for <b>${documentType}</b> was <b>Denied</b>.</p>
       <p><b>Reason:</b> ${reason || 'No reason provided.'}</p>
+    `,
+    for_release: `
+      <p>Hello,</p>
+      <p>Congratulations! Your document for <b>${documentType}</b> is now <b>FOR RELEASE</b>.</p>
+      <p>Please proceed to the City Civil Registry Office for payment and collection of your document.</p>
+    `,
+    released: `
+      <p>Hello,</p>
+      <p>Your document for <b>${documentType}</b> has been <b>RELEASED</b>.</p>
+      <p>Thank you for your patience.</p>
     `
   };
 
@@ -761,6 +773,24 @@ app.get('/api/document_request', verifyToken, checkRoles([1, 2]), (req, res) => 
   });
 });
 
+app.get('/api/document_request/for_release', verifyToken, checkRoles([1,2]), (req, res) => {
+  db.query(
+    `SELECT dr.*,
+        IFNULL(CONCAT(ud.User_FName, ' ', ud.User_LName), '') AS assigned_staff_name
+ FROM document_request dr
+ LEFT JOIN users u ON dr.assigned_staff_id = u.id
+ LEFT JOIN user_details ud ON u.id = ud.UserID
+ WHERE dr.status = 'for_release' AND dr.archived = 0`,
+    (err, results) => {
+      if (err) {
+        console.error('Failed to fetch For Release requests:', err);
+        return res.status(500).json({ message: 'Failed to fetch For Release requests', error: err.message });
+      }
+      res.json(results);
+    }
+  );
+});
+
 app.get('/api/document_request/:id', verifyToken, (req, res) => {
   const requestId = parseInt(req.params.id, 10);
   const sql = `
@@ -903,6 +933,102 @@ app.put('/api/document_request/:id/deny', verifyToken, checkRoles([1, 2]), (req,
       );
 
       res.json({ message: 'Request marked as Denied and assigned to you' });
+    }
+  );
+});
+
+
+
+// FEB25 (FOR_RELEASE)
+app.put('/api/document_request/:id/for_release', verifyToken, checkRoles([1, 2]), (req, res) => {
+  const requestId = req.params.id;
+
+  // Update only if current status is 'approved'
+  db.query(
+    `UPDATE document_request
+     SET status = ?, updated_at = NOW(), assigned_staff_id = ?
+     WHERE RequestID = ? AND status = ?`,
+    ['for_release', req.user.id, requestId, 'approved'],
+    (err, result) => {
+      if (err) return res.status(500).json({ message: 'Failed to update request', error: err.message });
+
+      if (result.affectedRows === 0) {
+        return res.status(400).json({ message: 'Request cannot be marked as For Release. It must be in Approved status first.' });
+      }
+
+      // Fetch user email and document type
+      db.query(
+        `SELECT u.email, dr.document_type
+         FROM document_request dr
+         JOIN users u ON dr.user_id = u.id
+         WHERE dr.RequestID = ?`,
+        [requestId],
+        (err, results) => {
+          if (!err && results.length > 0) {
+            const { email, document_type } = results[0];
+
+            // Send email for for_release status
+            sendRequestStatusEmail(email, 'for_release', null, document_type);
+
+            const emailMsg = `Congratulations! Your document for ${document_type} is now FOR RELEASE. Please proceed to the City Civil Registry Office for payment and collection of your document.`;
+
+            // Log the status in history
+            db.query(
+              'INSERT INTO request_status_history (RequestID, status, email_message) VALUES (?, ?, ?)',
+              [requestId, 'for_release', emailMsg],
+              (err) => { if (err) console.error('Failed to log history', err); }
+            );
+          }
+        }
+      );
+
+      res.json({ message: 'Request marked as For Release and assigned to you' });
+    }
+  );
+});
+
+
+
+// FEB25 (RELEASED)
+app.put('/api/document_request/:id/released', verifyToken, checkRoles([1, 2]), (req, res) => {
+  const requestId = req.params.id;
+
+  db.query(
+    `UPDATE document_request
+     SET status = ?, updated_at = NOW(), assigned_staff_id = ?
+     WHERE RequestID = ?`,
+    ['released', req.user.id, requestId],
+    (err, result) => {
+      if (err) return res.status(500).json({ message: 'Failed to update request', error: err.message });
+      if (result.affectedRows === 0) return res.status(404).json({ message: 'Request not found' });
+
+      // Fetch user email and document type
+      db.query(
+        `SELECT u.email, dr.document_type
+         FROM document_request dr
+         JOIN users u ON dr.user_id = u.id
+         WHERE dr.RequestID = ?`,
+        [requestId],
+        (err, results) => {
+          if (!err && results.length > 0) {
+            const { email, document_type } = results[0];
+
+            // Send email for released status
+            sendRequestStatusEmail(email, 'released', null, document_type); // no reason needed
+
+            const emailMsg = `Your document for ${document_type} has been <b>RELEASED</b>. Thank you for your patience.`;
+
+            // Log the status in history
+            db.query(
+              'INSERT INTO request_status_history (RequestID, status, email_message) VALUES (?, ?, ?)',
+              [requestId, 'released', emailMsg],
+              (err) => { if (err) console.error('Failed to log history', err); }
+            );
+          }
+        }
+      );
+
+      res.json({ message: 'Request marked as Released and assigned to you' });
     }
   );
 });
@@ -1171,54 +1297,6 @@ cron.schedule('0 6 * * *', () => {
           console.error(`[CRON] Failed to send reminder to ${row.email}:`, e.message);
         }
       }
-    }
-  );
-});
-
-// AUTO-ARCHIVE: every 30 seconds for testing (change to '0 2 * * *' for daily at 2AM in production)
-// Production: requests approved/denied older than 7 days get auto-archived
-cron.schedule('*/30 * * * * *', () => {
-  console.log('[CRON] Auto-archive check...');
-
-  // TESTING: 30 seconds | PRODUCTION: replace interval with DATE_SUB(NOW(), INTERVAL 7 DAY)
-  const sql = `
-    UPDATE document_request
-    SET archived = 1, updated_at = NOW()
-    WHERE archived = 0
-      AND status IN ('approved', 'denied')
-      AND updated_at < DATE_SUB(NOW(), INTERVAL 30 SECOND)
-  `;
-
-  db.query(sql, (err, result) => {
-    if (err) return console.error('[CRON] Auto-archive error:', err.message);
-    if (result.affectedRows > 0) console.log(`[CRON] Auto-archived ${result.affectedRows} request(s)`);
-  });
-});
-
-// AUTO-DELETE: every 30 seconds for testing (change to '0 3 * * *' for daily at 3AM in production)
-// Production: archived requests older than 5 years get permanently deleted
-cron.schedule('*/30 * * * * *', () => {
-  console.log('[CRON] Auto-delete check...');
-
-  // TESTING: 30 seconds | PRODUCTION: replace interval with DATE_SUB(NOW(), INTERVAL 5 YEAR)
-  db.query(
-    `SELECT RequestID FROM document_request
-     WHERE archived = 1 AND updated_at < DATE_SUB(NOW(), INTERVAL 30 SECOND)`,
-    (err, rows) => {
-      if (err) return console.error('[CRON] Auto-delete fetch error:', err.message);
-      if (!rows.length) return;
-
-      const ids = rows.map(r => r.RequestID);
-      console.log(`[CRON] Auto-deleting ${ids.length} archived request(s):`, ids);
-
-      db.query('DELETE FROM request_status_history WHERE RequestID IN (?)', [ids], err => {
-        if (err) return console.error('[CRON] Failed deleting history:', err.message);
-
-        db.query('DELETE FROM document_request WHERE RequestID IN (?)', [ids], err => {
-          if (err) return console.error('[CRON] Failed deleting requests:', err.message);
-          console.log(`[CRON] Permanently deleted ${ids.length} request(s)`);
-        });
-      });
     }
   );
 });

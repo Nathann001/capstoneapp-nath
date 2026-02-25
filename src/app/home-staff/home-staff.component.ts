@@ -17,8 +17,8 @@ export class HomeStaffComponent implements OnInit {
   under_review: any[] = [];
   approved: any[] = [];
   denied: any[] = [];
+  for_release: any[] = []; // NEW: For Release requests
 
-  // ---------- STATISTICS ----------
   stats = {
     approved: { today: 0, week: 0, month: 0 },
     denied: { today: 0, week: 0, month: 0 },
@@ -26,16 +26,13 @@ export class HomeStaffComponent implements OnInit {
     under_review: { today: 0, week: 0, month: 0 }
   };
 
-  // ---------- ROW SELECTIONS ----------
   selectedRow1: 'approved' | 'denied' | 'pending' | 'under_review' = 'approved';
   selectedRow2: 'approved' | 'denied' | 'pending' | 'under_review' = 'pending';
 
-  // ---------- PAGINATION ----------
   itemsPerPage: number = 6;
   currentPage1: number = 1;
   currentPage2: number = 1;
 
-  // ---------- APPOINTMENTS ----------
   appointments: any[] = [];
   isLoadingAppts: boolean = false;
   apptFilterDate: string = '';
@@ -43,10 +40,13 @@ export class HomeStaffComponent implements OnInit {
   apptFilterCertType: string = '';
   apptFilterRegType: string = '';
 
+  private API = 'https://drtbackend-2cw3.onrender.com/api/document_request';
+
   constructor(private http: HttpClient, private router: Router) {}
 
   ngOnInit() {
     this.fetchDocumentRequests();
+    this.fetchForReleaseRequests(); // NEW: load for release
     this.fetchAppointments();
   }
 
@@ -55,56 +55,78 @@ export class HomeStaffComponent implements OnInit {
     const token = localStorage.getItem('token');
     if (!token) return console.error('No token found. User might not be logged in.');
 
-    this.http.get<any[]>('https://drtbackend-2cw3.onrender.com/api/document_request', {
-      headers: { Authorization: `Bearer ${token}` }
-    }).subscribe({
-      next: (data) => {
-        const activeData = data.filter(d => d.archived === 0);
+    this.http.get<any[]>(this.API, { headers: { Authorization: `Bearer ${token}` } })
+      .subscribe({
+        next: (data) => {
+          const activeData = data.filter(d => d.archived === 0);
+          const sortByDateAsc = (a: any, b: any) => new Date(a.updated_at || a.date_created).getTime() - new Date(b.updated_at || b.date_created).getTime();
 
-        const sortByDateAsc = (a: any, b: any) => {
-          const dateA = new Date(a.updated_at || a.date_created).getTime();
-          const dateB = new Date(b.updated_at || b.date_created).getTime();
-          return dateA - dateB;
-        };
+          this.pending      = activeData.filter(d => d.status === 'pending').sort(sortByDateAsc);
+          this.under_review = activeData.filter(d => d.status === 'under_review').sort(sortByDateAsc);
+          this.approved     = activeData.filter(d => d.status === 'approved').sort(sortByDateAsc);
+          this.denied       = activeData.filter(d => d.status === 'denied').sort(sortByDateAsc);
 
-        this.pending     = activeData.filter(d => d.status === 'pending').sort(sortByDateAsc);
-        this.under_review = activeData.filter(d => d.status === 'under_review').sort(sortByDateAsc);
-        this.approved    = activeData.filter(d => d.status === 'approved').sort(sortByDateAsc);
-        this.denied      = activeData.filter(d => d.status === 'denied').sort(sortByDateAsc);
+          this.calculateStats(data);
+        },
+        error: (err) => console.error('Failed to fetch document requests', err)
+      });
+  }
 
-        this.calculateStats(data);
-      },
-      error: (err) => console.error('Failed to fetch document requests', err)
-    });
+  // ---------- FETCH FOR RELEASE REQUESTS ----------
+  fetchForReleaseRequests() {
+    const token = localStorage.getItem('token') || '';
+    this.http.get<any[]>(`${this.API}/for_release`, { headers: { Authorization: `Bearer ${token}` } })
+      .subscribe({
+        next: (data) => { this.for_release = data; },
+        error: (err) => console.error('Failed to fetch For Release requests', err)
+      });
+  }
+
+  // ---------- MARK REQUEST AS FOR RELEASE ----------
+  markForRelease(requestId: number) {
+    if (!confirm('Are you sure you want to mark this request as For Release?')) return;
+
+    const token = localStorage.getItem('token') || '';
+    this.http.put(`${this.API}/${requestId}/for_release`, {}, { headers: { Authorization: `Bearer ${token}` }, withCredentials: true })
+      .subscribe({
+        next: (res: any) => {
+          alert(res.message);
+          // Remove from approved table
+          this.approved = this.approved.filter(doc => doc.RequestID !== requestId);
+          // Refresh For Release table
+          this.fetchForReleaseRequests();
+        },
+        error: (err) => {
+          console.error(err);
+          alert(err.error?.message || 'Failed to mark request as For Release.');
+        }
+      });
   }
 
   // ---------- FETCH APPOINTMENTS ----------
   fetchAppointments() {
     this.isLoadingAppts = true;
     const token = localStorage.getItem('token') || '';
-
     const params: string[] = [];
     if (this.apptFilterDate)     params.push(`date=${this.apptFilterDate}`);
     if (this.apptFilterStatus)   params.push(`status=${this.apptFilterStatus}`);
     if (this.apptFilterCertType) params.push(`certificate_type=${this.apptFilterCertType}`);
     if (this.apptFilterRegType)  params.push(`registration_type=${encodeURIComponent(this.apptFilterRegType)}`);
 
-    const url = 'https://drtbackend-2cw3.onrender.com/api/staff/appointments'
-      + (params.length ? '?' + params.join('&') : '');
+    const url = 'https://drtbackend-2cw3.onrender.com/api/staff/appointments' + (params.length ? '?' + params.join('&') : '');
 
-    this.http.get<any[]>(url, {
-      headers: { Authorization: `Bearer ${token}` }
-    }).subscribe({
-      next: (data) => { this.appointments = data; this.isLoadingAppts = false; },
-      error: (err) => { console.error('Failed to fetch appointments', err); this.isLoadingAppts = false; }
-    });
+    this.http.get<any[]>(url, { headers: { Authorization: `Bearer ${token}` } })
+      .subscribe({
+        next: (data) => { this.appointments = data; this.isLoadingAppts = false; },
+        error: (err) => { console.error('Failed to fetch appointments', err); this.isLoadingAppts = false; }
+      });
   }
 
   clearApptFilters() {
-    this.apptFilterDate     = '';
-    this.apptFilterStatus   = '';
+    this.apptFilterDate = '';
+    this.apptFilterStatus = '';
     this.apptFilterCertType = '';
-    this.apptFilterRegType  = '';
+    this.apptFilterRegType = '';
     this.fetchAppointments();
   }
 
@@ -118,9 +140,7 @@ export class HomeStaffComponent implements OnInit {
   // ---------- STATS ----------
   calculateStats(data: any[]) {
     const now = new Date();
-    const countByPeriod = (arr: any[], fn: (d: Date) => boolean) =>
-      arr.filter(d => fn(new Date(d.updated_at || d.date_created))).length;
-
+    const countByPeriod = (arr: any[], fn: (d: Date) => boolean) => arr.filter(d => fn(new Date(d.updated_at || d.date_created))).length;
     const filterStatus = (status: string) => data.filter(d => d.status === status);
 
     for (const status of ['approved', 'denied', 'pending', 'under_review'] as const) {
@@ -132,8 +152,8 @@ export class HomeStaffComponent implements OnInit {
   }
 
   // ---------- HELPERS ----------
-  isSameDay(a: Date, b: Date)   { return a.toDateString() === b.toDateString(); }
-  isSameWeek(a: Date, b: Date)  { return Math.abs(a.getTime() - b.getTime()) / (24*60*60*1000) < 7; }
+  isSameDay(a: Date, b: Date) { return a.toDateString() === b.toDateString(); }
+  isSameWeek(a: Date, b: Date) { return Math.abs(a.getTime() - b.getTime()) / (24*60*60*1000) < 7; }
   isSameMonth(a: Date, b: Date) { return a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear(); }
 
   formatStatName(name: string) {
@@ -143,18 +163,16 @@ export class HomeStaffComponent implements OnInit {
 
   getDocumentLabel(type: string): string {
     const map: Record<string, string> = {
-      birth:    'Birth Certificate',
-      death:    'Death Certificate',
+      birth: 'Birth Certificate',
+      death: 'Death Certificate',
       marriage: 'Marriage Certificate'
     };
     return map[type] || type;
   }
 
-  // ---------- NAVIGATION ----------
   viewRequestDetail(request: any)   { this.router.navigate(['/request-detail', request.RequestID]); }
   viewInProcessDetail(request: any) { this.router.navigate(['/process-request', request.RequestID]); }
 
-  // ---------- PAGINATION ----------
   getPaginatedItems(list: any[], currentPage: number): any[] {
     const start = (currentPage - 1) * this.itemsPerPage;
     return list.slice(start, start + this.itemsPerPage);
