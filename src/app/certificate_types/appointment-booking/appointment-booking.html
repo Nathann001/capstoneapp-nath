@@ -1,0 +1,126 @@
+<!-- ================================================================ -->
+<!-- appointment-booking.component.html  (UPDATED)                   -->
+<!-- ================================================================ -->
+<div class="app-container">
+  <aside class="sidebar"></aside>
+
+  <div class="admin-container">
+    <h2 class="dashboard-title">Book an Appointment</h2>
+
+    <!-- SUCCESS -->
+    <div *ngIf="successMessage" class="alert-success">
+      <i class="fa-solid fa-circle-check"></i> {{ successMessage }}
+    </div>
+
+    <!-- ERROR -->
+    <div *ngIf="errorMessage" class="alert-error">
+      <i class="fa-solid fa-circle-exclamation"></i> {{ errorMessage }}
+    </div>
+
+    <div class="card">
+
+      <!-- ROW 1: Certificate Type + Registration Type -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+
+        <!-- Certificate Type -->
+        <div class="form-group">
+          <label class="form-label">Certificate Type</label>
+          <div class="option-group">
+            <div
+              *ngFor="let type of certificateTypes"
+              class="option-card"
+              [class.option-selected]="selectedCertType === type"
+              (click)="selectedCertType = type">
+              <i class="fa-solid"
+                 [ngClass]="{
+                   'fa-baby':       type === 'Birth',
+                   'fa-cross':      type === 'Death',
+                   'fa-ring':       type === 'Marriage'
+                 }">
+              </i>
+              <span>{{ type }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Registration Type -->
+        <div class="form-group">
+          <label class="form-label">Registration Type</label>
+          <div class="option-group">
+            <div
+              *ngFor="let type of registrationTypes"
+              class="option-card"
+              [class.option-selected]="selectedRegType === type"
+              (click)="selectedRegType = type">
+              <i class="fa-solid"
+                 [ngClass]="{
+                   'fa-clock':         type === 'On Time',
+                   'fa-clock-rotate-left': type === 'Delayed'
+                 }">
+              </i>
+              <span>{{ type }}</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- DATE PICKER -->
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label class="form-label">Select Date</label>
+        <input
+          type="date"
+          class="form-control"
+          [(ngModel)]="selectedDate"
+          [min]="minDate"
+          (change)="onDateChange()"
+        />
+      </div>
+
+      <!-- TIME SLOTS -->
+      <div *ngIf="selectedDate" class="form-group">
+        <label class="form-label">Select Time Slot</label>
+
+        <div *ngIf="loadingSlots" style="color:#999; padding: 10px 0;">Loading available slots...</div>
+
+        <div *ngIf="!loadingSlots && slots.length > 0" class="slot-grid">
+          <div
+            *ngFor="let slot of slots"
+            class="slot-card"
+            [class.slot-selected]="selectedTime === slot.time"
+            [class.slot-full]="slot.full"
+            (click)="selectTime(slot)">
+            <span class="slot-time">{{ slot.label }}</span>
+            <span class="slot-count">
+              <ng-container *ngIf="!slot.full">{{ slot.available }} spot{{ slot.available !== 1 ? 's' : '' }} left</ng-container>
+              <ng-container *ngIf="slot.full">Full</ng-container>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONFIRM BUTTON -->
+      <div style="margin-top: 24px;">
+        <button
+          class="btn complete"
+          (click)="bookAppointment()"
+          [disabled]="isBooking"
+          style="min-width: 180px;">
+          {{ isBooking ? 'Booking...' : 'Confirm Appointment' }}
+        </button>
+      </div>
+
+    </div>
+
+    <!-- INFO BANNER -->
+    <div class="card" style="margin-top: 16px; background: #f8fbff; border-left: 4px solid #2a7ca8;">
+      <p style="margin:0; font-size:13px; color:#555;">
+        <i class="fa-solid fa-circle-info" style="color:#2a7ca8; margin-right:6px;"></i>
+        Office hours are <b>8:00 AM – 5:00 PM</b>, Monday to Friday.
+        Each time slot accepts up to <b>20 appointments</b>.
+        A confirmation email will be sent after booking, and a reminder email will be sent on the day of your appointment.
+      </p>
+    </div>
+
+  </div>
+</div>

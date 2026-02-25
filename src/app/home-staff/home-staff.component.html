@@ -59,7 +59,7 @@
       </div>
     </div>
 
-    <!-- ================== DOCUMENT REQUESTS ================== -->
+    <!-- ================== DOCUMENT REQUESTS HEADER ================== -->
     <div style="margin-bottom: 20px; margin-top: 30px;">
       <h3 style="font-size: 24px; font-weight: bold; color: #2a5a8a; display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
         <i class="fa-solid fa-file-lines"></i>
@@ -79,11 +79,8 @@
             <th>Status</th>
           </tr>
         </thead>
-
         <tbody>
-          <tr *ngFor="let doc of pending"
-              style="cursor: pointer;"
-              (click)="viewRequestDetail(doc)">
+          <tr *ngFor="let doc of pending" style="cursor: pointer;" (click)="viewRequestDetail(doc)">
             <td>{{ doc.name }}</td>
             <td>{{ getDocumentLabel(doc.document_type) }}</td>
             <td>{{ doc.date_created | date:'medium' }}</td>
@@ -105,9 +102,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let doc of under_review"
-              style="cursor: pointer;"
-              (click)="viewInProcessDetail(doc)">
+          <tr *ngFor="let doc of under_review" style="cursor: pointer;" (click)="viewInProcessDetail(doc)">
             <td>{{ doc.name }}</td>
             <td>{{ getDocumentLabel(doc.document_type) }}</td>
             <td>{{ doc.updated_at | date:'medium' }}</td>
@@ -128,9 +123,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let doc of approved"
-              style="cursor: pointer;"
-              (click)="viewInProcessDetail(doc)">
+          <tr *ngFor="let doc of approved" style="cursor: pointer;" (click)="viewInProcessDetail(doc)">
             <td>{{ doc.name }}</td>
             <td>{{ getDocumentLabel(doc.document_type) }}</td>
             <td>{{ doc.updated_at | date:'medium' }}</td>
@@ -155,6 +148,125 @@
             <td>{{ doc.name }}</td>
             <td>{{ getDocumentLabel(doc.document_type) }}</td>
             <td>{{ doc.updated_at | date:'medium' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ================== APPOINTMENTS HEADER ================== -->
+    <div style="margin-bottom: 20px; margin-top: 40px;">
+      <h3 style="font-size: 24px; font-weight: bold; color: #2a5a8a; display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
+        <i class="fa-solid fa-calendar-check"></i>
+        APPOINTMENTS
+      </h3>
+    </div>
+
+    <!-- ================== APPOINTMENTS FILTER BAR ================== -->
+    <div class="card" style="margin-bottom: 16px;">
+      <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
+
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <label style="font-size: 12px; font-weight: 600; color: #555;">Date</label>
+          <input type="date" [(ngModel)]="apptFilterDate" (change)="fetchAppointments()"
+                 style="border: 1px solid #ddd; padding: 8px 10px; border-radius: 4px; font-size: 13px;" />
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <label style="font-size: 12px; font-weight: 600; color: #555;">Certificate Type</label>
+          <select [(ngModel)]="apptFilterCertType" (change)="fetchAppointments()"
+                  style="border: 1px solid #ddd; padding: 8px 10px; border-radius: 4px; font-size: 13px;">
+            <option value="">All</option>
+            <option value="Birth">Birth</option>
+            <option value="Death">Death</option>
+            <option value="Marriage">Marriage</option>
+          </select>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <label style="font-size: 12px; font-weight: 600; color: #555;">Registration Type</label>
+          <select [(ngModel)]="apptFilterRegType" (change)="fetchAppointments()"
+                  style="border: 1px solid #ddd; padding: 8px 10px; border-radius: 4px; font-size: 13px;">
+            <option value="">All</option>
+            <option value="On Time">On Time</option>
+            <option value="Delayed">Delayed</option>
+          </select>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <label style="font-size: 12px; font-weight: 600; color: #555;">Status</label>
+          <select [(ngModel)]="apptFilterStatus" (change)="fetchAppointments()"
+                  style="border: 1px solid #ddd; padding: 8px 10px; border-radius: 4px; font-size: 13px;">
+            <option value="">All</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        <button (click)="clearApptFilters()" class="btn pending" style="padding: 8px 14px; font-size: 12px;">
+          Clear Filters
+        </button>
+
+      </div>
+    </div>
+
+    <!-- ================== APPOINTMENTS TABLE ================== -->
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 class="dashboard-title" style="margin: 0;"><strong>APPOINTMENTS</strong></h3>
+        <span style="font-size: 12px; color: #999;">
+          {{ appointments.length }} record{{ appointments.length !== 1 ? 's' : '' }}
+        </span>
+      </div>
+
+      <div *ngIf="isLoadingAppts" style="text-align: center; padding: 30px; color: #999;">
+        Loading appointments...
+      </div>
+
+      <div *ngIf="!isLoadingAppts && appointments.length === 0" style="text-align: center; padding: 30px; color: #999;">
+        No appointments found.
+      </div>
+
+      <table *ngIf="!isLoadingAppts && appointments.length > 0" class="records-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Certificate</th>
+            <th>Registration</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Status</th>
+            <th>Booked At</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let appt of appointments; let i = index">
+            <td>{{ i + 1 }}</td>
+            <td>{{ appt.full_name }}</td>
+            <td style="font-size: 12px; color: #666;">{{ appt.email }}</td>
+            <td>{{ appt.certificate_type }}</td>
+            <td>
+              <span [ngStyle]="{
+                'background-color': appt.registration_type === 'On Time' ? '#e8f4e8' : '#fff8e1',
+                'border-color':     appt.registration_type === 'On Time' ? '#66bb6a'  : '#ffb300',
+                'color':            appt.registration_type === 'On Time' ? '#2e7d32'  : '#e65100'
+              }" style="display: inline-block; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: 600; border: 1px solid;">
+                {{ appt.registration_type }}
+              </span>
+            </td>
+            <td>{{ appt.appt_date | date:'MMM d, yyyy':'UTC' }}</td>
+            <td>{{ formatApptTime(appt.appt_time) }}</td>
+            <td>
+              <span [ngStyle]="{
+                'background-color': appt.status === 'confirmed' ? '#e8f4e8' : '#fdecea',
+                'border-color':     appt.status === 'confirmed' ? '#66bb6a'  : '#e57373',
+                'color':            appt.status === 'confirmed' ? '#2e7d32'  : '#c0392b'
+              }" style="display: inline-block; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: 600; text-transform: uppercase; border: 1px solid;">
+                {{ appt.status | titlecase }}
+              </span>
+            </td>
+            <td style="font-size: 12px; color: #999;">{{ appt.created_at | date:'MMM d, yyyy' }}</td>
           </tr>
         </tbody>
       </table>

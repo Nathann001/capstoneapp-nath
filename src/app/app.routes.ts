@@ -30,6 +30,7 @@ import { MarriagedelayedComponent } from './certificate_types/marriagedelayed/ma
 import { BirthdelayedComponent } from './certificate_types/birthdelayed/birthdelayed.component';
 import { MarriagelicenseComponent } from './certificate_types/marriagelicense/marriagelicense.component';
 import { OthersComponent } from './certificate_types/others/others.component';
+import { AppointmentBookingComponent } from './certificate_types/appointment-booking/appointment-booking';
 export const routes: Routes = [
     { path: '', component: HomeComponent },
     { path: 'login', loadComponent: () => import('./login/login.component').then(m => m.LoginComponent), canActivate: [authGuard] },
@@ -63,5 +64,5 @@ export const routes: Routes = [
     { path: 'birthdelayed', component: BirthdelayedComponent },
     { path: 'marriagelicense', component: MarriagelicenseComponent },
     { path: 'others', component: OthersComponent },
-
+    { path: 'appointment-booking', component: AppointmentBookingComponent }
 ];

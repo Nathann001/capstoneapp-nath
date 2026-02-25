@@ -12,7 +12,6 @@
   min-height: 100vh;
 }
 
-
 /* ================= DOCUMENTS PAGE ================= */
 .documents-page {
   flex: 1;
@@ -83,6 +82,30 @@
   margin-bottom: 25px;
 }
 
+/* ================= APPOINTMENT CARD ================= */
+.appointment-card {
+  border-left: 6px solid #2a7ca8;
+  background: linear-gradient(135deg, #f0f7fc 0%, #e8f4f8 100%);
+  grid-column: 1 / -1; /* span full width */
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.appointment-card:hover {
+  box-shadow: 0 14px 30px rgba(42, 124, 168, 0.3);
+}
+
+.appointment-card h3 {
+  color: #1a5a7a;
+}
+
+.appointment-icon {
+  font-size: 40px;
+  color: #2a7ca8;
+  margin-bottom: 16px;
+}
+
 /* ================= ACTION BUTTONS ================= */
 .document-actions {
   display: flex;
@@ -140,153 +163,60 @@
   transform: scale(0.98);
 }
 
+/* Appointment Book Button */
+.appointment-btn {
+  background: #2a7ca8;
+  font-size: 15px;
+  padding: 14px 24px;
+}
+
+.appointment-btn:hover {
+  background: #1a5a7a;
+}
+
 /* ================= RESPONSIVE BREAKPOINTS ================= */
 
-/* Tablet and Below */
 @media screen and (max-width: 1024px) {
-  .documents-page {
-    padding: 40px 25px;
-  }
-
-  .page-title {
-    font-size: 36px;
-    margin-bottom: 35px;
-  }
-
-  .documents-list {
-    gap: 25px;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  }
-
-  .document-card {
-    padding: 28px 24px;
-  }
-
-  .document-card h3 {
-    font-size: 20px;
-  }
+  .documents-page { padding: 40px 25px; }
+  .page-title { font-size: 36px; margin-bottom: 35px; }
+  .documents-list { gap: 25px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .document-card { padding: 28px 24px; }
+  .document-card h3 { font-size: 20px; }
 }
 
-/* Tablet Only - 2 Column Layout */
 @media screen and (min-width: 601px) and (max-width: 900px) {
-  .documents-list {
-    grid-template-columns: repeat(2, 1fr);
-    max-width: 800px;
-  }
-
-  .document-card h3 {
-    font-size: 19px;
-  }
-
-  .view-btn,
-  .apply-btn {
-    font-size: 13px;
-    padding: 12px 10px;
-  }
+  .documents-list { grid-template-columns: repeat(2, 1fr); max-width: 800px; }
+  .document-card h3 { font-size: 19px; }
+  .view-btn, .apply-btn { font-size: 13px; padding: 12px 10px; }
+  .appointment-card { grid-column: 1 / -1; }
 }
 
-/* Mobile - Stack Buttons */
 @media screen and (max-width: 600px) {
-  .documents-page {
-    padding: 30px 18px;
-  }
-
-  .documents-page::before {
-    background-size: 60%;
-  }
-
-  .page-title {
-    font-size: 28px;
-    margin-bottom: 25px;
-  }
-
-  .documents-list {
-    grid-template-columns: 1fr;
-    gap: 20px;
-    max-width: 500px;
-    padding: 0 10px;
-  }
-
-  .document-card {
-    padding: 25px 20px;
-  }
-
-  .document-card h3 {
-    font-size: 18px;
-    margin-bottom: 12px;
-  }
-
-  .document-card p {
-    font-size: 14px;
-    margin-bottom: 20px;
-  }
-
-  .document-actions {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .view-btn,
-  .apply-btn {
-    width: 100%;
-    font-size: 14px;
-    padding: 13px 16px;
-  }
+  .documents-page { padding: 30px 18px; }
+  .documents-page::before { background-size: 60%; }
+  .page-title { font-size: 28px; margin-bottom: 25px; }
+  .documents-list { grid-template-columns: 1fr; gap: 20px; max-width: 500px; padding: 0 10px; }
+  .document-card { padding: 25px 20px; }
+  .document-card h3 { font-size: 18px; margin-bottom: 12px; }
+  .document-card p { font-size: 14px; margin-bottom: 20px; }
+  .document-actions { flex-direction: column; gap: 10px; }
+  .view-btn, .apply-btn { width: 100%; font-size: 14px; padding: 13px 16px; }
+  .appointment-card { grid-column: unset; max-width: 100%; }
 }
 
-/* Small Mobile */
 @media screen and (max-width: 480px) {
-  .documents-page {
-    padding: 25px 15px;
-  }
-
-  .page-title {
-    font-size: 24px;
-    margin-bottom: 20px;
-  }
-
-  .document-card {
-    padding: 20px 16px;
-    border-left-width: 4px;
-  }
-
-  .document-card h3 {
-    font-size: 16px;
-  }
-
-  .document-card p {
-    font-size: 13px;
-  }
-
-  .view-btn,
-  .apply-btn {
-    font-size: 13px;
-    padding: 12px 14px;
-  }
+  .documents-page { padding: 25px 15px; }
+  .page-title { font-size: 24px; margin-bottom: 20px; }
+  .document-card { padding: 20px 16px; border-left-width: 4px; }
+  .document-card h3 { font-size: 16px; }
+  .document-card p { font-size: 13px; }
+  .view-btn, .apply-btn { font-size: 13px; padding: 12px 14px; }
 }
 
-/* Large Desktop */
 @media screen and (min-width: 1400px) {
-  .documents-list {
-    max-width: 1400px;
-    gap: 40px;
-  }
-
-  .document-card {
-    padding: 40px 35px;
-  }
-
-  .document-card h3 {
-    font-size: 24px;
-  }
-
-  .document-card p {
-    font-size: 16px;
-  }
-
-  .view-btn,
-  .apply-btn {
-    font-size: 15px;
-    padding: 16px 18px;
-  }
+  .documents-list { max-width: 1400px; gap: 40px; }
+  .document-card { padding: 40px 35px; }
+  .document-card h3 { font-size: 24px; }
+  .document-card p { font-size: 16px; }
+  .view-btn, .apply-btn { font-size: 15px; padding: 16px 18px; }
 }

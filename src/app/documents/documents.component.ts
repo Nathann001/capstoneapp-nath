@@ -6,6 +6,7 @@ interface CityDocument {
   name: string;
   file: string;
   applyRoute: string;
+  isAppointment?: boolean;
 }
 
 @Component({
@@ -59,6 +60,12 @@ export class DocumentsComponent {
       name: 'Delayed Registration of Death Certificate',
       file: '/assets/documents/delayed-registration-of-death.pdf',
       applyRoute: '/delayed-registration-of-death'
+    },
+    {
+      name: 'Appointment Booking for Registration of Certificates',
+      file: '',
+      applyRoute: '/appointment-booking',
+      isAppointment: true
     }
   ];
 
