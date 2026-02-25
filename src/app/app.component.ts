@@ -27,34 +27,41 @@ export const appConfig = {
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  title = 'Certificate_Generator';
-  showSidebar = true;
+  title = 'Angeles City DRT';
+  showSidebar = false;
   isLoggedIn = false;
   isAdmin = false;
   isStaff = false;
   isMobileSidebarOpen = false;
 
   constructor(private router: Router) {
-    this.checkLogin();
-
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
-        const authRoutes = ['/login', '/register', '/reset-password'];
-        this.showSidebar = !authRoutes.some(route => event.urlAfterRedirects.includes(route));
-        this.isLoggedIn = !!localStorage.getItem('token');
 
+        // Check if user is logged in
+        const token = localStorage.getItem('token');
         const user = JSON.parse(localStorage.getItem('user') || '{}');
+        this.isLoggedIn = !!token;
         this.isAdmin = user.role === 1;
         this.isStaff = user.role === 2;
+
+        // Show sidebar only if logged in
+        this.showSidebar = this.isLoggedIn;
 
         // Close mobile sidebar on navigation
         this.isMobileSidebarOpen = false;
 
-        // Redirect users to their "home" if they access the root
-        if (event.urlAfterRedirects === '/') {
+        // Redirect logged-in users from "/" to their dashboard
+        if (event.urlAfterRedirects === '/' && this.isLoggedIn) {
           if (this.isAdmin) this.router.navigate(['/admin']);
           else if (this.isStaff) this.router.navigate(['/home-staff']);
+        }
+
+        // Redirect logged-out users away from protected pages
+        const publicRoutes = ['/', '/login', '/register', '/otpverify', '/reset-password'];
+        if (!this.isLoggedIn && !publicRoutes.includes(event.urlAfterRedirects)) {
+          this.router.navigate(['/']);
         }
       });
   }
@@ -71,8 +78,9 @@ export class AppComponent {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     this.isLoggedIn = false;
+    this.showSidebar = false;
     this.isMobileSidebarOpen = false;
-    this.router.navigate(['/login']);
+    this.router.navigate(['/']);
   }
 
   @HostListener('document:mousemove', ['$event'])
@@ -88,15 +96,5 @@ export class AppComponent {
     const x = (event.clientX / window.innerWidth - 0.5) * 20;
     const y = (event.clientY / window.innerHeight - 0.5) * 20;
     element.style.backgroundPosition = `${50 + x}% ${50 + y}%`;
-  }
-
-  private checkLogin(): void {
-    const token = localStorage.getItem('token');
-    this.isLoggedIn = !!token;
-
-    const authRoutes = ['/login', '/register', '/reset-password'];
-    if (!this.isLoggedIn && !authRoutes.includes(this.router.url)) {
-      this.router.navigate(['/login']);
-    }
   }
 }

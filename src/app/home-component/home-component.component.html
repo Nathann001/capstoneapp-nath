@@ -1,7 +1,7 @@
 <div class="app-container">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
-  
+
 
   <!-- MAIN CONTENT -->
   <main class="home-bg">
@@ -16,6 +16,24 @@
       <h2>DIGITAL SERVICES FOR EVERY ANGELEÑO</h2>
       <p>Access city services anytime, anywhere.</p>
     </div>
+
+    <!-- LOGIN / REGISTER BUTTONS FOR GUESTS -->
+    <div class="landing-buttons-container" *ngIf="!isLoggedIn">
+      <p class="landing-instructions">
+        Gusto mong mag-apply ng documents?
+        <span class="landing-link" (click)="navigateToRegister()">Click Register</span>.<br>
+        Mayroon nang account?
+        <span class="landing-link" (click)="navigateToLogin()">Click Login</span>.
+      </p>
+
+      <div class="landing-buttons">
+        <button class="btn-login" (click)="navigateToLogin()">Login</button>
+        <button class="btn-register" (click)="navigateToRegister()">Register</button>
+      </div>
+    </div>
+
+    <!-- Full width divider -->
+    <hr class="landing-divider" />
 
     <div class="dashboard-grid">
       <!-- LATEST UPDATES -->
