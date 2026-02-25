@@ -45,8 +45,13 @@ export class BirthComponent {
 
   constructor(private fb: FormBuilder, private http: HttpClient, private router: Router) {
     this.documentForm = this.fb.group({
-      name: ['', [Validators.required, Validators.maxLength(50)]]
-    });
+    First_Name: ['', Validators.required],
+    Middle_Name: ['', Validators.required],
+    Last_Name: ['', Validators.required],
+    Doc_Date: ['', Validators.required],
+    Fathers_Name: ['', Validators.required],
+    Mothers_Name: ['', Validators.required],
+  });
   }
 
   get f() {
@@ -108,9 +113,15 @@ export class BirthComponent {
       Authorization: `Bearer ${token}`
     });
 
+    // FEB24
     const formData = new FormData();
-    formData.append('name', this.documentForm.value.name);
     formData.append('document_type', this.documentType);
+    formData.append('First_Name', this.documentForm.value.First_Name);
+    formData.append('Middle_Name', this.documentForm.value.Middle_Name);
+    formData.append('Last_Name', this.documentForm.value.Last_Name);
+    formData.append('Doc_Date', this.documentForm.value.Doc_Date);
+    formData.append('Fathers_Name', this.documentForm.value.Fathers_Name);
+    formData.append('Mothers_Name', this.documentForm.value.Mothers_Name);
 
     for (let i = 1; i <= 3; i++) {
       if (this.files[i]) {

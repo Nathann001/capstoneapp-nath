@@ -3,12 +3,43 @@
 
   <form [formGroup]="documentForm" (ngSubmit)="submitDocumentRequest()">
 
+    <!-- FEB24 -->
     <!-- Recipient Name -->
     <div class="form-group">
-      <label>Recipient Name*</label>
-      <input type="text" formControlName="name" />
-      <div *ngIf="f['name']?.invalid && f['name']?.touched" class="error">
-        Name is required (max 50 characters)
+      <label>First Name*</label>
+      <input type="text" formControlName="First_Name" />
+      <div *ngIf="f['First_Name']?.invalid && f['First_Name']?.touched" class="error">
+        First Name is required!
+      </div>
+
+      <label>Middle Name*</label>
+      <input type="text" formControlName="Middle_Name" />
+      <div *ngIf="f['Middle_Name']?.invalid && f['Middle_Name']?.touched" class="error">
+        Middle Name is required!
+      </div>
+
+      <label>Last Name*</label>
+      <input type="text" formControlName="Last_Name" />
+      <div *ngIf="f['Last_Name']?.invalid && f['Last_Name']?.touched" class="error">
+        Middle Name is required!
+      </div>
+
+      <label>Document Date*</label>
+      <input type="date" formControlName="Doc_Date" />
+      <div *ngIf="f['Doc_Date']?.invalid && f['Doc_Date']?.touched" class="error">
+        Document Date is required!
+      </div>
+
+      <label>Fathers Name*</label>
+      <input type="date" formControlName="Fathers_Name" />
+      <div *ngIf="f['Fathers_Name']?.invalid && f['Fathers_Name']?.touched" class="error">
+        Fathers Name is required!
+      </div>
+
+      <label>Mothers Name*</label>
+      <input type="date" formControlName="Mothers_Name" />
+      <div *ngIf="f['Mothers_Name']?.invalid && f['Mothers_Name']?.touched" class="error">
+        Mothers Name is required!
       </div>
     </div>
 
@@ -113,3 +144,97 @@
 
   </div>
 </div>
+
+<style>
+  .badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 8px;
+  }
+
+  .badge.required {
+    background-color: #dc3545;
+    color: white;
+  }
+
+  .badge.optional {
+    background-color: #6c757d;
+    color: white;
+  }
+
+  .required-field {
+    border-left: 4px solid #dc3545;
+    padding-left: 12px;
+    background-color: #fff5f5;
+    padding: 12px;
+    border-radius: 4px;
+  }
+
+  .file-status {
+    margin-top: 8px;
+    font-size: 0.9rem;
+  }
+
+  .file-status .success {
+    color: #28a745;
+    font-weight: 500;
+  }
+
+  .file-status .error {
+    color: #dc3545;
+    font-weight: 500;
+  }
+
+  .file-status .muted {
+    color: #6c757d;
+  }
+
+  .status-message {
+    padding: 12px;
+    border-radius: 4px;
+    margin: 16px 0;
+    font-weight: 500;
+  }
+
+  .status-message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+  }
+
+  .status-message.warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+  }
+
+  .form-group small {
+    display: block;
+    color: #6c757d;
+    margin-top: 4px;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+  }
+
+  .button-group button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 8px;
+  }
+
+  .btn-secondary:hover {
+    background-color: #5a6268;
+  }
+</style>

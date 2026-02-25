@@ -107,18 +107,28 @@ function sendRequestStatusEmail(to, status, reason = null, documentType = '') {
 }));
 
   app.use(express.json());
-const db = mysql.createPool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT || 3306,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-  enableKeepAlive: true,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+  const db = mysql.createPool({
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT || 3306,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 10000, // ADD THIS
+    connectTimeout: 30000,        // ADD THIS
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  });
+
+  // Keep DB connection alive
+setInterval(() => {
+  db.query('SELECT 1', (err) => {
+    if (err) console.error('Keepalive ping failed:', err.message);
+    else console.log('DB keepalive OK');
+  });
+}, 30000); // ping every 30 seconds
 
 console.log('Database Configuration:');
 console.log('Host:', process.env.DB_HOST);
@@ -152,14 +162,21 @@ db.on('error', (err) => {
   const upload = multer({ storage: multer.memoryStorage() });
 
   const uploadToCloudinary = (fileBuffer, folder) => {
-    return new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream({ folder }, (error, result) => {
-        if (result) resolve(result);
-        else reject(error);
-      });
-      streamifier.createReadStream(fileBuffer).pipe(stream);
-    });
-  }
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder, timeout: 60000 },
+      (error, result) => {
+        if (error) {
+          console.error('Cloudinary upload error:', error);
+          reject(error);
+        } else {
+          resolve(result);
+        }
+      }
+    );
+    streamifier.createReadStream(fileBuffer).pipe(stream);
+  });
+};
 
 // Serve the uploads folder statically
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -969,71 +986,160 @@ const uploadDocMultiple = multer({ storage: multer.memoryStorage() }).array('fil
 // CORRECTED ENDPOINT - Uses Cloudinary for file uploads
 app.post('/api/document_request', verifyToken, checkRoles([3]), (req, res) => {
   uploadDocMultiple(req, res, async (err) => {
-    if (err) return res.status(500).json({ error: 'File upload failed', details: err.message });
+    if (err) {
+      return res.status(500).json({
+        error: 'File upload failed',
+        details: err.message
+      });
+    }
 
-    const { name, document_type } = req.body;
+    const {
+      document_type,
+      First_Name,
+      Middle_Name,
+      Last_Name,
+      Fathers_Name,
+      Mothers_Name,
+      Doc_Date,
+      Death_Place,
+      Marriage_Place,
+      Wife_Name
+    } = req.body;
+
     const userId = req.user.id;
 
-    if (!name || !document_type) {
-      return res.status(400).json({ error: 'Name and document_type are required' });
+    // 🔹 Required fields per document type
+    const requiredFields = {
+      birth: ['First_Name', 'Middle_Name', 'Last_Name', 'Doc_Date', 'Fathers_Name', 'Mothers_Name'],
+      death: ['First_Name', 'Last_Name', 'Doc_Date', 'Death_Place'],
+      marriage: ['First_Name', 'Last_Name', 'Doc_Date', 'Marriage_Place', 'Wife_Name']
+    };
+
+    // 🔹 Validate document_type
+    if (!document_type) {
+      return res.status(400).json({ error: 'Document type is required' });
     }
 
-    let savedFiles = [];
+    if (!requiredFields[document_type]) {
+      return res.status(400).json({ error: 'Invalid document type' });
+    }
 
-    // Upload files to Cloudinary
-    if (req.files && req.files.length > 0) {
+    // 🔹 Dynamic validation
+    for (let field of requiredFields[document_type]) {
+      if (!req.body[field]) {
+        return res.status(400).json({
+          error: `${field} is required for ${document_type} certificate`
+        });
+      }
+    }
+
+    // 🔹 Get database connection
+    db.getConnection(async (connErr, connection) => {
+      if (connErr) {
+        console.error('Failed to get DB connection:', connErr);
+        return res.status(500).json({
+          error: 'Database connection failed',
+          details: connErr.message
+        });
+      }
+
       try {
-        for (const file of req.files) {
-          try {
-            console.log(`Uploading file: ${file.originalname}`);
-            const uploaded = await uploadToCloudinary(file.buffer, 'document_requests');
-            savedFiles.push(uploaded.secure_url);
-            console.log(`✓ Uploaded ${file.originalname} to Cloudinary`);
-          } catch (uploadErr) {
-            console.error(`✗ Failed to upload ${file.originalname}:`, uploadErr.message);
+        // 🔹 Upload files to Cloudinary
+        let savedFiles = [];
+
+        if (req.files && req.files.length > 0) {
+          for (const file of req.files) {
+            try {
+              console.log(`Uploading file: ${file.originalname}`);
+              const uploaded = await uploadToCloudinary(file.buffer, 'document_requests');
+              savedFiles.push(uploaded.secure_url);
+              console.log(`✓ Uploaded ${file.originalname}`);
+            } catch (uploadErr) {
+              console.error(`✗ Failed to upload ${file.originalname}:`, uploadErr.message);
+            }
           }
         }
-      } catch (err) {
-        console.error('Error uploading files:', err);
-        return res.status(500).json({ error: 'File upload failed', details: err.message });
-      }
-    }
 
-    const filePathString = savedFiles.length > 0 ? savedFiles.join(',') : '';
+        const filePathString = savedFiles.length > 0 ? savedFiles.join(',') : '';
+        const name = `${First_Name || ''} ${Middle_Name || ''} ${Last_Name || ''}`.trim();
 
-    const sql = 'INSERT INTO document_request (name, document_type, file_path, user_id) VALUES (?, ?, ?, ?)';
-    db.query(sql, [name, document_type, filePathString, userId], async (err, result) => {
-      if (err) {
-        console.error('Database error:', err);
-        return res.status(500).json({ error: 'Database insert failed', details: err.message });
-      }
+        // 🔹 Insert into database
+        connection.query(
+          `INSERT INTO document_request
+           (name, document_type, file_path, user_id,
+            First_Name, Middle_Name, Last_Name,
+            Fathers_Name, Mothers_Name, Doc_Date,
+            Death_Place, Marriage_Place, Wife_Name)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            name,
+            document_type,
+            filePathString,
+            userId,
+            First_Name || null,
+            Middle_Name || null,
+            Last_Name || null,
+            Fathers_Name || null,
+            Mothers_Name || null,
+            Doc_Date || null,
+            Death_Place || null,
+            Marriage_Place || null,
+            Wife_Name || null
+          ],
+          async (insertErr, result) => {
 
-      const requestId = result.insertId;
-      console.log(`Created request ID: ${requestId}`);
+            connection.release();
 
-      try {
-        const userEmailResults = await new Promise((resolve, reject) => {
-          db.query('SELECT email FROM users WHERE id = ?', [userId], (err, results) => {
-            if (err) return reject(err);
-            resolve(results);
-          });
+            if (insertErr) {
+              console.error('Database error:', insertErr);
+              return res.status(500).json({
+                error: 'Database insert failed',
+                details: insertErr.message
+              });
+            }
+
+            const requestId = result.insertId;
+            console.log(`Created request ID: ${requestId}`);
+
+            // 🔹 Send confirmation email
+            try {
+              const userEmailResults = await new Promise((resolve, reject) => {
+                db.query('SELECT email FROM users WHERE id = ?', [userId], (err, results) => {
+                  if (err) return reject(err);
+                  resolve(results);
+                });
+              });
+
+              if (userEmailResults.length > 0 && userEmailResults[0].email) {
+                await sendRequestStatusEmail(
+                  userEmailResults[0].email,
+                  'pending',
+                  null,
+                  document_type
+                );
+                console.log(`✓ Email sent`);
+              }
+
+            } catch (emailErr) {
+              console.error('Failed to send pending email:', emailErr.message);
+            }
+
+            res.status(201).json({
+              message: 'Document request submitted successfully',
+              requestId,
+              filePath: filePathString
+            });
+          }
+        );
+
+      } catch (e) {
+        connection.release();
+        console.error('Unexpected error:', e);
+        return res.status(500).json({
+          error: 'Unexpected error',
+          details: e.message
         });
-
-        if (userEmailResults.length > 0 && userEmailResults[0].email) {
-          const userEmail = userEmailResults[0].email;
-          console.log(`Sending pending email to: ${userEmail}`);
-          await sendRequestStatusEmail(userEmail, 'pending', null, document_type);
-          console.log(`✓ Email sent`);
-        }
-      } catch (emailErr) {
-        console.error('Failed to send pending email:', emailErr.message);
       }
-
-      res.status(201).json({
-        message: 'Document request submitted successfully',
-        requestId,
-        filePath: filePathString
-      });
     });
   });
 });
