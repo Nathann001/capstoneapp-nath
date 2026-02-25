@@ -1,24 +1,35 @@
-<div class="admin-container">
-  <h2 class="dashboard-title">Archived Requests</h2>
-  
-  <div class="card">
-    <table class="records-table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Date</th>
-          <th>Status</th>
-          <th>Archived At</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let doc of archivedRequests">
-          <td>{{ doc.name }}</td>
-          <td>{{ doc.updated_at || doc.date_created | date:'medium' }}</td>
-          <td class="capitalize">{{ doc.status }}</td>
-          <td>{{ doc.updated_at | date:'medium' }}</td>
-        </tr>
-      </tbody>
-    </table>
+<div class="app-container">
+  <div class="admin-container">
+    <h2 class="dashboard-title">Archives</h2>
+
+    <div class="card">
+      <table class="records-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Document Type</th>
+            <th>Status</th>
+            <th>Archived At</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let doc of archivedRequests">
+            <td>{{ doc.name || 'N/A' }}</td>
+            <td>{{ getDocumentLabel(doc.document_type || '') }}</td>
+            <td>{{ doc.status }}</td>
+            <td>{{ doc.updated_at | date:'mediumDate' }}</td>
+            <td>
+              <button (click)="restore(doc)" class="btn pending">Restore</button>
+              <button (click)="permanentDelete(doc)" class="btn record">Delete</button>
+            </td>
+          </tr>
+          <tr *ngIf="archivedRequests.length === 0">
+            <td colspan="5" style="text-align: center; padding: 20px;">No archived requests.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
   </div>
 </div>

@@ -795,7 +795,7 @@ app.get('/api/admin/document_request/statistics', verifyToken, checkRoles([1]), 
 
 app.get('/api/admin/document_request', verifyToken, checkRoles([1]), (req, res) => {
   db.query(
-    `SELECT RequestID, name, date_created, status, updated_at, archived FROM document_request ORDER BY date_created DESC`,
+    `SELECT RequestID, name, document_type, date_created, status, updated_at, archived FROM document_request ORDER BY date_created DESC`,
     (err, results) => {
       if (err) return res.status(500).json({ message: 'Database error' });
       res.json(results);
@@ -935,6 +935,46 @@ app.put('/api/document_request/:id/archive', verifyToken, checkRoles([1]), (req,
     db.query('UPDATE document_request SET archived = 1, updated_at = NOW() WHERE RequestID = ?', [requestId], (err) => {
       if (err) return res.status(500).json({ message: 'Failed to update DB', error: err.message });
       res.json({ message: 'Request archived successfully' });
+    });
+  });
+});
+
+// PUT /api/document_request/:id/restore
+app.put('/api/document_request/:id/restore', verifyToken, checkRoles([1]), (req, res) => {
+  db.query(
+    'UPDATE document_request SET archived = 0, updated_at = NOW() WHERE RequestID = ?',
+    [req.params.id],
+    (err, result) => {
+      if (err) return res.status(500).json({ message: 'Failed to restore', error: err.message });
+      if (result.affectedRows === 0) return res.status(404).json({ message: 'Request not found' });
+      res.json({ message: 'Request restored successfully' });
+    }
+  );
+});
+
+// DELETE /api/document_request/:id/permanent
+app.delete('/api/document_request/:id/permanent', verifyToken, checkRoles([1]), (req, res) => {
+  const requestId = req.params.id;
+
+  db.getConnection((err, connection) => {
+    if (err) return res.status(500).json({ message: 'Failed to get connection' });
+
+    connection.beginTransaction(err => {
+      if (err) { connection.release(); return res.status(500).json({ message: 'Transaction failed' }); }
+
+      connection.query('DELETE FROM request_status_history WHERE RequestID = ?', [requestId], err => {
+        if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ message: 'Failed deleting history' }); });
+
+        connection.query('DELETE FROM document_request WHERE RequestID = ?', [requestId], err => {
+          if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ message: 'Failed deleting request' }); });
+
+          connection.commit(err => {
+            if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ message: 'Commit failed' }); });
+            connection.release();
+            res.json({ message: 'Request permanently deleted' });
+          });
+        });
+      });
     });
   });
 });
@@ -1131,6 +1171,54 @@ cron.schedule('0 6 * * *', () => {
           console.error(`[CRON] Failed to send reminder to ${row.email}:`, e.message);
         }
       }
+    }
+  );
+});
+
+// AUTO-ARCHIVE: every 30 seconds for testing (change to '0 2 * * *' for daily at 2AM in production)
+// Production: requests approved/denied older than 7 days get auto-archived
+cron.schedule('*/30 * * * * *', () => {
+  console.log('[CRON] Auto-archive check...');
+
+  // TESTING: 30 seconds | PRODUCTION: replace interval with DATE_SUB(NOW(), INTERVAL 7 DAY)
+  const sql = `
+    UPDATE document_request
+    SET archived = 1, updated_at = NOW()
+    WHERE archived = 0
+      AND status IN ('approved', 'denied')
+      AND updated_at < DATE_SUB(NOW(), INTERVAL 30 SECOND)
+  `;
+
+  db.query(sql, (err, result) => {
+    if (err) return console.error('[CRON] Auto-archive error:', err.message);
+    if (result.affectedRows > 0) console.log(`[CRON] Auto-archived ${result.affectedRows} request(s)`);
+  });
+});
+
+// AUTO-DELETE: every 30 seconds for testing (change to '0 3 * * *' for daily at 3AM in production)
+// Production: archived requests older than 5 years get permanently deleted
+cron.schedule('*/30 * * * * *', () => {
+  console.log('[CRON] Auto-delete check...');
+
+  // TESTING: 30 seconds | PRODUCTION: replace interval with DATE_SUB(NOW(), INTERVAL 5 YEAR)
+  db.query(
+    `SELECT RequestID FROM document_request
+     WHERE archived = 1 AND updated_at < DATE_SUB(NOW(), INTERVAL 30 SECOND)`,
+    (err, rows) => {
+      if (err) return console.error('[CRON] Auto-delete fetch error:', err.message);
+      if (!rows.length) return;
+
+      const ids = rows.map(r => r.RequestID);
+      console.log(`[CRON] Auto-deleting ${ids.length} archived request(s):`, ids);
+
+      db.query('DELETE FROM request_status_history WHERE RequestID IN (?)', [ids], err => {
+        if (err) return console.error('[CRON] Failed deleting history:', err.message);
+
+        db.query('DELETE FROM document_request WHERE RequestID IN (?)', [ids], err => {
+          if (err) return console.error('[CRON] Failed deleting requests:', err.message);
+          console.log(`[CRON] Permanently deleted ${ids.length} request(s)`);
+        });
+      });
     }
   );
 });
