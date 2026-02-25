@@ -791,6 +791,25 @@ app.get('/api/document_request/for_release', verifyToken, checkRoles([1,2]), (re
   );
 });
 
+app.get('/api/document_request/released_list', verifyToken, checkRoles([1, 2]), (req, res) => {
+  db.query(
+    `SELECT dr.*,
+            IFNULL(CONCAT(ud.User_FName, ' ', ud.User_LName), '') AS assigned_staff_name
+     FROM document_request dr
+     LEFT JOIN users u ON dr.assigned_staff_id = u.id
+     LEFT JOIN user_details ud ON u.id = ud.UserID
+     WHERE dr.status = 'released' AND dr.archived = 0
+     ORDER BY dr.updated_at DESC`,
+    (err, results) => {
+      if (err) {
+        console.error('Failed to fetch Released requests:', err);
+        return res.status(500).json({ message: 'Failed to fetch Released requests', error: err.message });
+      }
+      res.json(results);
+    }
+  );
+});
+
 app.get('/api/document_request/:id', verifyToken, (req, res) => {
   const requestId = parseInt(req.params.id, 10);
   const sql = `
@@ -987,8 +1006,6 @@ app.put('/api/document_request/:id/for_release', verifyToken, checkRoles([1, 2])
   );
 });
 
-
-
 // FEB25 (RELEASED)
 app.put('/api/document_request/:id/released', verifyToken, checkRoles([1, 2]), (req, res) => {
   const requestId = req.params.id;
@@ -996,13 +1013,12 @@ app.put('/api/document_request/:id/released', verifyToken, checkRoles([1, 2]), (
   db.query(
     `UPDATE document_request
      SET status = ?, updated_at = NOW(), assigned_staff_id = ?
-     WHERE RequestID = ?`,
-    ['released', req.user.id, requestId],
+     WHERE RequestID = ? AND status = ?`,
+    ['released', req.user.id, requestId, 'for_release'],  // ✅ fixed typo here
     (err, result) => {
       if (err) return res.status(500).json({ message: 'Failed to update request', error: err.message });
-      if (result.affectedRows === 0) return res.status(404).json({ message: 'Request not found' });
+      if (result.affectedRows === 0) return res.status(404).json({ message: 'Request not found or not in For Release status' });
 
-      // Fetch user email and document type
       db.query(
         `SELECT u.email, dr.document_type
          FROM document_request dr
@@ -1012,13 +1028,8 @@ app.put('/api/document_request/:id/released', verifyToken, checkRoles([1, 2]), (
         (err, results) => {
           if (!err && results.length > 0) {
             const { email, document_type } = results[0];
-
-            // Send email for released status
-            sendRequestStatusEmail(email, 'released', null, document_type); // no reason needed
-
-            const emailMsg = `Your document for ${document_type} has been <b>RELEASED</b>. Thank you for your patience.`;
-
-            // Log the status in history
+            sendRequestStatusEmail(email, 'released', null, document_type);
+            const emailMsg = `Your document for ${document_type} has been RELEASED. Thank you for your patience.`;
             db.query(
               'INSERT INTO request_status_history (RequestID, status, email_message) VALUES (?, ?, ?)',
               [requestId, 'released', emailMsg],
@@ -1028,7 +1039,7 @@ app.put('/api/document_request/:id/released', verifyToken, checkRoles([1, 2]), (
         }
       );
 
-      res.json({ message: 'Request marked as Released and assigned to you' });
+      res.json({ message: 'Request marked as Released' });
     }
   );
 });

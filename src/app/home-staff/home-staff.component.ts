@@ -17,12 +17,13 @@ export class HomeStaffComponent implements OnInit {
   under_review: any[] = [];
   approved: any[] = [];
   denied: any[] = [];
-  for_release: any[] = []; // NEW: For Release requests
+  for_release: any[] = [];
+  released: any[] = [];
 
   stats = {
-    approved: { today: 0, week: 0, month: 0 },
-    denied: { today: 0, week: 0, month: 0 },
-    pending: { today: 0, week: 0, month: 0 },
+    approved:     { today: 0, week: 0, month: 0 },
+    denied:       { today: 0, week: 0, month: 0 },
+    pending:      { today: 0, week: 0, month: 0 },
     under_review: { today: 0, week: 0, month: 0 }
   };
 
@@ -40,26 +41,65 @@ export class HomeStaffComponent implements OnInit {
   apptFilterCertType: string = '';
   apptFilterRegType: string = '';
 
+  // ── Modal state ──────────────────────────────────────────
+  showConfirmModal   = false;
+  confirmModalTitle  = '';
+  confirmModalMessage = '';
+  pendingAction: (() => void) | null = null;
+
+  showResultModal   = false;
+  resultModalType: 'success' | 'error' = 'success';
+  resultModalMessage = '';
+  // ─────────────────────────────────────────────────────────
+
   private API = 'https://drtbackend-2cw3.onrender.com/api/document_request';
 
   constructor(private http: HttpClient, private router: Router) {}
 
   ngOnInit() {
     this.fetchDocumentRequests();
-    this.fetchForReleaseRequests(); // NEW: load for release
+    this.fetchForReleaseRequests();
+    this.fetchReleasedRequests();
     this.fetchAppointments();
   }
 
-  // ---------- FETCH DOCUMENT REQUESTS ----------
+  // ── Modal helpers ─────────────────────────────────────────
+  openConfirm(title: string, message: string, action: () => void) {
+    this.confirmModalTitle   = title;
+    this.confirmModalMessage = message;
+    this.pendingAction       = action;
+    this.showConfirmModal    = true;
+  }
+
+  confirmModalAction() {
+    this.showConfirmModal = false;
+    if (this.pendingAction) { this.pendingAction(); this.pendingAction = null; }
+  }
+
+  cancelModal() {
+    this.showConfirmModal = false;
+    this.pendingAction = null;
+  }
+
+  showResult(type: 'success' | 'error', message: string) {
+    this.resultModalType    = type;
+    this.resultModalMessage = message;
+    this.showResultModal    = true;
+  }
+
+  closeResultModal() { this.showResultModal = false; }
+  // ─────────────────────────────────────────────────────────
+
   fetchDocumentRequests() {
     const token = localStorage.getItem('token');
-    if (!token) return console.error('No token found. User might not be logged in.');
+    if (!token) return console.error('No token found.');
 
     this.http.get<any[]>(this.API, { headers: { Authorization: `Bearer ${token}` } })
       .subscribe({
         next: (data) => {
           const activeData = data.filter(d => d.archived === 0);
-          const sortByDateAsc = (a: any, b: any) => new Date(a.updated_at || a.date_created).getTime() - new Date(b.updated_at || b.date_created).getTime();
+          const sortByDateAsc = (a: any, b: any) =>
+            new Date(a.updated_at || a.date_created).getTime() - new Date(b.updated_at || b.date_created).getTime();
 
           this.pending      = activeData.filter(d => d.status === 'pending').sort(sortByDateAsc);
           this.under_review = activeData.filter(d => d.status === 'under_review').sort(sortByDateAsc);
@@ -72,7 +112,6 @@ export class HomeStaffComponent implements OnInit {
       });
   }
 
-  // ---------- FETCH FOR RELEASE REQUESTS ----------
   fetchForReleaseRequests() {
     const token = localStorage.getItem('token') || '';
     this.http.get<any[]>(`${this.API}/for_release`, { headers: { Authorization: `Bearer ${token}` } })
@@ -82,28 +121,57 @@ export class HomeStaffComponent implements OnInit {
       });
   }
 
-  // ---------- MARK REQUEST AS FOR RELEASE ----------
-  markForRelease(requestId: number) {
-    if (!confirm('Are you sure you want to mark this request as For Release?')) return;
-
+  fetchReleasedRequests() {
     const token = localStorage.getItem('token') || '';
-    this.http.put(`${this.API}/${requestId}/for_release`, {}, { headers: { Authorization: `Bearer ${token}` }, withCredentials: true })
+    this.http.get<any[]>(`${this.API}/released_list`, { headers: { Authorization: `Bearer ${token}` } })
       .subscribe({
-        next: (res: any) => {
-          alert(res.message);
-          // Remove from approved table
-          this.approved = this.approved.filter(doc => doc.RequestID !== requestId);
-          // Refresh For Release table
-          this.fetchForReleaseRequests();
-        },
-        error: (err) => {
-          console.error(err);
-          alert(err.error?.message || 'Failed to mark request as For Release.');
-        }
+        next: (data) => { this.released = data; },
+        error: (err) => console.error('Failed to fetch Released requests', err)
       });
   }
 
-  // ---------- FETCH APPOINTMENTS ----------
+  markForRelease(requestId: number) {
+    this.openConfirm(
+      'Mark as For Release',
+      'Are you sure you want to mark this request as For Release?',
+      () => {
+        const token = localStorage.getItem('token') || '';
+        this.http.put(`${this.API}/${requestId}/for_release`, {}, { headers: { Authorization: `Bearer ${token}` } })
+          .subscribe({
+            next: (res: any) => {
+              this.approved = this.approved.filter(doc => doc.RequestID !== requestId);
+              this.fetchForReleaseRequests();
+              this.showResult('success', res.message || 'Request marked as For Release.');
+            },
+            error: (err) => {
+              this.showResult('error', err.error?.message || 'Failed to mark request as For Release.');
+            }
+          });
+      }
+    );
+  }
+
+  markAsReleased(requestId: number) {
+    this.openConfirm(
+      'Mark as Released',
+      'Are you sure you want to mark this request as Released?',
+      () => {
+        const token = localStorage.getItem('token') || '';
+        this.http.put(`${this.API}/${requestId}/released`, {}, { headers: { Authorization: `Bearer ${token}` } })
+          .subscribe({
+            next: (res: any) => {
+              this.for_release = this.for_release.filter(doc => doc.RequestID !== requestId);
+              this.fetchReleasedRequests();
+              this.showResult('success', res.message || 'Request marked as Released.');
+            },
+            error: (err) => {
+              this.showResult('error', err.error?.message || 'Failed to mark request as Released.');
+            }
+          });
+      }
+    );
+  }
+
   fetchAppointments() {
     this.isLoadingAppts = true;
     const token = localStorage.getItem('token') || '';
@@ -113,7 +181,8 @@ export class HomeStaffComponent implements OnInit {
     if (this.apptFilterCertType) params.push(`certificate_type=${this.apptFilterCertType}`);
     if (this.apptFilterRegType)  params.push(`registration_type=${encodeURIComponent(this.apptFilterRegType)}`);
 
-    const url = 'https://drtbackend-2cw3.onrender.com/api/staff/appointments' + (params.length ? '?' + params.join('&') : '');
+    const url = 'https://drtbackend-2cw3.onrender.com/api/staff/appointments' +
+                (params.length ? '?' + params.join('&') : '');
 
     this.http.get<any[]>(url, { headers: { Authorization: `Bearer ${token}` } })
       .subscribe({
@@ -137,10 +206,10 @@ export class HomeStaffComponent implements OnInit {
     return `${hour}:${String(m).padStart(2, '0')} ${period}`;
   }
 
-  // ---------- STATS ----------
   calculateStats(data: any[]) {
     const now = new Date();
-    const countByPeriod = (arr: any[], fn: (d: Date) => boolean) => arr.filter(d => fn(new Date(d.updated_at || d.date_created))).length;
+    const countByPeriod = (arr: any[], fn: (d: Date) => boolean) =>
+      arr.filter(d => fn(new Date(d.updated_at || d.date_created))).length;
     const filterStatus = (status: string) => data.filter(d => d.status === status);
 
     for (const status of ['approved', 'denied', 'pending', 'under_review'] as const) {
@@ -151,9 +220,8 @@ export class HomeStaffComponent implements OnInit {
     }
   }
 
-  // ---------- HELPERS ----------
-  isSameDay(a: Date, b: Date) { return a.toDateString() === b.toDateString(); }
-  isSameWeek(a: Date, b: Date) { return Math.abs(a.getTime() - b.getTime()) / (24*60*60*1000) < 7; }
+  isSameDay(a: Date, b: Date)   { return a.toDateString() === b.toDateString(); }
+  isSameWeek(a: Date, b: Date)  { return Math.abs(a.getTime() - b.getTime()) / (24*60*60*1000) < 7; }
   isSameMonth(a: Date, b: Date) { return a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear(); }
 
   formatStatName(name: string) {
@@ -163,9 +231,7 @@ export class HomeStaffComponent implements OnInit {
 
   getDocumentLabel(type: string): string {
     const map: Record<string, string> = {
-      birth: 'Birth Certificate',
-      death: 'Death Certificate',
-      marriage: 'Marriage Certificate'
+      birth: 'Birth Certificate', death: 'Death Certificate', marriage: 'Marriage Certificate'
     };
     return map[type] || type;
   }

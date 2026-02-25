@@ -169,6 +169,7 @@
             <th>Document Type</th>
             <th>For Release At</th>
             <th>Assigned Staff</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
@@ -176,6 +177,45 @@
             <td>{{ doc.name }}</td>
             <td>{{ getDocumentLabel(doc.document_type) }}</td>
             <td>{{ doc.updated_at | date:'medium' }}</td>
+            <td>{{ doc.assigned_staff_name || '—' }}</td>
+            <td>
+              <button (click)="markAsReleased(doc.RequestID)" class="btn-released">
+                Mark as Released
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="for_release.length === 0">
+            <td colspan="5" style="text-align: center; color: #999; padding: 20px;">
+              No requests for release yet.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ================== RELEASED TABLE ================== -->
+    <div class="card">
+      <h3 class="dashboard-title"><strong>RELEASED</strong></h3>
+      <table class="records-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Document Type</th>
+            <th>Released At</th>
+            <th>Assigned Staff</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let doc of released">
+            <td>{{ doc.name }}</td>
+            <td>{{ getDocumentLabel(doc.document_type) }}</td>
+            <td>{{ doc.updated_at | date:'medium' }}</td>
+            <td>{{ doc.assigned_staff_name || '—' }}</td>
+          </tr>
+          <tr *ngIf="released.length === 0">
+            <td colspan="4" style="text-align: center; color: #999; padding: 20px;">
+              No released requests yet.
+            </td>
           </tr>
         </tbody>
       </table>
@@ -300,5 +340,33 @@
       </table>
     </div>
 
+  </div>
+</div>
+<!-- ================== CONFIRM MODAL ================== -->
+<div *ngIf="showConfirmModal" class="modal-overlay" (click)="cancelModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-icon confirm">
+      <i class="fa-solid fa-circle-question"></i>
+    </div>
+    <h3 class="modal-title">{{ confirmModalTitle }}</h3>
+    <p class="modal-message">{{ confirmModalMessage }}</p>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" (click)="cancelModal()">Cancel</button>
+      <button class="modal-btn confirm" (click)="confirmModalAction()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================== RESULT MODAL (success/error) ================== -->
+<div *ngIf="showResultModal" class="modal-overlay" (click)="closeResultModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-icon" [ngClass]="resultModalType">
+      <i class="fa-solid" [ngClass]="resultModalType === 'success' ? 'fa-circle-check' : 'fa-circle-xmark'"></i>
+    </div>
+    <h3 class="modal-title">{{ resultModalType === 'success' ? 'Success' : 'Error' }}</h3>
+    <p class="modal-message">{{ resultModalMessage }}</p>
+    <div class="modal-actions">
+      <button class="modal-btn confirm" (click)="closeResultModal()">OK</button>
+    </div>
   </div>
 </div>
