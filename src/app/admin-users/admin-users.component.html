@@ -87,8 +87,18 @@
               <span *ngIf="user.role == 1 && user.can_delete_admins" title="Can delete admins" style="margin-left: 4px;">🗑️</span>
             </td>
             <td>
-              <button (click)="selectUser(user)" class="btn pending">Edit</button>
-              <button (click)="confirmDelete(user)" class="btn record">Delete</button>
+              <button
+                (click)="selectUser(user)"
+                class="btn pending"
+                *ngIf="user.role !== 1 || currentUserCanEditAdmins">
+                Edit
+              </button>
+              <button
+                (click)="confirmDelete(user)"
+                class="btn record"
+                *ngIf="user.role !== 1 || currentUserCanDeleteAdmins">
+                Delete
+              </button>
             </td>
           </tr>
           <tr *ngIf="filteredUsers.length === 0">

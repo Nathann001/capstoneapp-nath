@@ -614,23 +614,46 @@ app.get('/api/admin/users/:id', verifyToken, checkRoles([1]), (req, res) => {
   });
 });
 
+// PUT /api/admin/users/:id
 app.put('/api/admin/users/:id', verifyToken, checkRoles([1]), (req, res) => {
   const { email, role, can_create_admins, can_edit_admins, can_delete_admins } = req.body;
   if (![1, 2, 3].includes(role)) return res.status(400).json({ message: 'Invalid role' });
 
-  const canCreateAdmins = (role === 1 && can_create_admins) ? 1 : 0;
-  const canEditAdmins   = (role === 1 && can_edit_admins)   ? 1 : 0;
-  const canDeleteAdmins = (role === 1 && can_delete_admins) ? 1 : 0;
+  // Check if target user is an admin
+  db.query('SELECT role FROM users WHERE id = ?', [req.params.id], (err, targetResults) => {
+    if (err) return res.status(500).json({ message: 'Database error' });
+    if (targetResults.length === 0) return res.status(404).json({ message: 'User not found' });
 
-  db.query(
-    'UPDATE users SET email = ?, role = ?, can_create_admins = ?, can_edit_admins = ?, can_delete_admins = ? WHERE id = ?',
-    [email, role, canCreateAdmins, canEditAdmins, canDeleteAdmins, req.params.id],
-    (err, result) => {
-      if (err) { console.error('Error updating user:', err); return res.status(500).json({ message: 'Update failed', error: err.message }); }
-      if (result.affectedRows === 0) return res.status(404).json({ message: 'User not found' });
-      res.json({ message: 'User updated successfully' });
+    const targetIsAdmin = targetResults[0].role === 1;
+
+    if (targetIsAdmin) {
+      db.query('SELECT can_edit_admins FROM users WHERE id = ?', [req.user.id], (err, adminResults) => {
+        if (err) return res.status(500).json({ message: 'Database error' });
+        if (!adminResults[0].can_edit_admins) {
+          return res.status(403).json({ message: 'You do not have permission to edit admins' });
+        }
+        proceedWithUpdate();
+      });
+    } else {
+      proceedWithUpdate();
     }
-  );
+
+    function proceedWithUpdate() {
+      const canCreateAdmins = (role === 1 && can_create_admins) ? 1 : 0;
+      const canEditAdmins   = (role === 1 && can_edit_admins)   ? 1 : 0;
+      const canDeleteAdmins = (role === 1 && can_delete_admins) ? 1 : 0;
+
+      db.query(
+        'UPDATE users SET email = ?, role = ?, can_create_admins = ?, can_edit_admins = ?, can_delete_admins = ? WHERE id = ?',
+        [email, role, canCreateAdmins, canEditAdmins, canDeleteAdmins, req.params.id],
+        (err, result) => {
+          if (err) return res.status(500).json({ message: 'Update failed', error: err.message });
+          if (result.affectedRows === 0) return res.status(404).json({ message: 'User not found' });
+          res.json({ message: 'User updated successfully' });
+        }
+      );
+    }
+  });
 });
 
 app.put('/api/admin/users/:id/password', verifyToken, checkRoles([1]), async (req, res) => {
@@ -644,42 +667,65 @@ app.put('/api/admin/users/:id/password', verifyToken, checkRoles([1]), async (re
   });
 });
 
+// DELETE /api/admin/users/:id
 app.delete('/api/admin/users/:id', verifyToken, checkRoles([1]), (req, res) => {
   const userId = req.params.id;
   if (req.user.id == userId) return res.status(400).json({ message: 'You cannot delete your own account' });
 
-  db.getConnection((err, connection) => {
-    if (err) return res.status(500).json({ message: 'Failed to get database connection' });
+  // Fetch the target user and the requesting admin's permissions
+  db.query('SELECT role FROM users WHERE id = ?', [userId], (err, targetResults) => {
+    if (err) return res.status(500).json({ message: 'Database error' });
+    if (targetResults.length === 0) return res.status(404).json({ message: 'User not found' });
 
-    connection.beginTransaction(err => {
-      if (err) { connection.release(); return res.status(500).json({ message: 'Transaction start failed' }); }
+    const targetIsAdmin = targetResults[0].role === 1;
 
-      connection.query(`
-        DELETE rsh FROM request_status_history rsh
-        JOIN document_request dr ON rsh.RequestID = dr.RequestID
-        WHERE dr.user_id = ?
-      `, [userId], err => {
-        if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ message: 'Failed deleting history', error: err.message }); });
+    // If target is an admin, check if requester has can_delete_admins
+    if (targetIsAdmin) {
+      db.query('SELECT can_delete_admins FROM users WHERE id = ?', [req.user.id], (err, adminResults) => {
+        if (err) return res.status(500).json({ message: 'Database error' });
+        if (!adminResults[0].can_delete_admins) {
+          return res.status(403).json({ message: 'You do not have permission to delete admins' });
+        }
+        proceedWithDelete();
+      });
+    } else {
+      proceedWithDelete();
+    }
 
-        connection.query('DELETE FROM document_request WHERE user_id = ?', [userId], err => {
-          if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ message: 'Failed deleting requests', error: err.message }); });
+    function proceedWithDelete() {
+      db.getConnection((err, connection) => {
+        if (err) return res.status(500).json({ message: 'Failed to get database connection' });
+        connection.beginTransaction(err => {
+          if (err) { connection.release(); return res.status(500).json({ message: 'Transaction start failed' }); }
 
-          connection.query('DELETE FROM user_details WHERE UserID = ?', [userId], err => {
-            if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ message: 'Failed deleting user details', error: err.message }); });
+          connection.query(`
+            DELETE rsh FROM request_status_history rsh
+            JOIN document_request dr ON rsh.RequestID = dr.RequestID
+            WHERE dr.user_id = ?
+          `, [userId], err => {
+            if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ message: 'Failed deleting history' }); });
 
-            connection.query('DELETE FROM users WHERE id = ?', [userId], err => {
-              if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ message: 'Failed deleting user', error: err.message }); });
+            connection.query('DELETE FROM document_request WHERE user_id = ?', [userId], err => {
+              if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ message: 'Failed deleting requests' }); });
 
-              connection.commit(err => {
-                if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ message: 'Commit failed' }); });
-                connection.release();
-                res.json({ message: 'User deleted successfully' });
+              connection.query('DELETE FROM user_details WHERE UserID = ?', [userId], err => {
+                if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ message: 'Failed deleting user details' }); });
+
+                connection.query('DELETE FROM users WHERE id = ?', [userId], err => {
+                  if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ message: 'Failed deleting user' }); });
+
+                  connection.commit(err => {
+                    if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ message: 'Commit failed' }); });
+                    connection.release();
+                    res.json({ message: 'User deleted successfully' });
+                  });
+                });
               });
             });
           });
         });
       });
-    });
+    }
   });
 });
 
