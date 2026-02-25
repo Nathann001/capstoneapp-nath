@@ -68,10 +68,11 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let doc of getPaginatedItems(row)"
-                (click)="doc.status === 'under_review' ? viewInProcessDetail(doc) : viewRequestDetail(doc)"
-                style="cursor: pointer;">
-              <td>{{ doc.RequestID }}</td>
+            <tr *ngFor="let doc of getPaginatedItems(row)">
+              <td (click)="doc.status === 'under_review' ? viewInProcessDetail(doc) : viewRequestDetail(doc)"
+                  style="cursor: pointer;">
+                {{ doc.RequestID }}
+              </td>
               <td>{{ getDocumentLabel(doc.document_type) }}</td>
               <td>{{ doc.updated_at || doc.date_created | date:'medium' }}</td>
               <td class="status-{{ doc.status === 'under_review' ? 'pending' : doc.status }}">
