@@ -19,6 +19,7 @@ export class OtpVerificationComponent implements OnInit {
   resendCooldown = 0;
   contact: string = '';
   message: string = '';
+  otpSent = false; // controls display of "We sent OTP to …"
 
   constructor(
     private fb: FormBuilder,
@@ -32,7 +33,7 @@ export class OtpVerificationComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Try to prefill from navigation state or sessionStorage
+    // Prefill contact from navigation state or sessionStorage
     const stateContact = history.state?.contact;
     const savedContact = sessionStorage.getItem('otpContact');
 
@@ -41,11 +42,8 @@ export class OtpVerificationComponent implements OnInit {
       sessionStorage.setItem('otpContact', this.contact);
     } else if (savedContact) {
       this.contact = savedContact;
-    } else {
-      this.contact = '';
     }
 
-    // Prefill the form control
     this.otpForm.get('contact')?.setValue(this.contact);
   }
 
@@ -63,7 +61,7 @@ export class OtpVerificationComponent implements OnInit {
     this.authService.verifyOtp(payload).subscribe({
       next: (res) => {
         console.log(res.message || 'Verification successful!');
-        sessionStorage.setItem('otpContact', contact); // remember for next time
+        sessionStorage.setItem('otpContact', contact);
         this.router.navigate(['/login']);
       },
       error: (err) => {
@@ -88,6 +86,7 @@ export class OtpVerificationComponent implements OnInit {
     this.authService.resendOtp(contact).subscribe({
       next: () => {
         this.message = 'OTP resent successfully!';
+        this.otpSent = true; // <-- Show the "We sent OTP to ..." text
         this.resendCooldown = 60;
 
         const countdown$ = timer(0, 1000);
@@ -105,5 +104,4 @@ export class OtpVerificationComponent implements OnInit {
       }
     });
   }
-
 }

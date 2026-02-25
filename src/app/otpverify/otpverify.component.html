@@ -1,59 +1,85 @@
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<div class="otp-page">
 
-<div class="login-bg">
-    <div class="bg-image"></div>
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div class="form-card">
 
-    <!-- Title -->
-    <h1 class="city-title">ANGELES CITY DOCUMENT REQUEST</h1>
+      <!-- Mobile header -->
+      <div class="mobile-header">
+        <img src="/assets/images/angeles_city_logo.png" alt="Seal" class="mobile-seal" />
+        <p class="mobile-title">Angeles City</p>
+      </div>
 
-    <!-- Logo -->
-    <img src="/assets/images/angeles_city_logo.png" alt="Angeles City Logo" class="logo" />
+      <!-- OTP Header -->
+      <div class="otp-header">
+        <div class="otp-icon-wrap"><i class="fa-solid fa-envelope-open-text"></i></div>
+        <h2 class="form-title">Check your email</h2>
+        <p class="otp-text" *ngIf="otpSent">
+        We sent a 6-digit code to<br>
+        <strong class="email-highlight">{{ otpForm.value.contact }}</strong>
+</p>
+      </div>
 
-    <!-- Subtitle -->
-    <p class="welcome-text">VERIFY YOUR ACCOUNT</p>
+      <!-- OTP FORM -->
+      <form [formGroup]="otpForm" (ngSubmit)="onSubmit()">
 
-    <!-- OTP Card -->
-    <div class="login-container">
-        <div class="login-box">
-            <form [formGroup]="otpForm" (ngSubmit)="onSubmit()" class="form-box">
-
-                <h3 class="login-title">ENTER OTP</h3>
-
-                <p class="otp-text">
-                    Enter the 6-digit code sent to your email or phone.
-                </p>
-
-                <!-- Email/Phone Input -->
-                <div class="input-with-icon">
-                    <input type="text" formControlName="contact" placeholder="Email or Phone" />
-                </div>
-
-                <!-- OTP Input -->
-                <div class="input-with-icon">
-                    <input type="text" formControlName="otp" placeholder="Enter 6-digit OTP" maxlength="6" />
-                </div>
-
-                <!-- Verify Button -->
-                <button type="submit" class="login-btn" [disabled]="otpForm.invalid || loading">
-                    {{ loading ? 'VERIFYING...' : 'VERIFY OTP' }}
-                </button>
-
-                <!-- Resend OTP -->
-                <div class="resend-container">
-                    <button type="button"
-                            class="resend-btn"
-                            (click)="resendOtp()"
-                            [disabled]="resendCooldown > 0">
-                        <i class="fa-solid fa-rotate-right"></i>
-                        {{ resendCooldown > 0 ? 'Resend OTP in ' + resendCooldown + 's' : 'Resend OTP' }}
-                    </button>
-
-                    <p class="resend-message" *ngIf="message">
-                        <i class="fa-solid fa-circle-check"></i> {{ message }}
-                    </p>
-                </div>
-
-            </form>
+        <!-- Email/Phone input -->
+        <div class="field-group">
+          <label class="field-label">Email or Phone</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-envelope input-icon"></i>
+            <input type="text" formControlName="contact" placeholder="Email or Phone"
+              [class.input-invalid]="otpForm.get('contact')?.invalid && otpForm.get('contact')?.touched" />
+          </div>
         </div>
+
+        <!-- OTP input -->
+        <div class="field-group">
+          <label class="field-label">Verification Code</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-key input-icon"></i>
+            <input type="text" formControlName="otp" maxlength="6"
+              placeholder="Enter 6-digit OTP"
+              [class.input-invalid]="otpForm.get('otp')?.invalid && otpForm.get('otp')?.touched" />
+          </div>
+        </div>
+
+        <!-- VERIFY BUTTON -->
+        <button type="submit" class="btn-submit" [disabled]="otpForm.invalid || loading">
+          <span *ngIf="!loading"><i class="fa-solid fa-circle-check"></i> Verify Account</span>
+          <span *ngIf="loading" class="btn-spinner-wrap">
+            <span class="spinner"></span> Verifying…
+          </span>
+        </button>
+
+      </form>
+
+      <!-- RESEND OTP -->
+      <div class="resend-wrap">
+        <button type="button" class="btn-resend" (click)="resendOtp()" [disabled]="resendCooldown > 0">
+          <i class="fa-solid fa-rotate-right"></i>
+          {{ resendCooldown > 0 ? 'Resend in ' + resendCooldown + 's' : 'Resend OTP' }}
+        </button>
+
+        <p class="resend-ok" *ngIf="message">
+          <i class="fa-solid fa-circle-check"></i> {{ message }}
+        </p>
+      </div>
+
     </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="panel-overlay"></div>
+    <div class="panel-content">
+      <img src="/assets/images/angeles_city_logo.png" alt="Seal" class="seal" />
+      <h1 class="panel-title">Angeles City</h1>
+      <p class="panel-eyebrow">Republic of the Philippines</p>
+      <div class="panel-rule"></div>
+      <p class="panel-desc">Join thousands of Angeleños accessing government services online — fast, easy, and secure.</p>
+    </div>
+    <div class="panel-footer">© 2026 City Government of Angeles</div>
+  </div>
+
 </div>
