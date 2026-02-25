@@ -1,10 +1,9 @@
 <div class="app-container">
   <div class="admin-container">
 
-    <!-- ================== PAGE TITLE ================== -->
     <h2 class="dashboard-title">Users</h2>
 
-    <!-- ================== CREATE ACCOUNT TOGGLE BUTTON ================== -->
+    <!-- ================== CREATE ACCOUNT TOGGLE ================== -->
     <div style="margin-bottom: 20px;">
       <button (click)="toggleCreateForm()" class="btn complete" style="display: flex; align-items: center; gap: 8px;">
         <span style="font-size: 18px; line-height: 1;">{{ showCreateForm ? '✕' : '+' }}</span>
@@ -18,12 +17,14 @@
       <form [formGroup]="createForm" (ngSubmit)="createUser()" style="display: flex; flex-direction: column; gap: 12px;">
         <input formControlName="email" type="email" placeholder="Email" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
         <input formControlName="password" type="password" placeholder="Password" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+
+        <!-- Role dropdown: Admin option only shown if currentUserCanCreateAdmins -->
         <select formControlName="role" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-          <option *ngFor="let r of roles" [value]="r.value">{{ r.label }}</option>
+          <option *ngFor="let r of availableRoles" [value]="r.value">{{ r.label }}</option>
         </select>
 
-        <!-- Only show for Admins (role == 1) -->
-        <div *ngIf="createForm.value.role == 1" style="margin: 4px 0;">
+        <!-- can_create_admins: only shown if Admin role selected AND current user can grant it -->
+        <div *ngIf="createForm.value.role == 1 && currentUserCanCreateAdmins" style="margin: 4px 0;">
           <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
             <input type="checkbox" formControlName="can_create_admins">
             Can create other admins
@@ -36,7 +37,7 @@
       </form>
     </div>
 
-    <!-- ================== SEARCH & FILTER SECTION ================== -->
+    <!-- ================== SEARCH & FILTER ================== -->
     <div style="margin: 0 0 20px; display: flex; gap: 10px;">
       <input
         type="text"
@@ -47,7 +48,7 @@
       />
       <select [(ngModel)]="filterRole" (ngModelChange)="onRoleFilterChange($event)" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px; min-width: 150px;">
         <option value="">All Roles</option>
-        <option *ngFor="let role of roles" [value]="role.value">{{ role.label }}</option>
+        <option *ngFor="let role of filterRoles" [value]="role.value">{{ role.label }}</option>
       </select>
     </div>
 
@@ -76,7 +77,6 @@
               <button (click)="confirmDelete(user)" class="btn record">Delete</button>
             </td>
           </tr>
-
           <tr *ngIf="filteredUsers.length === 0">
             <td colspan="4" style="text-align: center; padding: 20px;">No users found.</td>
           </tr>
@@ -97,16 +97,17 @@
       </div>
       <button class="modal-close" (click)="closeEditModal()" aria-label="Close">&#x2715;</button>
     </div>
-
     <div class="modal-body">
       <form [formGroup]="editForm" (ngSubmit)="updateUser()" style="display: flex; flex-direction: column; gap: 12px;">
         <input formControlName="email" type="email" placeholder="Email" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+
+        <!-- Role dropdown: Admin option only shown if currentUserCanCreateAdmins -->
         <select formControlName="role" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-          <option *ngFor="let r of roles" [value]="r.value">{{ r.label }}</option>
+          <option *ngFor="let r of availableRoles" [value]="r.value">{{ r.label }}</option>
         </select>
 
-        <!-- Only show for Admins (role == 1) -->
-        <div *ngIf="editForm.value.role == 1" style="margin: 4px 0;">
+        <!-- can_create_admins: only shown if Admin role selected AND current user can grant it -->
+        <div *ngIf="editForm.value.role == 1 && currentUserCanCreateAdmins" style="margin: 4px 0;">
           <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
             <input type="checkbox" formControlName="can_create_admins">
             Can create other admins
@@ -133,12 +134,10 @@
       <h3 class="modal-title">Delete User</h3>
       <button class="modal-close" (click)="closeDeleteModal()" aria-label="Close">&#x2715;</button>
     </div>
-
     <div class="modal-body">
       <p style="margin: 0 0 6px;">Are you sure you want to delete this user?</p>
       <p style="margin: 0; font-weight: 600;">{{ userToDelete?.email }}</p>
       <p style="margin: 8px 0 0; color: #888; font-size: 0.875rem;">This action cannot be undone.</p>
-
       <div class="modal-actions" style="margin-top: 24px;">
         <button type="button" (click)="closeDeleteModal()" class="btn pending">Cancel</button>
         <button type="button" (click)="deleteUser()" class="btn record">Delete</button>
