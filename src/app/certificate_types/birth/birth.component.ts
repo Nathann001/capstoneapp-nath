@@ -115,7 +115,7 @@ export class BirthComponent {
 
     // FEB24
     const formData = new FormData();
-    formData.append('document_type', this.documentType);
+    formData.append('document_type', 'birth');
     formData.append('First_Name', this.documentForm.value.First_Name);
     formData.append('Middle_Name', this.documentForm.value.Middle_Name);
     formData.append('Last_Name', this.documentForm.value.Last_Name);

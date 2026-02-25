@@ -13,6 +13,7 @@ require('dotenv').config();
   const fs = require('fs');
   const cloudinary = require('cloudinary').v2;
   const streamifier = require('streamifier');
+  const cron = require('node-cron');
 
   const sgMail = require('@sendgrid/mail');
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -91,6 +92,84 @@ function sendRequestStatusEmail(to, status, reason = null, documentType = '') {
   };
 
   return sgMail.send(msg);
+}
+
+function sendAppointmentConfirmationEmail(to, fullName, apptDate, apptTime, certificateType, registrationType) {
+  const formattedDate = new Date(apptDate).toLocaleDateString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC'
+  });
+  const formattedTime = formatTimeSlot(apptTime);
+
+  const msg = {
+    to,
+    from: process.env.SENDGRID_FROM,
+    subject: 'Appointment Confirmed – Angeles City DRT',
+    html: `
+      <p>Dear <b>${fullName}</b>,</p>
+      <p>Your appointment has been successfully booked. Here are your details:</p>
+      <table style="border-collapse:collapse; margin:16px 0;">
+        <tr>
+          <td style="padding:6px 16px 6px 0; font-weight:600; color:#555;">Certificate Type:</td>
+          <td style="padding:6px 0; color:#333;">${certificateType}</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 16px 6px 0; font-weight:600; color:#555;">Registration Type:</td>
+          <td style="padding:6px 0; color:#333;">${registrationType}</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 16px 6px 0; font-weight:600; color:#555;">Date:</td>
+          <td style="padding:6px 0; color:#333;">${formattedDate}</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 16px 6px 0; font-weight:600; color:#555;">Time:</td>
+          <td style="padding:6px 0; color:#333;">${formattedTime}</td>
+        </tr>
+      </table>
+      <p>Please make sure to arrive on time and bring any required documents.</p>
+      <p>If you need to cancel or reschedule, please contact us as soon as possible.</p>
+      <br/>
+      <p>Sincerely,<br/><b>Angeles City DRT</b></p>
+    `
+  };
+  return sgMail.send(msg);
+}
+
+function sendAppointmentReminderEmail(to, fullName, apptDate, apptTime) {
+  const formattedDate = new Date(apptDate).toLocaleDateString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC'
+  });
+  const formattedTime = formatTimeSlot(apptTime);
+
+  const msg = {
+    to,
+    from: process.env.SENDGRID_FROM,
+    subject: 'Reminder: Your Appointment is Today – Angeles City DRT',
+    html: `
+      <p>Dear <b>${fullName}</b>,</p>
+      <p>This is a friendly reminder that you have an appointment <b>today</b>:</p>
+      <table style="border-collapse:collapse; margin:16px 0;">
+        <tr>
+          <td style="padding:6px 16px 6px 0; font-weight:600; color:#555;">Date:</td>
+          <td style="padding:6px 0; color:#333;">${formattedDate}</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 16px 6px 0; font-weight:600; color:#555;">Time:</td>
+          <td style="padding:6px 0; color:#333;">${formattedTime}</td>
+        </tr>
+      </table>
+      <p>Please arrive on time and bring any required documents.</p>
+      <br/>
+      <p>Sincerely,<br/><b>Angeles City DRT</b></p>
+    `
+  };
+  return sgMail.send(msg);
+}
+
+function formatTimeSlot(timeStr) {
+  const [h, m] = timeStr.split(':').map(Number);
+  const period = h >= 12 ? 'PM' : 'AM';
+  const hour = h % 12 || 12;
+  return `${hour}:${String(m).padStart(2, '0')} ${period}`;
 }
 
   const app = express();
@@ -986,74 +1065,32 @@ const uploadDocMultiple = multer({ storage: multer.memoryStorage() }).array('fil
 // CORRECTED ENDPOINT - Uses Cloudinary for file uploads
 app.post('/api/document_request', verifyToken, checkRoles([3]), (req, res) => {
   uploadDocMultiple(req, res, async (err) => {
-    if (err) {
-      return res.status(500).json({
-        error: 'File upload failed',
-        details: err.message
-      });
-    }
+    if (err) return res.status(500).json({ error: 'File upload failed', details: err.message });
 
-    const {
-      document_type,
-      First_Name,
-      Middle_Name,
-      Last_Name,
-      Fathers_Name,
-      Mothers_Name,
-      Doc_Date,
-      Death_Place,
-      Marriage_Place,
-      Wife_Name
-    } = req.body;
-
+    const { document_type, First_Name, Middle_Name, Last_Name } = req.body;
     const userId = req.user.id;
 
-    // 🔹 Required fields per document type
-    const requiredFields = {
-      birth: ['First_Name', 'Middle_Name', 'Last_Name', 'Doc_Date', 'Fathers_Name', 'Mothers_Name'],
-      death: ['First_Name', 'Last_Name', 'Doc_Date', 'Death_Place'],
-      marriage: ['First_Name', 'Last_Name', 'Doc_Date', 'Marriage_Place', 'Wife_Name']
-    };
-
-    // 🔹 Validate document_type
-    if (!document_type) {
-      return res.status(400).json({ error: 'Document type is required' });
+    if (!document_type || !First_Name || !Middle_Name || !Last_Name) {
+      return res.status(400).json({ error: 'Name and document_type are required' });
     }
 
-    if (!requiredFields[document_type]) {
-      return res.status(400).json({ error: 'Invalid document type' });
-    }
-
-    // 🔹 Dynamic validation
-    for (let field of requiredFields[document_type]) {
-      if (!req.body[field]) {
-        return res.status(400).json({
-          error: `${field} is required for ${document_type} certificate`
-        });
-      }
-    }
-
-    // 🔹 Get database connection
+    // GET CONNECTION FIRST before any async work
     db.getConnection(async (connErr, connection) => {
       if (connErr) {
         console.error('Failed to get DB connection:', connErr);
-        return res.status(500).json({
-          error: 'Database connection failed',
-          details: connErr.message
-        });
+        return res.status(500).json({ error: 'Database connection failed', details: connErr.message });
       }
 
       try {
-        // 🔹 Upload files to Cloudinary
+        // Upload files to Cloudinary
         let savedFiles = [];
-
         if (req.files && req.files.length > 0) {
           for (const file of req.files) {
             try {
               console.log(`Uploading file: ${file.originalname}`);
               const uploaded = await uploadToCloudinary(file.buffer, 'document_requests');
               savedFiles.push(uploaded.secure_url);
-              console.log(`✓ Uploaded ${file.originalname}`);
+              console.log(`✓ Uploaded ${file.originalname} to Cloudinary`);
             } catch (uploadErr) {
               console.error(`✗ Failed to upload ${file.originalname}:`, uploadErr.message);
             }
@@ -1061,47 +1098,26 @@ app.post('/api/document_request', verifyToken, checkRoles([3]), (req, res) => {
         }
 
         const filePathString = savedFiles.length > 0 ? savedFiles.join(',') : '';
-        const name = `${First_Name || ''} ${Middle_Name || ''} ${Last_Name || ''}`.trim();
+        const name = `${First_Name} ${Middle_Name} ${Last_Name}`.trim();
 
-        // 🔹 Insert into database
+        // Use the held connection for the INSERT
         connection.query(
-          `INSERT INTO document_request
-           (name, document_type, file_path, user_id,
-            First_Name, Middle_Name, Last_Name,
-            Fathers_Name, Mothers_Name, Doc_Date,
-            Death_Place, Marriage_Place, Wife_Name)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            name,
-            document_type,
-            filePathString,
-            userId,
-            First_Name || null,
-            Middle_Name || null,
-            Last_Name || null,
-            Fathers_Name || null,
-            Mothers_Name || null,
-            Doc_Date || null,
-            Death_Place || null,
-            Marriage_Place || null,
-            Wife_Name || null
-          ],
-          async (insertErr, result) => {
-
-            connection.release();
+  `INSERT INTO document_request
+    (name, document_type, file_path, user_id, First_Name, Middle_Name, Last_Name)
+   VALUES (?, ?, ?, ?, ?, ?, ?)`,
+  [name, document_type, filePathString, userId, First_Name, Middle_Name, Last_Name],
+  async (insertErr, result) => {
+            connection.release(); // Always release
 
             if (insertErr) {
               console.error('Database error:', insertErr);
-              return res.status(500).json({
-                error: 'Database insert failed',
-                details: insertErr.message
-              });
+              return res.status(500).json({ error: 'Database insert failed', details: insertErr.message });
             }
 
             const requestId = result.insertId;
             console.log(`Created request ID: ${requestId}`);
 
-            // 🔹 Send confirmation email
+            // Send confirmation email
             try {
               const userEmailResults = await new Promise((resolve, reject) => {
                 db.query('SELECT email FROM users WHERE id = ?', [userId], (err, results) => {
@@ -1111,15 +1127,9 @@ app.post('/api/document_request', verifyToken, checkRoles([3]), (req, res) => {
               });
 
               if (userEmailResults.length > 0 && userEmailResults[0].email) {
-                await sendRequestStatusEmail(
-                  userEmailResults[0].email,
-                  'pending',
-                  null,
-                  document_type
-                );
+                await sendRequestStatusEmail(userEmailResults[0].email, 'pending', null, document_type);
                 console.log(`✓ Email sent`);
               }
-
             } catch (emailErr) {
               console.error('Failed to send pending email:', emailErr.message);
             }
@@ -1135,12 +1145,229 @@ app.post('/api/document_request', verifyToken, checkRoles([3]), (req, res) => {
       } catch (e) {
         connection.release();
         console.error('Unexpected error:', e);
-        return res.status(500).json({
-          error: 'Unexpected error',
-          details: e.message
-        });
+        return res.status(500).json({ error: 'Unexpected error', details: e.message });
       }
     });
+  });
+});
+
+// APPOINTMENT ROUTES
+cron.schedule('0 6 * * *', () => {
+  console.log('[CRON] Running daily appointment reminder job...');
+  const todaySQL = new Date().toISOString().split('T')[0];
+
+  db.query(`
+    SELECT id, email, full_name, appt_date, appt_time
+    FROM appointments
+    WHERE appt_date = ? AND status = 'confirmed' AND reminder_sent = 0
+  `, [todaySQL], async (err, rows) => {
+    if (err) return console.error('[CRON] DB error:', err.message);
+    if (!rows.length) return console.log('[CRON] No reminders to send today.');
+
+    for (const row of rows) {
+      try {
+        await sendAppointmentReminderEmail(row.email, row.full_name, row.appt_date, row.appt_time);
+        db.query('UPDATE appointments SET reminder_sent = 1 WHERE id = ?', [row.id]);
+        console.log(`[CRON] Reminder sent to ${row.email}`);
+      } catch (e) {
+        console.error(`[CRON] Failed to send reminder to ${row.email}:`, e.message);
+      }
+    }
+  });
+});
+
+app.get('/api/appointments/slots', (req, res) => {
+  const { date } = req.query;
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return res.status(400).json({ message: 'Valid date (YYYY-MM-DD) is required' });
+  }
+
+  const ALL_SLOTS = [
+    '08:00:00','09:00:00','10:00:00','11:00:00',
+    '12:00:00','13:00:00','14:00:00','15:00:00',
+    '16:00:00','17:00:00'
+  ];
+  const MAX_PER_SLOT = 20;
+
+  db.query(
+    `SELECT appt_time, COUNT(*) AS booked
+     FROM appointments
+     WHERE appt_date = ? AND status = 'confirmed'
+     GROUP BY appt_time`,
+    [date],
+    (err, rows) => {
+      if (err) return res.status(500).json({ message: 'Database error' });
+      const bookedMap = {};
+      rows.forEach(r => { bookedMap[r.appt_time] = r.booked; });
+
+      const slots = ALL_SLOTS.map(slot => ({
+        time: slot,
+        label: formatTimeSlot(slot),
+        booked: bookedMap[slot] || 0,
+        available: MAX_PER_SLOT - (bookedMap[slot] || 0),
+        full: (bookedMap[slot] || 0) >= MAX_PER_SLOT
+      }));
+
+      res.json(slots);
+    }
+  );
+});
+
+// ----------------------------------------------------------------
+// POST /api/appointments  — Book an appointment (role 3)
+// ----------------------------------------------------------------
+app.post('/api/appointments', verifyToken, checkRoles([3]), async (req, res) => {
+  const { appt_date, appt_time, certificate_type, registration_type } = req.body;
+  const userId = req.user.id;
+
+  if (!appt_date || !appt_time || !certificate_type || !registration_type) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+
+  const VALID_TIMES = [
+    '08:00:00','09:00:00','10:00:00','11:00:00',
+    '12:00:00','13:00:00','14:00:00','15:00:00',
+    '16:00:00','17:00:00'
+  ];
+  const VALID_CERT_TYPES = ['Birth', 'Death', 'Marriage'];
+  const VALID_REG_TYPES = ['On Time', 'Delayed'];
+
+  if (!VALID_TIMES.includes(appt_time))
+    return res.status(400).json({ message: 'Invalid time slot' });
+  if (!VALID_CERT_TYPES.includes(certificate_type))
+    return res.status(400).json({ message: 'Invalid certificate type' });
+  if (!VALID_REG_TYPES.includes(registration_type))
+    return res.status(400).json({ message: 'Invalid registration type' });
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (new Date(appt_date) < today)
+    return res.status(400).json({ message: 'Cannot book an appointment in the past' });
+
+  try {
+    // Check slot capacity
+    const [[countRow]] = await new Promise((resolve, reject) => {
+      db.query(
+        `SELECT COUNT(*) AS booked FROM appointments
+         WHERE appt_date = ? AND appt_time = ? AND status = 'confirmed'`,
+        [appt_date, appt_time],
+        (err, r) => err ? reject(err) : resolve([r])
+      );
+    });
+    if (countRow.booked >= 20)
+      return res.status(409).json({ message: 'This time slot is already full. Please choose another.' });
+
+    // Check user doesn't already have an appointment on this date
+    const existing = await new Promise((resolve, reject) => {
+      db.query(
+        `SELECT id FROM appointments WHERE user_id = ? AND appt_date = ? AND status = 'confirmed'`,
+        [userId, appt_date],
+        (err, r) => err ? reject(err) : resolve(r[0])
+      );
+    });
+    if (existing)
+      return res.status(409).json({ message: 'You already have an appointment on this date.' });
+
+    // Get user info
+    const userRow = await new Promise((resolve, reject) => {
+      db.query(
+        `SELECT u.email, ud.User_FName, ud.User_LName
+         FROM users u LEFT JOIN user_details ud ON u.id = ud.UserID
+         WHERE u.id = ?`,
+        [userId],
+        (err, r) => err ? reject(err) : resolve(r[0])
+      );
+    });
+    if (!userRow) return res.status(404).json({ message: 'User not found' });
+
+    const fullName = `${userRow.User_FName || ''} ${userRow.User_LName || ''}`.trim() || userRow.email;
+    const email = userRow.email;
+
+    // Insert appointment
+    const insertResult = await new Promise((resolve, reject) => {
+      db.query(
+        `INSERT INTO appointments
+          (user_id, appt_date, appt_time, full_name, certificate_type, registration_type, email)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [userId, appt_date, appt_time, fullName, certificate_type, registration_type, email],
+        (err, r) => err ? reject(err) : resolve(r)
+      );
+    });
+
+    // Send confirmation email
+    try {
+      await sendAppointmentConfirmationEmail(email, fullName, appt_date, appt_time, certificate_type, registration_type);
+    } catch (emailErr) {
+      console.error('Failed to send confirmation email:', emailErr.message);
+    }
+
+    res.status(201).json({
+      message: 'Appointment booked successfully',
+      appointmentId: insertResult.insertId
+    });
+
+  } catch (err) {
+    console.error('Appointment booking error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// ----------------------------------------------------------------
+// GET /api/my/appointments  — User's own appointments (role 3)
+// ----------------------------------------------------------------
+app.get('/api/my/appointments', verifyToken, checkRoles([3]), (req, res) => {
+  db.query(
+    `SELECT id, appt_date, appt_time, full_name, certificate_type, registration_type, status, created_at
+     FROM appointments WHERE user_id = ?
+     ORDER BY appt_date DESC, appt_time DESC`,
+    [req.user.id],
+    (err, results) => {
+      if (err) return res.status(500).json({ message: 'Database error' });
+      res.json(results);
+    }
+  );
+});
+
+// ----------------------------------------------------------------
+// DELETE /api/my/appointments/:id  — Cancel own appointment (role 3)
+// ----------------------------------------------------------------
+app.delete('/api/my/appointments/:id', verifyToken, checkRoles([3]), (req, res) => {
+  db.query(
+    `UPDATE appointments SET status = 'cancelled' WHERE id = ? AND user_id = ?`,
+    [req.params.id, req.user.id],
+    (err, result) => {
+      if (err) return res.status(500).json({ message: 'Database error' });
+      if (result.affectedRows === 0) return res.status(404).json({ message: 'Appointment not found' });
+      res.json({ message: 'Appointment cancelled successfully' });
+    }
+  );
+});
+
+// ----------------------------------------------------------------
+// GET /api/staff/appointments  — Staff/Admin view (roles 1, 2)
+// Optional: ?date=YYYY-MM-DD&status=confirmed&certificate_type=Birth
+// ----------------------------------------------------------------
+app.get('/api/staff/appointments', verifyToken, checkRoles([1, 2]), (req, res) => {
+  const { date, status, certificate_type, registration_type } = req.query;
+
+  let sql = `
+    SELECT a.id, a.full_name, a.email, a.appt_date, a.appt_time,
+           a.certificate_type, a.registration_type, a.status, a.created_at
+    FROM appointments a
+    WHERE 1=1
+  `;
+  const params = [];
+
+  if (date)               { sql += ' AND a.appt_date = ?';        params.push(date); }
+  if (status)             { sql += ' AND a.status = ?';           params.push(status); }
+  if (certificate_type)   { sql += ' AND a.certificate_type = ?'; params.push(certificate_type); }
+  if (registration_type)  { sql += ' AND a.registration_type = ?';params.push(registration_type); }
+
+  sql += ' ORDER BY a.appt_date ASC, a.appt_time ASC';
+
+  db.query(sql, params, (err, results) => {
+    if (err) return res.status(500).json({ message: 'Database error' });
+    res.json(results);
   });
 });
 
