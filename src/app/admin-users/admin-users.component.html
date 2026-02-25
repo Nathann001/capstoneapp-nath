@@ -18,16 +18,28 @@
         <input formControlName="email" type="email" placeholder="Email" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
         <input formControlName="password" type="password" placeholder="Password" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
 
-        <!-- Role dropdown: Admin option only shown if currentUserCanCreateAdmins -->
         <select formControlName="role" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
           <option *ngFor="let r of availableRoles" [value]="r.value">{{ r.label }}</option>
         </select>
 
-        <!-- can_create_admins: only shown if Admin role selected AND current user can grant it -->
-        <div *ngIf="createForm.value.role == 1 && currentUserCanCreateAdmins" style="margin: 4px 0;">
+        <div *ngIf="createForm.value.role == '1' && currentUserCanCreateAdmins" style="margin: 4px 0;">
           <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
             <input type="checkbox" formControlName="can_create_admins">
             Can create other admins
+          </label>
+        </div>
+
+        <div *ngIf="createForm.value.role == '1' && currentUserCanEditAdmins" style="margin: 4px 0;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" formControlName="can_edit_admins">
+            Can edit other admins
+          </label>
+        </div>
+
+        <div *ngIf="createForm.value.role == '1' && currentUserCanDeleteAdmins" style="margin: 4px 0;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" formControlName="can_delete_admins">
+            Can delete other admins
           </label>
         </div>
 
@@ -70,7 +82,9 @@
             <td>{{ user.email }}</td>
             <td>
               {{ getRoleLabel(user.role) }}
-              <span *ngIf="user.role == 1 && user.can_create_admins" title="Can create admins" style="margin-left: 6px;">🔑</span>
+              <span *ngIf="user.role == 1 && user.can_create_admins" title="Can create admins" style="margin-left: 4px;">🔑</span>
+              <span *ngIf="user.role == 1 && user.can_edit_admins"   title="Can edit admins"   style="margin-left: 4px;">✏️</span>
+              <span *ngIf="user.role == 1 && user.can_delete_admins" title="Can delete admins" style="margin-left: 4px;">🗑️</span>
             </td>
             <td>
               <button (click)="selectUser(user)" class="btn pending">Edit</button>
@@ -101,16 +115,28 @@
       <form [formGroup]="editForm" (ngSubmit)="updateUser()" style="display: flex; flex-direction: column; gap: 12px;">
         <input formControlName="email" type="email" placeholder="Email" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
 
-        <!-- Role dropdown: Admin option only shown if currentUserCanCreateAdmins -->
         <select formControlName="role" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
           <option *ngFor="let r of availableRoles" [value]="r.value">{{ r.label }}</option>
         </select>
 
-        <!-- can_create_admins: only shown if Admin role selected AND current user can grant it -->
-        <div *ngIf="editForm.value.role == 1 && currentUserCanCreateAdmins" style="margin: 4px 0;">
+        <div *ngIf="editForm.value.role == '1' && currentUserCanCreateAdmins" style="margin: 4px 0;">
           <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
             <input type="checkbox" formControlName="can_create_admins">
             Can create other admins
+          </label>
+        </div>
+
+        <div *ngIf="editForm.value.role == '1' && currentUserCanEditAdmins" style="margin: 4px 0;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" formControlName="can_edit_admins">
+            Can edit other admins
+          </label>
+        </div>
+
+        <div *ngIf="editForm.value.role == '1' && currentUserCanDeleteAdmins" style="margin: 4px 0;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" formControlName="can_delete_admins">
+            Can delete other admins
           </label>
         </div>
 

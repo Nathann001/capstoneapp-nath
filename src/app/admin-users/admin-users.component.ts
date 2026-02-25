@@ -35,6 +35,8 @@ export class AdminUsersComponent implements OnInit {
 
   // Current logged-in admin's permission
   currentUserCanCreateAdmins: boolean = false;
+  currentUserCanEditAdmins: boolean = false;
+  currentUserCanDeleteAdmins: boolean = false
 
   // Role options — dynamically filtered based on currentUserCanCreateAdmins
   // Role 3 (User) is never shown — admins only create Admin or Staff
@@ -56,30 +58,35 @@ export class AdminUsersComponent implements OnInit {
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
       role: [2, Validators.required],
-      can_create_admins: [false]
+      can_create_admins: [false],
+      can_edit_admins: [false],
+      can_delete_admins: [false]
     });
 
     this.editForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       role: [2, Validators.required],
       password: [''],
-      can_create_admins: [false]
+      can_create_admins: [false],
+      can_edit_admins: [false],
+      can_delete_admins: [false]
     });
   }
 
   ngOnInit() {
-    // Read the logged-in admin's can_create_admins from localStorage
-    // This is stored during login: localStorage.setItem('user', JSON.stringify(user))
     try {
       const stored = localStorage.getItem('user');
       if (stored) {
         const parsed = JSON.parse(stored);
         this.currentUserCanCreateAdmins = !!parsed.can_create_admins;
+        this.currentUserCanEditAdmins = !!parsed.can_edit_admins;
+        this.currentUserCanDeleteAdmins = !!parsed.can_delete_admins;
       }
     } catch {
       this.currentUserCanCreateAdmins = false;
+      this.currentUserCanEditAdmins = false;
+      this.currentUserCanDeleteAdmins = false;
     }
-
     this.loadUsers();
   }
 
@@ -124,7 +131,7 @@ export class AdminUsersComponent implements OnInit {
   toggleCreateForm() {
     this.showCreateForm = !this.showCreateForm;
     if (!this.showCreateForm) {
-      this.createForm.reset({ role: 2, can_create_admins: false });
+    this.createForm.reset({ role: 2, can_create_admins: false, can_edit_admins: false, can_delete_admins: false });
     }
   }
 
@@ -141,14 +148,14 @@ export class AdminUsersComponent implements OnInit {
     }
 
     // Strip can_create_admins if not an admin or current user can't grant it
-    if (formValue.role !== 1 || !this.currentUserCanCreateAdmins) {
-      formValue.can_create_admins = false;
-    }
+    if (formValue.role !== 1 || !this.currentUserCanCreateAdmins) formValue.can_create_admins = false;
+    if (formValue.role !== 1 || !this.currentUserCanEditAdmins)   formValue.can_edit_admins = false;
+    if (formValue.role !== 1 || !this.currentUserCanDeleteAdmins) formValue.can_delete_admins = false;
 
     this.adminService.createUser(formValue).subscribe({
       next: (res: any) => {
         console.log(res.message);
-        this.createForm.reset({ role: 2, can_create_admins: false });
+        this.createForm.reset({ role: 2, can_create_admins: false, can_edit_admins: false, can_delete_admins: false });
         this.showCreateForm = false;
         this.loadUsers();
       },
@@ -164,7 +171,9 @@ export class AdminUsersComponent implements OnInit {
       email: user.email,
       role: user.role,
       password: '',
-      can_create_admins: user.can_create_admins === 1
+      can_create_admins: user.can_create_admins === 1,
+      can_edit_admins: user.can_edit_admins === 1,
+      can_delete_admins: user.can_delete_admins === 1
     });
     this.showEditModal = true;
   }
@@ -183,12 +192,10 @@ export class AdminUsersComponent implements OnInit {
     const payload: any = {
       email: this.editForm.value.email,
       role,
-      // Only send can_create_admins if role is Admin AND current user has permission to grant it
-      can_create_admins: (role === 1 && this.currentUserCanCreateAdmins)
-        ? this.editForm.value.can_create_admins
-        : false
+      can_create_admins: (role === 1 && this.currentUserCanCreateAdmins) ? this.editForm.value.can_create_admins : false,
+      can_edit_admins:   (role === 1 && this.currentUserCanEditAdmins)   ? this.editForm.value.can_edit_admins   : false,
+      can_delete_admins: (role === 1 && this.currentUserCanDeleteAdmins) ? this.editForm.value.can_delete_admins : false,
     };
-
     this.adminService.updateUser(this.selectedUser.id, payload).subscribe({
       next: () => {
         const newPassword = this.editForm.value.password;

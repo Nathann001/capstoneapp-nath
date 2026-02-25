@@ -12,6 +12,8 @@ export interface User {
   contact_no?: string;
   role: number;
   can_create_admins?: number;
+  can_edit_admins?: number;
+  can_delete_admins?: number;
   created_at?: string;
 }
 
@@ -37,7 +39,7 @@ export class AdminService {
     return this.http.get<User[]>(`${this.apiUrl}/users`, { headers: this.getAuthHeaders() });
   }
 
-  createUser(data: { email: string; password: string; role: number; can_create_admins?: boolean }): Observable<any> {
+  createUser(data: { email: string; password: string; role: number; can_create_admins?: boolean; can_edit_admins?: boolean; can_delete_admins?: boolean }): Observable<any> {
   return this.http.post(`${this.apiUrl}/create-user`, data, { headers: this.getAuthHeaders() });
 }
 
