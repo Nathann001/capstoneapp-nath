@@ -186,32 +186,200 @@ html, body {
 .status-approved { color: green; }
 .status-rejected { color: red; }
 
-/* Overlay covers the entire screen */
+/* ===============================
+   MODAL STYLES
+   Add these to both CSS files
+================================ */
+
+/* Overlay — already defined, enhanced here */
 .modal-overlay {
-  position: fixed;       /* Fix to viewport */
+  position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0,0,0,0.5);  /* Semi-transparent background */
-
-  display: flex;         /* Center the modal */
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 9999;
+  animation: overlayFadeIn 0.2s ease;
+}
 
-  z-index: 9999;         /* Always on top */
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* Modal box */
 .modal-container {
   background: #fff;
-  border-radius: 8px;
-  width: 400px;           /* Or use max-width: 90% for responsiveness */
-  max-width: 90%;
-  padding: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  border-radius: 12px;
+  width: 420px;
+  max-width: 92%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  animation: modalSlideIn 0.25s ease;
 }
 
+.modal-container--sm {
+  width: 380px;
+}
+
+@keyframes modalSlideIn {
+  from { opacity: 0; transform: translateY(-18px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+/* Header */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid #e8eef3;
+  background: #f5f9fc;
+}
+
+.modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a3a4e;
+  letter-spacing: 0.01em;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #7a94a5;
+  font-size: 16px;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.modal-close:hover {
+  background: #e0eaf1;
+  color: #1a3a4e;
+}
+
+/* Body */
+.modal-body {
+  padding: 22px 20px 20px;
+}
+
+.modal-body p {
+  color: #444;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.modal-body p strong,
+.modal-body p[style*="font-weight: 600"],
+.modal-body p[style*="font-weight:600"] {
+  color: #1a3a4e;
+  font-size: 15px;
+}
+
+/* Warning note (used in Delete modal) */
+.modal-body p[style*="color: #888"] {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff4f4;
+  border: 1px solid #fcd5d5;
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: #c0392b !important;
+  font-size: 13px;
+  margin-top: 10px !important;
+}
+
+/* Actions row */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+/* Override btn sizes inside modal */
+.modal-actions .btn {
+  min-width: 90px;
+  padding: 8px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 6px;
+  transition: filter 0.15s, transform 0.1s;
+}
+
+.modal-actions .btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.modal-actions .btn:active {
+  transform: translateY(0);
+  filter: brightness(0.95);
+}
+
+/* Cancel (pending/yellow) — override to neutral grey inside modals */
+.modal-actions .btn.pending {
+  background: #e8eef3;
+  color: #3a556a;
+}
+
+.modal-actions .btn.pending:hover {
+  background: #d5e1ea;
+  filter: none;
+}
+
+/* Confirm / positive action */
+.modal-actions .btn.complete {
+  background: #2a7ca8;
+}
+
+/* Destructive action */
+.modal-actions .btn.record {
+  background: #e74c3c;
+}
+
+/* ---- Divider line between header accent and icon (optional) ---- */
+.modal-header--danger .modal-title {
+  color: #c0392b;
+}
+
+.modal-header--danger {
+  border-left: 4px solid #e74c3c;
+}
+
+.modal-header--success {
+  border-left: 4px solid #2a7ca8;
+}
+
+/* ===============================
+   MOBILE
+================================ */
+@media (max-width: 480px) {
+  .modal-container,
+  .modal-container--sm {
+    width: 95%;
+    border-radius: 10px;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .modal-actions .btn {
+    width: 100%;
+    text-align: center;
+  }
+}
 /* TABLET RESPONSIVE */
 @media (max-width: 1024px) {
   .sidebar {
