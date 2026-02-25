@@ -12,14 +12,14 @@ import { Router } from '@angular/router';
   styleUrls: ['./birth.component.css']
 })
 export class BirthComponent {
+
   documentForm: FormGroup;
+
+  // ✅ ONE FILE ONLY (Valid ID)
   files: { [key: number]: File | null } = {
-    1: null,
-    2: null,
-    3: null
+    1: null
   };
 
-  // Modal state
   modal: {
     visible: boolean;
     type: 'success' | 'error' | 'warning';
@@ -36,22 +36,24 @@ export class BirthComponent {
   isSubmitting = false;
 
   fileRequirements = [
-    { number: 1, label: 'Affidavit of Admission of Paternity',        hint: 'Affidavit of Acknowledgment/Admission of Paternity',         required: true },
-    { number: 2, label: 'Affidavit to Use the Surname of the Father', hint: 'Affidavit to Use the Surname of the Father (RA 9255)',        required: true },
-    { number: 3, label: 'Birth Certificate',                           hint: 'Upload a copy of the duly accomplished birth certificate',   required: true }
+    { number: 1, label: 'Valid ID', hint: 'Upload one valid government ID', required: true }
   ];
 
-  documentType = 'Birth Certificate';
+  documentType = 'birth';
 
-  constructor(private fb: FormBuilder, private http: HttpClient, private router: Router) {
+  constructor(
+    private fb: FormBuilder,
+    private http: HttpClient,
+    private router: Router
+  ) {
     this.documentForm = this.fb.group({
-    First_Name: ['', Validators.required],
-    Middle_Name: ['', Validators.required],
-    Last_Name: ['', Validators.required],
-    Doc_Date: ['', Validators.required],
-    Fathers_Name: ['', Validators.required],
-    Mothers_Name: ['', Validators.required],
-  });
+      First_Name: ['', Validators.required],
+      Middle_Name: ['', Validators.required],
+      Last_Name: ['', Validators.required],
+      Doc_Date: ['', Validators.required],
+      Fathers_Name: ['', Validators.required],
+      Mothers_Name: ['', Validators.required],
+    });
   }
 
   get f() {
@@ -64,10 +66,9 @@ export class BirthComponent {
     }
   }
 
+  // ✅ Check only Valid ID
   areRequiredFilesSelected(): boolean {
-    return this.files[1] !== null &&
-           this.files[2] !== null &&
-           this.files[3] !== null;
+    return this.files[1] !== null;
   }
 
   isFileSelected(fileNumber: number): boolean {
@@ -78,12 +79,10 @@ export class BirthComponent {
     return this.files[fileNumber]?.name || 'No file selected';
   }
 
-  // Open a modal dialog
   showModal(type: 'success' | 'error' | 'warning', title: string, message: string, requestId?: string) {
     this.modal = { visible: true, type, title, message, requestId };
   }
 
-  // Close modal; if success, redirect to /documents
   closeModal() {
     const wasSuccess = this.modal.type === 'success';
     this.modal.visible = false;
@@ -93,13 +92,18 @@ export class BirthComponent {
   }
 
   submitDocumentRequest() {
+
     if (this.documentForm.invalid) {
       this.documentForm.markAllAsTouched();
       return;
     }
 
     if (!this.areRequiredFilesSelected()) {
-      this.showModal('warning', 'Missing Documents', 'Please upload all 3 required documents before submitting.');
+      this.showModal(
+        'warning',
+        'Missing Document',
+        'Please upload your Valid ID before submitting.'
+      );
       return;
     }
 
@@ -113,9 +117,8 @@ export class BirthComponent {
       Authorization: `Bearer ${token}`
     });
 
-    // FEB24
     const formData = new FormData();
-    formData.append('document_type', 'birth');
+    formData.append('document_type', this.documentType);
     formData.append('First_Name', this.documentForm.value.First_Name);
     formData.append('Middle_Name', this.documentForm.value.Middle_Name);
     formData.append('Last_Name', this.documentForm.value.Last_Name);
@@ -123,40 +126,48 @@ export class BirthComponent {
     formData.append('Fathers_Name', this.documentForm.value.Fathers_Name);
     formData.append('Mothers_Name', this.documentForm.value.Mothers_Name);
 
-    for (let i = 1; i <= 3; i++) {
-      if (this.files[i]) {
-        formData.append('files', this.files[i]!, this.files[i]!.name);
-      }
+    // ✅ Append only ONE file
+    if (this.files[1]) {
+      formData.append('files', this.files[1], this.files[1]!.name);
     }
 
     this.isSubmitting = true;
 
-    this.http.post('https://drtbackend-2cw3.onrender.com/api/document_request', formData, { headers })
-      .subscribe({
-        next: (res: any) => {
-          this.isSubmitting = false;
-          this.documentForm.reset();
-          this.files = { 1: null, 2: null, 3: null };
+    this.http.post(
+      'https://drtbackend-2cw3.onrender.com/api/document_request',
+      formData,
+      { headers }
+    ).subscribe({
+      next: (res: any) => {
+        this.isSubmitting = false;
+        this.documentForm.reset();
+        this.files = { 1: null };
+
+        this.showModal(
+          'success',
+          'Request Submitted!',
+          'Your Birth Certificate request has been successfully submitted.',
+          res.requestId
+        );
+      },
+      error: (err: any) => {
+        this.isSubmitting = false;
+
+        if (err.status === 401) {
+          this.showModal('error', 'Unauthorized', 'Your session has expired. Please log in again.');
+        } else {
           this.showModal(
-            'success',
-            'Request Submitted!',
-            'Your document request has been successfully submitted.',
-            res.requestId
+            'error',
+            'Submission Failed',
+            'Failed to submit your request. ' + (err.error?.error || err.message)
           );
-        },
-        error: (err: any) => {
-          this.isSubmitting = false;
-          if (err.status === 401) {
-            this.showModal('error', 'Unauthorized', 'Your session has expired. Please log in again.');
-          } else {
-            this.showModal('error', 'Submission Failed', 'Failed to submit your request. ' + (err.error?.message || err.message));
-          }
         }
-      });
+      }
+    });
   }
 
   resetFiles() {
-    this.files = { 1: null, 2: null, 3: null };
+    this.files = { 1: null };
     this.documentForm.reset();
   }
 }

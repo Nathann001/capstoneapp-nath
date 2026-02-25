@@ -3,44 +3,67 @@
 
   <form [formGroup]="documentForm" (ngSubmit)="submitDocumentRequest()">
 
-    <!-- Recipient Name -->
+    <!-- INPUT DETAILS -->
     <div class="form-group">
-      <label>Recipient Name*</label>
-      <input type="text" formControlName="name" />
-      <div *ngIf="f['name']?.invalid && f['name']?.touched" class="error">
-        Name is required (max 50 characters)
+      <label>First Name of Deceased*</label>
+      <input type="text" formControlName="First_Name" />
+      <div *ngIf="f['First_Name']?.invalid && f['First_Name']?.touched" class="error">
+        First Name of Deceased is required!
+      </div>
+
+      <label>Middle Name of Deceased*</label>
+      <input type="text" formControlName="Middle_Name" />
+      <div *ngIf="f['Middle_Name']?.invalid && f['Middle_Name']?.touched" class="error">
+        Middle Name of Deceased is required!
+      </div>
+
+      <label>Last Name of Deceased*</label>
+      <input type="text" formControlName="Last_Name" />
+      <div *ngIf="f['Last_Name']?.invalid && f['Last_Name']?.touched" class="error">
+        Last Name of Deceased is required!
+      </div>
+
+      <label>Date of Death*</label>
+      <input type="date" formControlName="Doc_Date" />
+      <div *ngIf="f['Doc_Date']?.invalid && f['Doc_Date']?.touched" class="error">
+        Date of Death is required!
+      </div>
+
+      <label>Place of Death*</label>
+      <input type="text" formControlName="Death_Place" />
+      <div *ngIf="f['Death_Place']?.invalid && f['Death_Place']?.touched" class="error">
+        Place of Death is required!
       </div>
     </div>
 
-    <!-- File Upload (Required) -->
+    <!-- Valid ID -->
     <div class="form-group required-field">
       <label>
-        Death Certificate
+        VALID ID
         <span class="badge required">Required</span>
       </label>
-      <input type="file" (change)="onFileSelected($event)" accept="image/*,.pdf" />
-      <div class="file-status" *ngIf="isFileSelected(); else notUploaded">
-        <span class="success">✓ {{ getFileName() }}</span>
+      <small>VALID ID</small>
+      <input type="file" (change)="onFileSelected($event, 1)" accept="image/*,.pdf" />
+      <div class="file-status" *ngIf="isFileSelected(1); else notUploaded1">
+        <span class="success">✓ {{ getFileName(1) }}</span>
       </div>
-      <ng-template #notUploaded>
-        <div class="file-status">
-          <span class="error">✗ This document is required</span>
-        </div>
+      <ng-template #notUploaded1>
+        <div class="file-status"><span class="error">✗ This document is required</span></div>
       </ng-template>
     </div>
 
     <!-- Status Message -->
-    <div class="status-message" [ngClass]="isFileSelected() ? 'success' : 'warning'">
+    <div class="status-message" [ngClass]="areRequiredFilesSelected() ? 'success' : 'warning'">
       <strong>Status:</strong>
-      <span *ngIf="isFileSelected()">✓ Document uploaded — Ready to submit</span>
-      <span *ngIf="!isFileSelected()">✗ Please upload the required document</span>
+      <span *ngIf="areRequiredFilesSelected()">✓ Required document uploaded — Ready to submit</span>
+      <span *ngIf="!areRequiredFilesSelected()">✗ Please upload the required document</span>
     </div>
 
     <div class="button-group">
       <button
         type="submit"
         class="btn btn-req"
-        [disabled]="!isFileSelected() || isSubmitting"
+        [disabled]="!areRequiredFilesSelected() || isSubmitting"
       >
         {{ isSubmitting ? 'Submitting...' : 'Submit' }}
       </button>
@@ -50,35 +73,6 @@
     </div>
 
   </form>
-</div>
-
-<!-- ── Modal Dialog ── -->
-<div class="modal-overlay" *ngIf="modal.visible" (click)="closeModal()">
-  <div class="modal-box" [ngClass]="modal.type" (click)="$event.stopPropagation()">
-
-    <div class="modal-icon">
-      <span *ngIf="modal.type === 'success'">✓</span>
-      <span *ngIf="modal.type === 'error'">✕</span>
-      <span *ngIf="modal.type === 'warning'">⚠</span>
-    </div>
-
-    <h3 class="modal-title">{{ modal.title }}</h3>
-    <p class="modal-message">{{ modal.message }}</p>
-
-    <div class="modal-request-id" *ngIf="modal.type === 'success' && modal.requestId">
-      <span>Request ID:</span>
-      <strong>{{ modal.requestId }}</strong>
-    </div>
-
-    <p class="modal-redirect-note" *ngIf="modal.type === 'success'">
-      You will be redirected to your documents page.
-    </p>
-
-    <button class="modal-close-btn" (click)="closeModal()">
-      {{ modal.type === 'success' ? 'Go to Documents' : 'Close' }}
-    </button>
-
-  </div>
 </div>
 
 <!-- ── Modal Dialog ── -->
@@ -111,3 +105,97 @@
 
   </div>
 </div>
+
+<style>
+  .badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 8px;
+  }
+
+  .badge.required {
+    background-color: #dc3545;
+    color: white;
+  }
+
+  .badge.optional {
+    background-color: #6c757d;
+    color: white;
+  }
+
+  .required-field {
+    border-left: 4px solid #dc3545;
+    padding-left: 12px;
+    background-color: #fff5f5;
+    padding: 12px;
+    border-radius: 4px;
+  }
+
+  .file-status {
+    margin-top: 8px;
+    font-size: 0.9rem;
+  }
+
+  .file-status .success {
+    color: #28a745;
+    font-weight: 500;
+  }
+
+  .file-status .error {
+    color: #dc3545;
+    font-weight: 500;
+  }
+
+  .file-status .muted {
+    color: #6c757d;
+  }
+
+  .status-message {
+    padding: 12px;
+    border-radius: 4px;
+    margin: 16px 0;
+    font-weight: 500;
+  }
+
+  .status-message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+  }
+
+  .status-message.warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+  }
+
+  .form-group small {
+    display: block;
+    color: #6c757d;
+    margin-top: 4px;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+  }
+
+  .button-group button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 8px;
+  }
+
+  .btn-secondary:hover {
+    background-color: #5a6268;
+  }
+</style>

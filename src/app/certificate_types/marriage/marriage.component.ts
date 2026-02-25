@@ -13,7 +13,9 @@ import { Router } from '@angular/router';
 })
 export class MarriageComponent {
   documentForm: FormGroup;
-  file1: File | null = null;
+  files: { [key: number]: File | null } = {
+    1: null
+  };
 
   // Modal state
   modal: {
@@ -31,98 +33,134 @@ export class MarriageComponent {
 
   isSubmitting = false;
 
-  documentType = 'Marriage Certificate';
+  documentType = 'marriage';
 
-  constructor(private fb: FormBuilder, private http: HttpClient, private router: Router) {
+  constructor(
+    private fb: FormBuilder,
+    private http: HttpClient,
+    private router: Router
+  ) {
     this.documentForm = this.fb.group({
-      name: ['', [Validators.required, Validators.maxLength(50)]]
+      First_Name: ['', Validators.required],
+      Middle_Name: ['', Validators.required],
+      Last_Name: ['', Validators.required],
+      Wife_Name: ['', Validators.required],
+      Doc_Date: ['', Validators.required],
+      Marriage_Place: ['', Validators.required],
     });
   }
 
   get f() {
-    return this.documentForm.controls;
-  }
-
-  onFileSelected(event: any) {
-    if (event.target.files.length > 0) {
-      this.file1 = event.target.files[0];
+      return this.documentForm.controls;
     }
-  }
-
-  isFileSelected(): boolean {
-    return this.file1 !== null;
-  }
-
-  getFileName(): string {
-    return this.file1?.name || 'No file selected';
-  }
-
-  showModal(type: 'success' | 'error' | 'warning', title: string, message: string, requestId?: string) {
-    this.modal = { visible: true, type, title, message, requestId };
-  }
-
-  closeModal() {
-    const wasSuccess = this.modal.type === 'success';
-    this.modal.visible = false;
-    if (wasSuccess) {
-      this.router.navigate(['/documents']);
+  
+    onFileSelected(event: any, fileNumber: number) {
+      if (event.target.files.length > 0) {
+        this.files[fileNumber] = event.target.files[0];
+      }
     }
-  }
-
-  submitDocumentRequest() {
-    if (this.documentForm.invalid) {
-      this.documentForm.markAllAsTouched();
-      return;
+  
+    // ✅ Check only Valid ID
+    areRequiredFilesSelected(): boolean {
+      return this.files[1] !== null;
     }
-
-    if (!this.isFileSelected()) {
-      this.showModal('warning', 'Missing Document', 'Please upload the required document before submitting.');
-      return;
+  
+    isFileSelected(fileNumber: number): boolean {
+      return this.files[fileNumber] !== null;
     }
-
-    const token = localStorage.getItem('token');
-    if (!token) {
-      this.showModal('error', 'Not Logged In', 'You are not logged in. Please log in and try again.');
-      return;
+  
+    getFileName(fileNumber: number): string {
+      return this.files[fileNumber]?.name || 'No file selected';
     }
-
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${token}`
-    });
+  
+    showModal(type: 'success' | 'error' | 'warning', title: string, message: string, requestId?: string) {
+      this.modal = { visible: true, type, title, message, requestId };
+    }
+  
+    closeModal() {
+      const wasSuccess = this.modal.type === 'success';
+      this.modal.visible = false;
+      if (wasSuccess) {
+        this.router.navigate(['/documents']);
+      }
+    }
+  
+    submitDocumentRequest() {
+  
+      if (this.documentForm.invalid) {
+        this.documentForm.markAllAsTouched();
+        return;
+      }
+  
+      if (!this.areRequiredFilesSelected()) {
+        this.showModal(
+          'warning',
+          'Missing Document',
+          'Please upload your Valid ID before submitting.'
+        );
+        return;
+      }
+  
+      const token = localStorage.getItem('token');
+      if (!token) {
+        this.showModal('error', 'Not Logged In', 'You are not logged in. Please log in and try again.');
+        return;
+      }
+  
+      const headers = new HttpHeaders({
+        Authorization: `Bearer ${token}`
+      });
 
     const formData = new FormData();
-    formData.append('name', this.documentForm.value.name);
     formData.append('document_type', this.documentType);
-    formData.append('files', this.file1!, this.file1!.name);
+    formData.append('First_Name', this.documentForm.value.First_Name);
+    formData.append('Middle_Name', this.documentForm.value.Middle_Name);
+    formData.append('Last_Name', this.documentForm.value.Last_Name);
+    formData.append('Wife_Name', this.documentForm.value.Wife_Name);
+    formData.append('Doc_Date', this.documentForm.value.Doc_Date);
+    formData.append('Marriage_Place', this.documentForm.value.Marriage_Place);
+
+      if (this.files[1]) {
+            formData.append('files', this.files[1], this.files[1]!.name);
+          }
 
     this.isSubmitting = true;
 
-    this.http.post('https://drtbackend-2cw3.onrender.com/api/document_request', formData, { headers })
-      .subscribe({
-        next: (res: any) => {
-          this.isSubmitting = false;
-          this.documentForm.reset();
-          this.file1 = null;
+    this.http.post(
+      'https://drtbackend-2cw3.onrender.com/api/document_request',
+      formData,
+      { headers }
+    ).subscribe({
+      next: (res: any) => {
+        this.isSubmitting = false;
+        this.documentForm.reset();
+        this.files = { 1: null };
+
+        this.showModal(
+          'success',
+          'Request Submitted!',
+          'Your Birth Certificate request has been successfully submitted.',
+          res.requestId
+        );
+      },
+      error: (err: any) => {
+        this.isSubmitting = false;
+
+        if (err.status === 401) {
+          this.showModal('error', 'Unauthorized', 'Your session has expired. Please log in again.');
+        } else {
           this.showModal(
-            'success',
-            'Request Submitted!',
-            'Your document request has been successfully submitted.',
-            res.requestId
+            'error',
+            'Submission Failed',
+            'Failed to submit your request. ' + (err.error?.error || err.message)
           );
-        },
-        error: (err: any) => {
-          this.isSubmitting = false;
-          if (err.status === 401) {
-            this.showModal('error', 'Unauthorized', 'Your session has expired. Please log in again.');
-          } else {
-            this.showModal('error', 'Submission Failed', 'Failed to submit your request. ' + (err.error?.message || err.message));
-          }
         }
-      });
+      }
+    });
   }
 
   resetFiles() {
-    this.file1 = null;
+    this.files = { 1: null };
     this.documentForm.reset();
   }
 }
