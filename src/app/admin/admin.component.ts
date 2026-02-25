@@ -144,6 +144,15 @@ export class AdminComponent implements OnInit {
   });
 }
 
+getDocumentLabel(type: string): string {
+  const map: Record<string, string> = {
+    birth: 'Birth Certificate',
+    death: 'Death Certificate',
+    marriage: 'Marriage Certificate'
+  };
+  return map[type] || type;
+}
+
   isSameDay(a: Date, b: Date) { return a.toDateString() === b.toDateString(); }
   isSameWeek(a: Date, b: Date) { return Math.abs(a.getTime() - b.getTime()) / (24*60*60*1000) < 7; }
   isSameMonth(a: Date, b: Date) { return a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear(); }

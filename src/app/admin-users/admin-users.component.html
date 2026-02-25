@@ -1,12 +1,19 @@
 <div class="app-container">
-  <!-- ================== MAIN CONTENT ================== -->
   <div class="admin-container">
-    
+
     <!-- ================== PAGE TITLE ================== -->
     <h2 class="dashboard-title">Users</h2>
 
-    <!-- ================== CREATE USER SECTION ================== -->
-    <div class="card">
+    <!-- ================== CREATE ACCOUNT TOGGLE BUTTON ================== -->
+    <div style="margin-bottom: 20px;">
+      <button (click)="toggleCreateForm()" class="btn complete" style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 18px; line-height: 1;">{{ showCreateForm ? '✕' : '+' }}</span>
+        {{ showCreateForm ? 'Cancel' : 'Create Account' }}
+      </button>
+    </div>
+
+    <!-- ================== CREATE USER PANEL ================== -->
+    <div *ngIf="showCreateForm" class="card create-panel">
       <h3 class="dashboard-title">Create Account</h3>
       <form [formGroup]="createForm" (ngSubmit)="createUser()" style="display: flex; flex-direction: column; gap: 12px;">
         <input formControlName="email" type="email" placeholder="Email" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
@@ -15,9 +22,9 @@
           <option *ngFor="let r of roles" [value]="r.value">{{ r.label }}</option>
         </select>
 
-        <!-- Only show for Admins -->
-        <div *ngIf="createForm.value.role == 1" style="margin: 8px 0;">
-          <label style="display: flex; align-items: center; gap: 8px;">
+        <!-- Only show for Admins (role == 1) -->
+        <div *ngIf="createForm.value.role == 1" style="margin: 4px 0;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
             <input type="checkbox" formControlName="can_create_admins">
             Can create other admins
           </label>
@@ -30,7 +37,7 @@
     </div>
 
     <!-- ================== SEARCH & FILTER SECTION ================== -->
-    <div style="margin: 20px 0; display: flex; gap: 10px;">
+    <div style="margin: 0 0 20px; display: flex; gap: 10px;">
       <input
         type="text"
         placeholder="Search by name or email..."
@@ -57,18 +64,16 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let user of filteredUsers" style="cursor: pointer;">
+          <tr *ngFor="let user of filteredUsers">
             <td>{{ user.full_name || 'N/A' }}</td>
             <td>{{ user.email }}</td>
             <td>
               {{ getRoleLabel(user.role) }}
-              <span *ngIf="user.role == 1 && user.can_create_admins" title="Can create admins" style="margin-left: 8px;">
-                🔑
-              </span>
+              <span *ngIf="user.role == 1 && user.can_create_admins" title="Can create admins" style="margin-left: 6px;">🔑</span>
             </td>
-            <td style="display: flex; justify-content: center; gap: 8px;">
+            <td>
               <button (click)="selectUser(user)" class="btn pending">Edit</button>
-              <button (click)="deleteUser(user.id)" class="btn record">Delete</button>
+              <button (click)="confirmDelete(user)" class="btn record">Delete</button>
             </td>
           </tr>
 
@@ -79,33 +84,65 @@
       </table>
     </div>
 
-    <!-- ================== EDIT USER SECTION ================== -->
-    <div *ngIf="selectedUser" class="card">
-      <h3 class="dashboard-title">Edit User: {{ selectedUser.email }}</h3>
+  </div>
+</div>
+
+<!-- ================== EDIT USER MODAL ================== -->
+<div *ngIf="showEditModal" class="modal-overlay" (click)="closeEditModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h3 class="modal-title">Edit User</h3>
+        <p class="modal-subtitle">{{ selectedUser?.email }}</p>
+      </div>
+      <button class="modal-close" (click)="closeEditModal()" aria-label="Close">&#x2715;</button>
+    </div>
+
+    <div class="modal-body">
       <form [formGroup]="editForm" (ngSubmit)="updateUser()" style="display: flex; flex-direction: column; gap: 12px;">
         <input formControlName="email" type="email" placeholder="Email" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
         <select formControlName="role" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
           <option *ngFor="let r of roles" [value]="r.value">{{ r.label }}</option>
         </select>
 
-        <!-- Only show for Admins -->
-        <div *ngIf="editForm.value.role == 1" style="margin: 8px 0;">
-          <label style="display: flex; align-items: center; gap: 8px;">
+        <!-- Only show for Admins (role == 1) -->
+        <div *ngIf="editForm.value.role == 1" style="margin: 4px 0;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
             <input type="checkbox" formControlName="can_create_admins">
             Can create other admins
           </label>
         </div>
 
         <input formControlName="password" type="password" placeholder="New Password (optional)" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-        
-        <div style="display: flex; gap: 10px;">
+
+        <div class="modal-actions">
+          <button type="button" (click)="closeEditModal()" class="btn pending">Cancel</button>
           <button type="submit" [disabled]="editForm.invalid || loading" class="btn complete">
             {{ loading ? 'Updating...' : 'Update User' }}
           </button>
-          <button type="button" (click)="cancelEdit()" class="btn pending">Cancel</button>
         </div>
       </form>
     </div>
+  </div>
+</div>
 
+<!-- ================== DELETE CONFIRMATION MODAL ================== -->
+<div *ngIf="showDeleteModal" class="modal-overlay" (click)="closeDeleteModal()">
+  <div class="modal-container modal-container--sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Delete User</h3>
+      <button class="modal-close" (click)="closeDeleteModal()" aria-label="Close">&#x2715;</button>
+    </div>
+
+    <div class="modal-body">
+      <p style="margin: 0 0 6px;">Are you sure you want to delete this user?</p>
+      <p style="margin: 0; font-weight: 600;">{{ userToDelete?.email }}</p>
+      <p style="margin: 8px 0 0; color: #888; font-size: 0.875rem;">This action cannot be undone.</p>
+
+      <div class="modal-actions" style="margin-top: 24px;">
+        <button type="button" (click)="closeDeleteModal()" class="btn pending">Cancel</button>
+        <button type="button" (click)="deleteUser()" class="btn record">Delete</button>
+      </div>
+    </div>
   </div>
 </div>

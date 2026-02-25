@@ -108,4 +108,13 @@ export class HomeStaffComponent implements OnInit {
   getTotalPages(list: any[]): number[] {
     return Array(Math.ceil(list.length / this.itemsPerPage)).fill(0).map((_, i) => i + 1);
   }
+
+  getDocumentLabel(type: string): string {
+  const map: Record<string, string> = {
+    birth: 'Birth Certificate',
+    death: 'Death Certificate',
+    marriage: 'Marriage Certificate'
+  };
+  return map[type] || type;
+}
 }

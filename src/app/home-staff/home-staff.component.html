@@ -85,7 +85,7 @@
               style="cursor: pointer;"
               (click)="viewRequestDetail(doc)">
             <td>{{ doc.name }}</td>
-            <td>{{ doc.document_type }}</td>
+            <td>{{ getDocumentLabel(doc.document_type) }}</td>
             <td>{{ doc.date_created | date:'medium' }}</td>
             <td class="status-pending">{{ doc.status }}</td>
           </tr>
@@ -109,7 +109,7 @@
               style="cursor: pointer;"
               (click)="viewInProcessDetail(doc)">
             <td>{{ doc.name }}</td>
-            <td>{{ doc.document_type }}</td>
+            <td>{{ getDocumentLabel(doc.document_type) }}</td>
             <td>{{ doc.updated_at | date:'medium' }}</td>
           </tr>
         </tbody>
@@ -132,7 +132,7 @@
               style="cursor: pointer;"
               (click)="viewInProcessDetail(doc)">
             <td>{{ doc.name }}</td>
-            <td>{{ doc.document_type }}</td>
+            <td>{{ getDocumentLabel(doc.document_type) }}</td>
             <td>{{ doc.updated_at | date:'medium' }}</td>
           </tr>
         </tbody>
@@ -153,7 +153,7 @@
         <tbody>
           <tr *ngFor="let doc of denied">
             <td>{{ doc.name }}</td>
-            <td>{{ doc.document_type }}</td>
+            <td>{{ getDocumentLabel(doc.document_type) }}</td>
             <td>{{ doc.updated_at | date:'medium' }}</td>
           </tr>
         </tbody>

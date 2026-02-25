@@ -6,7 +6,7 @@
 
   <!-- ================== MAIN CONTENT ================== -->
   <div class="admin-container">
-    
+
     <!-- ================== PAGE TITLE ================== -->
     <h2 class="dashboard-title">My Document Requests</h2>
 
@@ -22,7 +22,7 @@
 
     <!-- ================== REQUESTS LIST ================== -->
     <div *ngFor="let req of requests" class="card" style="margin-bottom: 16px;">
-      
+
       <!-- Request Header -->
       <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0;">
         <div>
@@ -38,7 +38,7 @@
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; font-size: 13px;">
         <div style="display: flex; justify-content: space-between; gap: 8px;">
           <label style="font-weight: 600; color: #666;">Document Type:</label>
-          <span style="color: #333;">{{ req.document_type }}</span>
+          <span style="color: #333;">{{ getDocumentLabel(req.document_type) }}</span>
         </div>
         <div style="display: flex; justify-content: space-between; gap: 8px;">
           <label style="font-weight: 600; color: #666;">Last Updated:</label>
@@ -48,7 +48,7 @@
 
       <!-- Request Actions -->
       <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <button (click)="viewHistory(req.RequestID)" 
+        <button (click)="viewHistory(req.RequestID)"
                 class="btn pending"
                 [class.active]="isHistoryVisible(req.RequestID)"
                 [disabled]="isHistoryLoading(req.RequestID)"
@@ -56,8 +56,8 @@
           {{ isHistoryLoading(req.RequestID) ? 'Loading...' : (isHistoryVisible(req.RequestID) ? 'Hide History' : 'View History') }}
         </button>
 
-        <button *ngIf="req.file_path" 
-                (click)="downloadFile(req.RequestID, req.file_path)" 
+        <button *ngIf="req.file_path"
+                (click)="downloadFile(req.RequestID, req.file_path)"
                 class="btn complete"
                 style="padding: 6px 12px; min-width: 70px;">
           Download File
@@ -88,7 +88,7 @@
           </div>
         </div>
 
-        <p *ngIf="!isHistoryLoading(req.RequestID) && (!historyMap[req.RequestID] || historyMap[req.RequestID].length === 0)" 
+        <p *ngIf="!isHistoryLoading(req.RequestID) && (!historyMap[req.RequestID] || historyMap[req.RequestID].length === 0)"
            style="text-align: center; color: #999; padding: 15px; margin: 0;">
           No history available.
         </p>

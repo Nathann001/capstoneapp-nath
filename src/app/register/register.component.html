@@ -3,16 +3,10 @@
 <div class="login-bg">
     <div class="bg-image"></div>
 
-    <!-- Title -->
     <h1 class="city-title">ANGELES CITY DOCUMENT REQUEST</h1>
-
-    <!-- Logo -->
     <img src="/assets/images/angeles_city_logo.png" alt="Angeles City Logo" class="logo" />
-
-    <!-- Subtitle -->
     <p class="welcome-text">CREATE YOUR ACCOUNT NOW</p>
 
-    <!-- Register Card -->
     <div class="login-container">
         <div class="login-box">
 
@@ -21,12 +15,10 @@
 
                 <h3 class="login-title">SIGN UP</h3>
 
-                <!-- Email -->
                 <div class="input-with-icon">
                     <input type="email" formControlName="email" placeholder="Email Address" />
                 </div>
 
-                <!-- Password -->
                 <div class="input-with-icon">
                     <input [type]="showPassword ? 'text' : 'password'"
                            formControlName="password"
@@ -36,7 +28,6 @@
                     </span>
                 </div>
 
-                <!-- Confirm Password -->
                 <div class="input-with-icon">
                     <input [type]="showConfirmPassword ? 'text' : 'password'"
                            formControlName="confirmPassword"
@@ -46,10 +37,10 @@
                     </span>
                 </div>
 
-                <!-- Register Button -->
-                <button type="submit" class="login-btn" [disabled]="registerForm.invalid">REGISTER</button>
+                <button type="submit" class="login-btn" [disabled]="registerForm.invalid || loading">
+                    {{ loading ? 'SENDING OTP...' : 'REGISTER' }}
+                </button>
 
-                <!-- Already have an account -->
                 <p class="register-text">
                     Already have an account?
                     <a routerLink="/login">Log in</a>
@@ -63,10 +54,9 @@
                 <h3 class="login-title">VERIFY YOUR ACCOUNT</h3>
 
                 <p class="otp-text">
-                    An OTP has been sent to {{ registerForm.value.email }}
+                    An OTP has been sent to <strong>{{ registerForm.value.email }}</strong>
                 </p>
 
-                <!-- OTP Input -->
                 <div class="input-with-icon">
                     <input type="text"
                            [(ngModel)]="otpCode"
@@ -75,16 +65,41 @@
                            maxlength="6" />
                 </div>
 
-                <!-- Verify Button -->
-                <button type="button" (click)="onVerifyOtp()" class="login-btn">VERIFY ACCOUNT</button>
+                <button type="button" (click)="onVerifyOtp()" class="login-btn"
+                        [disabled]="otpCode.length < 6 || verifying">
+                    {{ verifying ? 'VERIFYING...' : 'VERIFY ACCOUNT' }}
+                </button>
 
-                <!-- Back link -->
-                <p class="register-text">
-                    <a (click)="isOtpSent = false" style="cursor:pointer; color:#ffd6d1;">
-                        ← Back to edit info
-                    </a>
-                </p>
+                <div class="resend-container">
+                    <button type="button"
+                            class="resend-btn"
+                            (click)="resendOtp()"
+                            [disabled]="resendCooldown > 0">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        {{ resendCooldown > 0 ? 'Resend OTP in ' + resendCooldown + 's' : 'Resend OTP' }}
+                    </button>
+
+                    <p class="resend-message" *ngIf="resendMessage">
+                        <i class="fa-solid fa-circle-check"></i> {{ resendMessage }}
+                    </p>
+                </div>
+
             </div>
         </div>
+    </div>
+</div>
+
+<!-- ===== OTP ERROR MODAL ===== -->
+<div class="modal-overlay" *ngIf="showErrorModal" (click)="closeErrorModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+
+        <div class="modal-icon">
+            <i class="fa-solid fa-circle-xmark"></i>
+        </div>
+
+        <h3 class="modal-title">Invalid OTP</h3>
+        <p class="modal-message">{{ errorMessage }}</p>
+
+        <button class="modal-close-btn" (click)="closeErrorModal()">Try Again</button>
     </div>
 </div>

@@ -1,27 +1,59 @@
-<div class="otp-container">
-  <h2>Verify Your Account</h2>
-  <form [formGroup]="otpForm" (ngSubmit)="onSubmit()">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-    <!-- Make email/phone input editable -->
-    <div class="input-group">
-      <input type="text" formControlName="contact" placeholder="Email or Phone">
+<div class="login-bg">
+    <div class="bg-image"></div>
+
+    <!-- Title -->
+    <h1 class="city-title">ANGELES CITY DOCUMENT REQUEST</h1>
+
+    <!-- Logo -->
+    <img src="/assets/images/angeles_city_logo.png" alt="Angeles City Logo" class="logo" />
+
+    <!-- Subtitle -->
+    <p class="welcome-text">VERIFY YOUR ACCOUNT</p>
+
+    <!-- OTP Card -->
+    <div class="login-container">
+        <div class="login-box">
+            <form [formGroup]="otpForm" (ngSubmit)="onSubmit()" class="form-box">
+
+                <h3 class="login-title">ENTER OTP</h3>
+
+                <p class="otp-text">
+                    Enter the 6-digit code sent to your email or phone.
+                </p>
+
+                <!-- Email/Phone Input -->
+                <div class="input-with-icon">
+                    <input type="text" formControlName="contact" placeholder="Email or Phone" />
+                </div>
+
+                <!-- OTP Input -->
+                <div class="input-with-icon">
+                    <input type="text" formControlName="otp" placeholder="Enter 6-digit OTP" maxlength="6" />
+                </div>
+
+                <!-- Verify Button -->
+                <button type="submit" class="login-btn" [disabled]="otpForm.invalid || loading">
+                    {{ loading ? 'VERIFYING...' : 'VERIFY OTP' }}
+                </button>
+
+                <!-- Resend OTP -->
+                <div class="resend-container">
+                    <button type="button"
+                            class="resend-btn"
+                            (click)="resendOtp()"
+                            [disabled]="resendCooldown > 0">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        {{ resendCooldown > 0 ? 'Resend OTP in ' + resendCooldown + 's' : 'Resend OTP' }}
+                    </button>
+
+                    <p class="resend-message" *ngIf="message">
+                        <i class="fa-solid fa-circle-check"></i> {{ message }}
+                    </p>
+                </div>
+
+            </form>
+        </div>
     </div>
-
-
-    <div class="input-group">
-      <input type="text" formControlName="otp" placeholder="Enter OTP">
-    </div>
-
-    <button type="submit" [disabled]="otpForm.invalid || loading">
-      {{ loading ? 'Verifying...' : 'Verify OTP' }}
-    </button>
-
-    <button type="button" (click)="resendOtp()" [disabled]="resendCooldown > 0">
-  {{ resendCooldown > 0 ? 'Resend OTP (' + resendCooldown + 's)' : 'Resend OTP' }}
-</button>
-
-<p class="otp-message" *ngIf="message">{{ message }}</p>
-
-
-  </form>
 </div>

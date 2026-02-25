@@ -24,7 +24,6 @@
     z-index: -1;
 }
 
-/* City title */
 .city-title {
     font-size: 32px;
     font-weight: 800;
@@ -33,13 +32,10 @@
     margin-bottom: 10px;
     text-transform: uppercase;
     text-shadow:
-        -1px -1px 0 #fff,
-         1px -1px 0 #fff,
-        -1px  1px 0 #fff,
-         1px  1px 0 #fff;
+        -1px -1px 0 #fff,  1px -1px 0 #fff,
+        -1px  1px 0 #fff,  1px  1px 0 #fff;
 }
 
-/* Subtitle under logo */
 .welcome-text {
     font-size: 32px;
     font-weight: 700;
@@ -48,26 +44,21 @@
     margin-bottom: 25px;
     text-transform: uppercase;
     text-shadow:
-        -1px -1px 0 #fff,
-         1px -1px 0 #fff,
-        -1px  1px 0 #fff,
-         1px  1px 0 #fff;
+        -1px -1px 0 #fff,  1px -1px 0 #fff,
+        -1px  1px 0 #fff,  1px  1px 0 #fff;
 }
 
-/* Logo */
 .logo {
     width: 130px;
     margin-bottom: 1px;
 }
 
-/* Center container */
 .login-container {
     display: flex;
     justify-content: center;
     width: 100%;
 }
 
-/* Red card */
 .login-box {
     background: #f44336;
     width: 100%;
@@ -79,14 +70,12 @@
     text-align: center;
 }
 
-/* Form layout */
 .form-box {
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
-/* SIGN UP title */
 .login-title {
     color: #000;
     font-size: 20px;
@@ -94,7 +83,6 @@
     margin-bottom: 20px;
 }
 
-/* Input wrapper — pill style matching login */
 .input-with-icon {
     position: relative;
     width: 100%;
@@ -104,7 +92,6 @@
     justify-content: center;
 }
 
-/* Pill inputs — same as login */
 .input-with-icon input {
     width: 100%;
     padding: 12px 45px 12px 16px;
@@ -128,7 +115,6 @@
     box-shadow: 0 0 5px rgba(244, 67, 54, 0.5);
 }
 
-/* Eye icon */
 .password-toggle {
     position: absolute;
     right: 15px;
@@ -143,17 +129,8 @@
     z-index: 2;
 }
 
-.password-toggle:hover {
-    color: #f44336;
-}
+.password-toggle:hover { color: #f44336; }
 
-/* Error messages */
-.error small {
-    color: #2b0000;
-    font-size: 14px;
-}
-
-/* Register button — same as login-btn */
 .login-btn {
     background: #ffb3ab;
     color: #000;
@@ -166,16 +143,9 @@
     transition: background 0.3s;
 }
 
-.login-btn:hover {
-    background: #ff8c75;
-}
+.login-btn:hover { background: #ff8c75; }
+.login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.login-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-/* "Already have an account?" text */
 .register-text {
     font-size: 20px;
     color: #ffd6d1;
@@ -189,11 +159,8 @@
     margin-left: 3px;
 }
 
-.register-text a:hover {
-    text-decoration: underline;
-}
+.register-text a:hover { text-decoration: underline; }
 
-/* OTP section */
 .otp-text {
     color: #fff;
     text-align: center;
@@ -201,112 +168,158 @@
     font-size: 16px;
 }
 
-.back-btn {
+.otp-text strong { color: #ffd6d1; }
+
+/* ===== RESEND OTP ===== */
+.resend-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.resend-btn {
     background: none;
-    border: none;
+    border: 2px solid #ffd6d1;
     color: #ffd6d1;
+    border-radius: 20px;
+    padding: 8px 24px;
+    font-size: 15px;
+    font-weight: 600;
     cursor: pointer;
-    margin-top: 10px;
-    font-size: 16px;
-    text-decoration: underline;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    letter-spacing: 0.5px;
 }
 
-.back-btn:hover {
+.resend-btn:hover:not(:disabled) {
+    background: #ffd6d1;
+    color: #c62828;
+    border-color: #ffd6d1;
+}
+
+.resend-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    border-color: rgba(255, 214, 209, 0.5);
+    color: rgba(255, 214, 209, 0.55);
+}
+
+.resend-btn i { font-size: 14px; }
+
+.resend-message {
     color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    animation: fadeIn 0.3s ease;
 }
 
+.resend-message i {
+    color: #a5d6a7;
+    font-size: 14px;
+}
+
+/* ===== OTP ERROR MODAL ===== */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease;
+}
+
+.modal-box {
+    background: #fff;
+    border-radius: 20px;
+    padding: 36px 32px 28px;
+    max-width: 360px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+    animation: slideUp 0.25s ease;
+}
+
+.modal-icon {
+    font-size: 52px;
+    color: #f44336;
+    margin-bottom: 12px;
+    line-height: 1;
+}
+
+.modal-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #222;
+    margin: 0 0 10px 0;
+}
+
+.modal-message {
+    font-size: 15px;
+    color: #555;
+    margin: 0 0 24px 0;
+    line-height: 1.5;
+}
+
+.modal-close-btn {
+    background: #f44336;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 32px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    letter-spacing: 0.5px;
+}
+
+.modal-close-btn:hover { background: #c62828; }
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
 
 /* ===== TABLET ===== */
 @media (max-width: 1024px) {
-
-    .city-title,
-    .welcome-text {
-        font-size: 26px;
-        text-align: center;
-    }
-
-    .logo {
-        width: 110px;
-    }
-
-    .login-box {
-        max-width: 600px;
-        padding: 25px 20px;
-    }
-
-    .input-with-icon {
-        max-width: 360px;
-    }
-
-    .input-with-icon input {
-        font-size: 16px;
-        padding: 10px 40px 10px 14px;
-    }
-
-    .login-btn {
-        font-size: 18px;
-        padding: 10px 25px;
-    }
-
-    .register-text {
-        font-size: 18px;
-    }
+    .city-title, .welcome-text { font-size: 26px; text-align: center; }
+    .logo { width: 110px; }
+    .login-box { max-width: 600px; padding: 25px 20px; }
+    .input-with-icon { max-width: 360px; }
+    .input-with-icon input { font-size: 16px; padding: 10px 40px 10px 14px; }
+    .login-btn { font-size: 18px; padding: 10px 25px; }
+    .register-text { font-size: 18px; }
 }
-
 
 /* ===== MOBILE ===== */
 @media (max-width: 600px) {
-
-    .login-bg {
-        padding: 15px;
-    }
-
-    .city-title {
-        font-size: 22px;
-        margin-bottom: 5px;
-    }
-
-    .welcome-text {
-        font-size: 20px;
-        margin-bottom: 15px;
-    }
-
-    .logo {
-        width: 90px;
-        margin-bottom: 5px;
-    }
-
-    .login-box {
-        width: 100%;
-        max-width: 100%;
-        border-radius: 20px;
-        padding: 20px 15px;
-    }
-
-    .login-title {
-        font-size: 18px;
-    }
-
-    .input-with-icon {
-        max-width: 100%;
-    }
-
-    .input-with-icon input {
-        font-size: 15px;
-        padding: 10px 38px 10px 12px;
-    }
-
-    .password-toggle {
-        font-size: 16px;
-    }
-
-    .login-btn {
-        width: 100%;
-        font-size: 18px;
-        padding: 12px;
-    }
-
-    .register-text {
-        font-size: 16px;
-    }
+    .login-bg { padding: 15px; }
+    .city-title { font-size: 22px; margin-bottom: 5px; }
+    .welcome-text { font-size: 20px; margin-bottom: 15px; }
+    .logo { width: 90px; margin-bottom: 5px; }
+    .login-box { width: 100%; max-width: 100%; border-radius: 20px; padding: 20px 15px; }
+    .login-title { font-size: 18px; }
+    .input-with-icon { max-width: 100%; }
+    .input-with-icon input { font-size: 15px; padding: 10px 38px 10px 12px; }
+    .password-toggle { font-size: 16px; }
+    .login-btn { width: 100%; font-size: 18px; padding: 12px; }
+    .register-text { font-size: 16px; }
+    .resend-btn { width: 100%; justify-content: center; font-size: 14px; }
+    .modal-box { padding: 28px 20px 22px; }
+    .modal-icon { font-size: 44px; }
 }

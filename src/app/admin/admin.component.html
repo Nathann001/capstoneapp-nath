@@ -65,6 +65,7 @@
           <thead>
             <tr>
               <th>Name</th>
+              <th>Document Type</th>
               <th>Date</th>
               <th>Status</th>
               <th>Action</th>
@@ -75,6 +76,7 @@
                 (click)="doc.status === 'under_review' ? viewInProcessDetail(doc) : viewRequestDetail(doc)"
                 style="cursor: pointer;">
               <td>{{ doc.RequestID }}</td>
+              <td>{{ getDocumentLabel(doc.document_type) }}</td>
               <td>{{ doc.updated_at || doc.date_created | date:'medium' }}</td>
               <td class="status-{{ doc.status === 'under_review' ? 'pending' : doc.status }}">
                 {{ doc.status === 'under_review' ? 'Under Review' : doc.status }}

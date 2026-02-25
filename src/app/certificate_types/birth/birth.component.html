@@ -31,13 +31,13 @@
       </div>
 
       <label>Fathers Name*</label>
-      <input type="date" formControlName="Fathers_Name" />
+      <input type="text" formControlName="Fathers_Name" />
       <div *ngIf="f['Fathers_Name']?.invalid && f['Fathers_Name']?.touched" class="error">
         Fathers Name is required!
       </div>
 
       <label>Mothers Name*</label>
-      <input type="date" formControlName="Mothers_Name" />
+      <input type="text" formControlName="Mothers_Name" />
       <div *ngIf="f['Mothers_Name']?.invalid && f['Mothers_Name']?.touched" class="error">
         Mothers Name is required!
       </div>

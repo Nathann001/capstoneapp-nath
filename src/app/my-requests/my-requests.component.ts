@@ -90,4 +90,13 @@ export class MyRequestsComponent implements OnInit {
   isHistoryLoading(requestId: number): boolean {
     return this.loadingHistory[requestId] || false;
   }
+
+  getDocumentLabel(type: string): string {
+  const map: Record<string, string> = {
+    birth: 'Birth Certificate',
+    death: 'Death Certificate',
+    marriage: 'Marriage Certificate'
+  };
+  return map[type] || type;
+}
 }

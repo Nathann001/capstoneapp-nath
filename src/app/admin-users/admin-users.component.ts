@@ -32,12 +32,18 @@ export class AdminUsersComponent implements OnInit {
   selectedUser: User | null = null;
   loading = false;
 
+  // Panel/modal state
+  showCreateForm = false;
+  showEditModal = false;
+  showDeleteModal = false;
+  userToDelete: User | null = null;
+
   constructor(private fb: FormBuilder, private adminService: AdminService, private router: Router) {
     this.createForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
-      role: [2, Validators.required], // default Staff
-      can_create_admins: [false] // only relevant for Admins
+      role: [2, Validators.required],
+      can_create_admins: [false]
     });
 
     this.editForm = this.fb.group({
@@ -90,43 +96,47 @@ export class AdminUsersComponent implements OnInit {
     return role ? role.label : 'Unknown';
   }
 
-  createUser() {
-  if (this.createForm.invalid) {
-    console.error('Form is invalid');
-    return;
-  }
-
-  this.loading = true;
-
-  // Convert role to number
-  const formValue = { ...this.createForm.value, role: Number(this.createForm.value.role) };
-
-  // Ensure role is valid (1 = admin, 2 = staff)
-  if (![1, 2].includes(formValue.role)) {
-    console.error('Invalid role:', formValue.role);
-    this.loading = false;
-    return;
-  }
-
-  // Only allow can_create_admins if role === 1 (admin)
-  if (formValue.role !== 1) {
-    formValue.can_create_admins = false;
-  }
-
-  console.log('Creating user with payload:', formValue);
-
-  this.adminService.createUser(formValue).subscribe({
-    next: (res: any) => {
-      console.log(res.message);
+  toggleCreateForm() {
+    this.showCreateForm = !this.showCreateForm;
+    if (!this.showCreateForm) {
       this.createForm.reset({ role: 2, can_create_admins: false });
-      this.loadUsers();
-    },
-    error: (err: any) => console.error(err.error?.message || 'Failed to create user'),
-    complete: () => this.loading = false
-  });
-}
+    }
+  }
 
+  createUser() {
+    if (this.createForm.invalid) {
+      console.error('Form is invalid');
+      return;
+    }
 
+    this.loading = true;
+
+    const formValue = { ...this.createForm.value, role: Number(this.createForm.value.role) };
+
+    if (![1, 2].includes(formValue.role)) {
+      console.error('Invalid role:', formValue.role);
+      this.loading = false;
+      return;
+    }
+
+    // Only allow can_create_admins if role === 1 (Admin)
+    if (formValue.role !== 1) {
+      formValue.can_create_admins = false;
+    }
+
+    this.adminService.createUser(formValue).subscribe({
+      next: (res: any) => {
+        console.log(res.message);
+        this.createForm.reset({ role: 2, can_create_admins: false });
+        this.showCreateForm = false;
+        this.loadUsers();
+      },
+      error: (err: any) => console.error(err.error?.message || 'Failed to create user'),
+      complete: () => this.loading = false
+    });
+  }
+
+  // Open edit modal
   selectUser(user: User) {
     this.selectedUser = user;
     this.editForm.patchValue({
@@ -135,6 +145,12 @@ export class AdminUsersComponent implements OnInit {
       password: '',
       can_create_admins: (user as any).can_create_admins || false
     });
+    this.showEditModal = true;
+  }
+
+  closeEditModal() {
+    this.showEditModal = false;
+    this.selectedUser = null;
   }
 
   updateUser() {
@@ -146,7 +162,12 @@ export class AdminUsersComponent implements OnInit {
       role: Number(this.editForm.value.role)
     };
 
-    if (payload.role === 1) payload.can_create_admins = this.editForm.value.can_create_admins;
+    // Only send can_create_admins for Admin role
+    if (payload.role === 1) {
+      payload.can_create_admins = this.editForm.value.can_create_admins;
+    } else {
+      payload.can_create_admins = false;
+    }
 
     this.adminService.updateUser(this.selectedUser.id, payload).subscribe({
       next: (res: any) => {
@@ -155,7 +176,7 @@ export class AdminUsersComponent implements OnInit {
           this.adminService.updateUserPassword(this.selectedUser!.id, newPassword).subscribe({
             next: () => {
               console.log('User credentials and password updated successfully');
-              this.selectedUser = null;
+              this.closeEditModal();
               this.loadUsers();
             },
             error: (err) => console.error(err.error?.message || 'Failed to update password'),
@@ -163,7 +184,7 @@ export class AdminUsersComponent implements OnInit {
           });
         } else {
           console.log('User updated successfully');
-          this.selectedUser = null;
+          this.closeEditModal();
           this.loadUsers();
           this.loading = false;
         }
@@ -175,19 +196,30 @@ export class AdminUsersComponent implements OnInit {
     });
   }
 
-  cancelEdit() {
-    this.selectedUser = null;
+  // Open delete confirmation modal
+  confirmDelete(user: User) {
+    this.userToDelete = user;
+    this.showDeleteModal = true;
   }
 
-  deleteUser(id: number) {
-    if (!confirm('Are you sure you want to delete this user?')) return;
+  closeDeleteModal() {
+    this.showDeleteModal = false;
+    this.userToDelete = null;
+  }
 
-    this.adminService.deleteUser(id).subscribe({
+  deleteUser() {
+    if (!this.userToDelete) return;
+
+    this.adminService.deleteUser(this.userToDelete.id).subscribe({
       next: (res: any) => {
         console.log(res.message);
+        this.closeDeleteModal();
         this.loadUsers();
       },
-      error: (err: any) => console.error(err.error?.message || 'Failed to delete user')
+      error: (err: any) => {
+        console.error(err.error?.message || 'Failed to delete user');
+        this.closeDeleteModal();
+      }
     });
   }
 }
