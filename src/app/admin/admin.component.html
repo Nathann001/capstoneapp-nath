@@ -3,6 +3,7 @@
 
     <h2 class="dashboard-title">Statistics Dashboard</h2>
 
+    <!-- ================== ROW 1 ================== -->
     <div class="flex items-center gap-4 mb-4">
       <label class="font-semibold">Row 1:</label>
       <select [(ngModel)]="selectedRow1" class="border px-2 py-1 rounded">
@@ -28,6 +29,7 @@
       </div>
     </div>
 
+    <!-- ================== ROW 2 ================== -->
     <div class="flex items-center gap-4 mb-4">
       <label class="font-semibold">Row 2:</label>
       <select [(ngModel)]="selectedRow2" class="border px-2 py-1 rounded">
@@ -53,10 +55,10 @@
       </div>
     </div>
 
+    <!-- ================== PAGINATED GRID ================== -->
     <div class="table-grid">
       <div *ngFor="let row of rows" class="card">
         <h3 class="dashboard-title">{{ formatStatName(row === 1 ? selectedRow1 : selectedRow2) }}</h3>
-
         <table class="records-table">
           <thead>
             <tr>
@@ -71,54 +73,136 @@
             <tr *ngFor="let doc of getPaginatedItems(row)">
               <td (click)="doc.status === 'under_review' ? viewInProcessDetail(doc) : viewRequestDetail(doc)"
                   style="cursor: pointer;">
-                {{ doc.RequestID }}
+                {{ doc.name }}
               </td>
               <td>{{ getDocumentLabel(doc.document_type) }}</td>
-              <td>{{ doc.updated_at || doc.date_created | date:'medium' }}</td>
+              <td>{{ (doc.updated_at || doc.date_created) | date:'medium' }}</td>
               <td class="status-{{ doc.status === 'under_review' ? 'pending' : doc.status }}">
                 {{ doc.status === 'under_review' ? 'Under Review' : doc.status }}
               </td>
               <td>
-                <button *ngIf="doc.archived === 0"
-                        (click)="confirmArchive(doc, $event)"
-                        class="btn pending">
+                <button (click)="confirmArchive(doc, $event)" class="btn pending">
                   Archive
                 </button>
-                <span *ngIf="doc.archived === 1">Archived</span>
               </td>
+            </tr>
+            <tr *ngIf="getPaginatedItems(row).length === 0">
+              <td colspan="5" style="text-align:center; color:#999; padding:20px;">No records found.</td>
             </tr>
           </tbody>
         </table>
 
-        <div style="display: flex; justify-content: flex-end; margin-top: 15px; gap: 5px;">
+        <div style="display:flex; justify-content:flex-end; margin-top:15px; gap:5px;">
           <button *ngFor="let page of getTotalPages(row)"
                   (click)="changePage(row, page)"
                   [style.backgroundColor]="(row === 1 ? currentPage1 : currentPage2) === page ? '#2a7ca8' : 'white'"
                   [style.color]="(row === 1 ? currentPage1 : currentPage2) === page ? 'white' : '#333'"
-                  style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">
+                  style="padding:8px 12px; border:1px solid #ddd; border-radius:4px; cursor:pointer;">
             {{ page }}
           </button>
         </div>
       </div>
     </div>
 
+    <!-- ================== FOR RELEASE TABLE ================== -->
+    <div class="card" style="margin-top: 32px;">
+      <h3 class="dashboard-title"><strong>FOR RELEASE</strong></h3>
+      <table class="records-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Document Type</th>
+            <th>For Release At</th>
+            <th>Assigned Staff</th>
+            <th>Archive</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let doc of for_release">
+            <td>{{ doc.name }}</td>
+            <td>{{ getDocumentLabel(doc.document_type) }}</td>
+            <td>{{ doc.updated_at | date:'medium' }}</td>
+            <td>{{ doc.assigned_staff_name || '—' }}</td>
+            <td>
+              <button (click)="confirmArchive(doc, $event)" class="btn pending">
+                Archive
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="for_release.length === 0">
+            <td colspan="5" style="text-align:center; color:#999; padding:20px;">
+              No requests for release yet.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ================== RELEASED TABLE ================== -->
+    <div class="card" style="margin-top: 24px;">
+      <h3 class="dashboard-title"><strong>RELEASED</strong></h3>
+      <table class="records-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Document Type</th>
+            <th>Released At</th>
+            <th>Assigned Staff</th>
+            <th>Archive</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let doc of released">
+            <td>{{ doc.name }}</td>
+            <td>{{ getDocumentLabel(doc.document_type) }}</td>
+            <td>{{ doc.updated_at | date:'medium' }}</td>
+            <td>{{ doc.assigned_staff_name || '—' }}</td>
+            <td>
+              <button (click)="confirmArchive(doc, $event)" class="btn pending">
+                Archive
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="released.length === 0">
+            <td colspan="5" style="text-align:center; color:#999; padding:20px;">
+              No released requests yet.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
   </div>
 </div>
 
-<!-- ARCHIVE MODAL -->
+<!-- ================== ARCHIVE CONFIRM MODAL ================== -->
 <div *ngIf="showArchiveModal" class="modal-overlay" (click)="closeArchiveModal()">
-  <div class="modal-container modal-container--sm" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3 class="modal-title">Archive Request</h3>
-      <button class="modal-close" (click)="closeArchiveModal()">&#x2715;</button>
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-icon confirm">
+      <i class="fa-solid fa-box-archive"></i>
     </div>
-    <div class="modal-body">
-      <p style="margin: 0 0 6px;">Are you sure you want to archive this request?</p>
-      <p style="margin: 0; font-weight: 600;">{{ docToArchive?.name }}</p>
-      <div class="modal-actions" style="margin-top: 24px;">
-        <button type="button" (click)="closeArchiveModal()" class="btn pending">Cancel</button>
-        <button type="button" (click)="archiveRequest()" class="btn complete">Archive</button>
-      </div>
+    <h3 class="modal-title">Archive Request</h3>
+    <p class="modal-message">
+      Are you sure you want to archive<br>
+      <strong>{{ docToArchive?.name }}</strong>?
+    </p>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" (click)="closeArchiveModal()">Cancel</button>
+      <button class="modal-btn confirm" (click)="archiveRequest()">Archive</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================== RESULT MODAL ================== -->
+<div *ngIf="showResultModal" class="modal-overlay" (click)="closeResultModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-icon" [ngClass]="resultModalType">
+      <i class="fa-solid" [ngClass]="resultModalType === 'success' ? 'fa-circle-check' : 'fa-circle-xmark'"></i>
+    </div>
+    <h3 class="modal-title">{{ resultModalType === 'success' ? 'Success' : 'Error' }}</h3>
+    <p class="modal-message">{{ resultModalMessage }}</p>
+    <div class="modal-actions">
+      <button class="modal-btn confirm" (click)="closeResultModal()">OK</button>
     </div>
   </div>
 </div>

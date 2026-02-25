@@ -130,4 +130,5 @@ export class RegisterComponent {
   togglePassword() { this.showPassword = !this.showPassword; }
   toggleConfirmPassword() { this.showConfirmPassword = !this.showConfirmPassword; }
   goToLogin(): void { this.router.navigate(['/login']); }
+  goToOtp(): void { this.router.navigate(['/otpverify']); }
 }
