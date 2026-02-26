@@ -1,31 +1,5 @@
 <div class="account-page">
 
-  <!-- Sidebar -->
-  <aside class="account-sidebar">
-    <div class="sidebar-avatar">
-      <div class="avatar-ring">
-        <div class="avatar-initials">
-          {{ (profileForm.get('firstName')?.value?.[0] || '') + (profileForm.get('lastName')?.value?.[0] || '') || '?' }}
-        </div>
-      </div>
-      <p class="sidebar-name">
-        {{ profileForm.get('firstName')?.value || 'Your Name' }}
-        {{ profileForm.get('lastName')?.value }}
-      </p>
-      <p class="sidebar-email">{{ profileForm.get('email')?.value }}</p>
-    </div>
-
-    <nav class="sidebar-nav">
-      <a class="sidebar-link active">
-        <i class="fa-solid fa-user"></i> My Profile
-      </a>
-    </nav>
-
-    <button class="sidebar-logout" (click)="logout()">
-      <i class="fa-solid fa-right-from-bracket"></i> Sign Out
-    </button>
-  </aside>
-
   <!-- Main Content -->
   <main class="account-main">
 

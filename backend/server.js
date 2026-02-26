@@ -759,14 +759,17 @@ app.delete('/api/admin/staff/:id', verifyToken, checkRoles([1]), (req, res) => {
 // ----------------------------------------------------------------
 // DOCUMENT REQUEST ROUTES
 // ----------------------------------------------------------------
-
+// FEB 26
 app.get('/api/document_request', verifyToken, checkRoles([1, 2]), (req, res) => {
   const sql = `
     SELECT dr.*,
-           ud.User_FullName AS requester_name
+           CONCAT(requester_ud.User_FName, ' ', requester_ud.User_LName) AS requester_name,
+           CONCAT(staff_ud.User_FName, ' ', staff_ud.User_LName)         AS assigned_staff_name
     FROM document_request dr
-    LEFT JOIN users u ON dr.user_id = u.id
-    LEFT JOIN user_details ud ON u.id = ud.UserID
+    LEFT JOIN users        requester_u  ON dr.user_id           = requester_u.id
+    LEFT JOIN user_details requester_ud ON requester_u.id       = requester_ud.UserID
+    LEFT JOIN users        staff_u      ON dr.assigned_staff_id = staff_u.id
+    LEFT JOIN user_details staff_ud     ON staff_u.id           = staff_ud.UserID
     WHERE (dr.status = 'pending' AND dr.assigned_staff_id IS NULL)
        OR dr.assigned_staff_id = ?
     ORDER BY dr.date_created DESC
@@ -781,11 +784,14 @@ app.get('/api/document_request', verifyToken, checkRoles([1, 2]), (req, res) => 
 app.get('/api/document_request/for_release', verifyToken, checkRoles([1,2]), (req, res) => {
   db.query(
     `SELECT dr.*,
-        IFNULL(CONCAT(ud.User_FName, ' ', ud.User_LName), '') AS assigned_staff_name
- FROM document_request dr
- LEFT JOIN users u ON dr.assigned_staff_id = u.id
- LEFT JOIN user_details ud ON u.id = ud.UserID
- WHERE dr.status = 'for_release' AND dr.archived = 0`,
+            CONCAT(requester_ud.User_FName, ' ', requester_ud.User_LName) AS requester_name,
+            IFNULL(CONCAT(staff_ud.User_FName, ' ', staff_ud.User_LName), '') AS assigned_staff_name
+     FROM document_request dr
+     LEFT JOIN users        requester_u  ON dr.user_id           = requester_u.id
+     LEFT JOIN user_details requester_ud ON requester_u.id       = requester_ud.UserID
+     LEFT JOIN users        staff_u      ON dr.assigned_staff_id = staff_u.id
+     LEFT JOIN user_details staff_ud     ON staff_u.id           = staff_ud.UserID
+     WHERE dr.status = 'for_release' AND dr.archived = 0`,
     (err, results) => {
       if (err) {
         console.error('Failed to fetch For Release requests:', err);
@@ -799,10 +805,13 @@ app.get('/api/document_request/for_release', verifyToken, checkRoles([1,2]), (re
 app.get('/api/document_request/released_list', verifyToken, checkRoles([1, 2]), (req, res) => {
   db.query(
     `SELECT dr.*,
-            IFNULL(CONCAT(ud.User_FName, ' ', ud.User_LName), '') AS assigned_staff_name
+            CONCAT(requester_ud.User_FName, ' ', requester_ud.User_LName) AS requester_name,
+            IFNULL(CONCAT(staff_ud.User_FName, ' ', staff_ud.User_LName), '') AS assigned_staff_name
      FROM document_request dr
-     LEFT JOIN users u ON dr.assigned_staff_id = u.id
-     LEFT JOIN user_details ud ON u.id = ud.UserID
+     LEFT JOIN users        requester_u  ON dr.user_id           = requester_u.id
+     LEFT JOIN user_details requester_ud ON requester_u.id       = requester_ud.UserID
+     LEFT JOIN users        staff_u      ON dr.assigned_staff_id = staff_u.id
+     LEFT JOIN user_details staff_ud     ON staff_u.id           = staff_ud.UserID
      WHERE dr.status = 'released' AND dr.archived = 0
      ORDER BY dr.updated_at DESC`,
     (err, results) => {

@@ -1,167 +1,194 @@
 <div class="app-container">
-  <!-- ================== SIDEBAR ================== -->
-  <aside class="sidebar"></aside>
-
-  <!-- ================== MAIN CONTENT ================== -->
   <div class="admin-container">
 
-    <!-- ================== PAGE TITLE ================== -->
-    <h2 class="dashboard-title">My Document Requests</h2>
-
-    <!-- ================== LOADING STATE ================== -->
-    <div *ngIf="isLoading" class="card">
-      <p style="text-align: center; color: #999; padding: 30px 20px;">Loading your requests...</p>
+    <!-- ================== DOCUMENT REQUESTS SECTION ================== -->
+    <div class="section-heading">
+      <i class="fa-solid fa-file-lines"></i>
+      <span>My Document Requests</span>
     </div>
 
-    <!-- ================== NO REQUESTS STATE ================== -->
-    <div *ngIf="!isLoading && requests.length === 0" class="card">
-      <p style="text-align: center; color: #999; padding: 30px 20px;">You have no requests yet.</p>
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="card state-card">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      <p>Loading your requests...</p>
     </div>
 
-    <!-- ================== REQUESTS LIST ================== -->
-    <div *ngFor="let req of requests" class="card" style="margin-bottom: 16px;">
+    <!-- Empty -->
+    <div *ngIf="!isLoading && requests.length === 0" class="card state-card">
+      <i class="fa-solid fa-folder-open"></i>
+      <p>You have no document requests yet.</p>
+    </div>
 
-      <!-- Request Header -->
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0;">
-        <div>
-          <h3 style="margin: 0 0 4px 0; font-size: 15px; font-weight: 600; color: #333;">{{ req.name }}</h3>
-          <p style="margin: 0; font-size: 12px; color: #999;">{{ req.date_created | date:'MMM d, yyyy' }}</p>
+    <!-- Request Cards -->
+    <div *ngFor="let req of requests; let i = index"
+         class="request-card card"
+         [style.animation-delay]="(i * 60) + 'ms'">
+
+      <!-- Card Header -->
+      <div class="req-header">
+        <div class="req-header-left">
+          <div class="req-icon">
+            <i [class]="getDocIcon(req.document_type)"></i>
+          </div>
+          <div>
+            <h3 class="req-name">{{ req.name }}</h3>
+            <p class="req-date">
+              <i class="fa-regular fa-clock"></i>
+              Submitted {{ req.date_created | date:'MMMM d, yyyy' }}
+            </p>
+          </div>
         </div>
-        <span [ngClass]="'status-' + req.status" style="display: inline-block; padding: 4px 10px; border-radius: 3px; font-size: 11px; font-weight: 600; text-transform: uppercase; background-color: #e8f4f8; border: 1px solid #2a7ca8;">
+        <span class="status-badge" [ngClass]="'status-' + req.status">
           {{ req.status | titlecase }}
         </span>
       </div>
 
-      <!-- Request Details -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; font-size: 13px;">
-        <div style="display: flex; justify-content: space-between; gap: 8px;">
-          <label style="font-weight: 600; color: #666;">Document Type:</label>
-          <span style="color: #333;">{{ getDocumentLabel(req.document_type) }}</span>
+      <!-- Card Details -->
+      <div class="req-details">
+        <div class="req-detail-item">
+          <span class="detail-label">Document Type</span>
+          <span class="detail-value">{{ getDocumentLabel(req.document_type) }}</span>
         </div>
-        <div style="display: flex; justify-content: space-between; gap: 8px;">
-          <label style="font-weight: 600; color: #666;">Last Updated:</label>
-          <span style="color: #333;">{{ req.updated_at | date:'MMM d, yyyy • HH:mm' }}</span>
+        <div class="req-detail-item">
+          <span class="detail-label">Last Updated</span>
+          <span class="detail-value">{{ req.updated_at | date:'MMM d, yyyy' }} at {{ req.updated_at | date:'HH:mm' }}</span>
         </div>
       </div>
 
-      <!-- Request Actions -->
-      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <!-- Card Actions -->
+      <div class="req-actions">
         <button (click)="viewHistory(req.RequestID)"
-                class="btn pending"
-                [class.active]="isHistoryVisible(req.RequestID)"
-                [disabled]="isHistoryLoading(req.RequestID)"
-                style="padding: 6px 12px; min-width: 70px;">
+                class="btn-action"
+                [ngClass]="isHistoryVisible(req.RequestID) ? 'btn-cancel' : 'btn-history'"
+                [disabled]="isHistoryLoading(req.RequestID)">
+          <i class="fa-solid" [ngClass]="isHistoryLoading(req.RequestID) ? 'fa-spinner fa-spin' : (isHistoryVisible(req.RequestID) ? 'fa-chevron-up' : 'fa-clock-rotate-left')"></i>
           {{ isHistoryLoading(req.RequestID) ? 'Loading...' : (isHistoryVisible(req.RequestID) ? 'Hide History' : 'View History') }}
         </button>
 
-        <button *ngIf="req.file_path"
-                (click)="downloadFile(req.RequestID, req.file_path)"
-                class="btn complete"
-                style="padding: 6px 12px; min-width: 70px;">
-          Download File
-        </button>
-
-        <span *ngIf="!req.file_path" style="padding: 6px 12px; color: #999; font-size: 12px; font-weight: 500; align-self: center;">
-          No file available
+        <span *ngIf="!req.file_path" class="no-file-note">
+          <i class="fa-solid fa-file-slash"></i> No file available
         </span>
       </div>
 
-      <!-- History Section -->
-      <div *ngIf="isHistoryVisible(req.RequestID)" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f0f0f0;">
-        <h4 style="margin: 0 0 10px 0; font-size: 13px; font-weight: 600; color: #333;">Status History</h4>
+      <!-- History Timeline -->
+      <div *ngIf="isHistoryVisible(req.RequestID)" class="history-section">
+        <h4 class="history-title">
+          <i class="fa-solid fa-timeline"></i> Status History
+        </h4>
 
-        <div *ngIf="isHistoryLoading(req.RequestID)" style="text-align: center; padding: 15px; color: #999;">
-          Loading history...
+        <div *ngIf="isHistoryLoading(req.RequestID)" class="state-card state-card--sm">
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          <p>Loading history...</p>
         </div>
 
-        <div *ngIf="!isHistoryLoading(req.RequestID) && historyMap[req.RequestID] && historyMap[req.RequestID].length > 0"
-             style="display: flex; flex-direction: column; gap: 8px;">
-          <div *ngFor="let h of historyMap[req.RequestID]"
-               style="display: flex; gap: 10px; padding: 10px; background-color: #f9f9f9; border-radius: 4px; border-left: 3px solid #2a7ca8; font-size: 12px;">
-            <div [ngClass]="'status-' + h.status"
-                 style="display: inline-block; padding: 3px 8px; border-radius: 2px; font-size: 10px; font-weight: 600; text-transform: uppercase; background-color: #e8f4f8; border: 1px solid #2a7ca8; white-space: nowrap; min-width: 70px; text-align: center; flex-shrink: 0;">
-              {{ h.status | titlecase }}
-            </div>
-            <div style="flex: 1;">
-              <p style="margin: 0 0 2px 0; color: #555; line-height: 1.4;">{{ h.email_message }}</p>
-              <small style="color: #999; font-size: 11px;">{{ h.updated_at | date:'MMM d, yyyy • HH:mm' }}</small>
+        <div *ngIf="!isHistoryLoading(req.RequestID) && (historyMap[req.RequestID]?.length ?? 0) > 0"
+             class="timeline">
+          <div *ngFor="let h of historyMap[req.RequestID]; let last = last"
+               class="timeline-item" [class.timeline-item--last]="last">
+            <div class="timeline-dot" [ngClass]="'dot-' + h.status"></div>
+            <div class="timeline-content">
+              <div class="timeline-header">
+                <span class="status-badge status-badge--sm" [ngClass]="'status-' + h.status">
+                  {{ h.status | titlecase }}
+                </span>
+                <span class="timeline-date">
+                  <i class="fa-regular fa-calendar"></i>
+                  {{ h.updated_at | date:'MMM d, yyyy' }} at {{ h.updated_at | date:'HH:mm' }}
+                </span>
+              </div>
+              <p class="timeline-message">{{ h.email_message }}</p>
             </div>
           </div>
         </div>
 
-        <p *ngIf="!isHistoryLoading(req.RequestID) && (!historyMap[req.RequestID] || historyMap[req.RequestID].length === 0)"
-           style="text-align: center; color: #999; padding: 15px; margin: 0;">
-          No history available.
-        </p>
+        <div *ngIf="!isHistoryLoading(req.RequestID) && (!historyMap[req.RequestID] || historyMap[req.RequestID].length === 0)"
+             class="state-card state-card--sm">
+          <i class="fa-solid fa-inbox"></i>
+          <p>No history available.</p>
+        </div>
       </div>
 
     </div>
 
-    <!-- ================== MY APPOINTMENTS TITLE ================== -->
-    <h2 class="dashboard-title" style="margin-top: 32px;">My Appointments</h2>
-
-    <!-- ================== APPOINTMENTS LOADING ================== -->
-    <div *ngIf="isLoadingAppointments" class="card">
-      <p style="text-align: center; color: #999; padding: 30px 20px;">Loading your appointments...</p>
+    <!-- ================== APPOINTMENTS SECTION ================== -->
+    <div class="section-heading" style="margin-top: 12px;">
+      <i class="fa-solid fa-calendar-check"></i>
+      <span>My Appointments</span>
     </div>
 
-    <!-- ================== NO APPOINTMENTS ================== -->
-    <div *ngIf="!isLoadingAppointments && appointments.length === 0" class="card">
-      <p style="text-align: center; color: #999; padding: 30px 20px;">
+    <!-- Loading -->
+    <div *ngIf="isLoadingAppointments" class="card state-card">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      <p>Loading your appointments...</p>
+    </div>
+
+    <!-- Empty -->
+    <div *ngIf="!isLoadingAppointments && appointments.length === 0" class="card state-card">
+      <i class="fa-solid fa-calendar-xmark"></i>
+      <p>
         You have no appointments yet.
-        <a routerLink="/appointment-booking" style="color: #2a7ca8; text-decoration: none; font-weight: 600; margin-left: 4px;">
-          Book one now →
-        </a>
+        <a routerLink="/appointment-booking" class="book-link">Book one now →</a>
       </p>
     </div>
 
-    <!-- ================== APPOINTMENTS LIST ================== -->
-    <div *ngFor="let appt of appointments" class="card" style="margin-bottom: 16px;">
+    <!-- Appointment Cards -->
+    <div *ngFor="let appt of appointments; let i = index"
+         class="request-card card appt-card"
+         [style.animation-delay]="(i * 60) + 'ms'">
 
-      <!-- Header -->
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0;">
-        <div>
-          <h3 style="margin: 0 0 4px 0; font-size: 15px; font-weight: 600; color: #333;">{{ appt.full_name }}</h3>
-          <p style="margin: 0; font-size: 12px; color: #999;">Booked on {{ appt.created_at | date:'MMM d, yyyy' }}</p>
+      <!-- Card Header -->
+      <div class="req-header">
+        <div class="req-header-left">
+          <div class="req-icon req-icon--appt">
+            <i class="fa-solid fa-calendar-check"></i>
+          </div>
+          <div>
+            <h3 class="req-name">{{ appt.full_name }}</h3>
+            <p class="req-date">
+              <i class="fa-regular fa-clock"></i>
+              Booked on {{ appt.created_at | date:'MMMM d, yyyy' }}
+            </p>
+          </div>
         </div>
-        <span [ngStyle]="{
-          'background-color': appt.status === 'confirmed' ? '#e8f4e8' : '#fdecea',
-          'border-color':     appt.status === 'confirmed' ? '#66bb6a'  : '#e57373',
-          'color':            appt.status === 'confirmed' ? '#2e7d32'  : '#c0392b'
-        }" style="display: inline-block; padding: 4px 10px; border-radius: 3px; font-size: 11px; font-weight: 600; text-transform: uppercase; border: 1px solid;">
+        <span class="status-badge" [ngClass]="appt.status === 'confirmed' ? 'status-approved' : 'status-cancelled'">
           {{ appt.status | titlecase }}
         </span>
       </div>
 
-      <!-- Details -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0;">
-        <div style="display: flex; justify-content: space-between; gap: 8px;">
-          <label style="font-weight: 600; color: #666;">Certificate:</label>
-          <span style="color: #333;">{{ appt.certificate_type }}</span>
+      <!-- Card Details -->
+      <div class="req-details req-details--4col">
+        <div class="req-detail-item">
+          <span class="detail-label">Certificate</span>
+          <span class="detail-value">{{ appt.certificate_type }}</span>
         </div>
-        <div style="display: flex; justify-content: space-between; gap: 8px;">
-          <label style="font-weight: 600; color: #666;">Registration:</label>
-          <span style="color: #333;">{{ appt.registration_type }}</span>
+        <div class="req-detail-item">
+          <span class="detail-label">Registration Type</span>
+          <span class="detail-value">
+            <span class="reg-badge" [ngClass]="appt.registration_type === 'On Time' ? 'reg-ontime' : 'reg-delayed'">
+              {{ appt.registration_type }}
+            </span>
+          </span>
         </div>
-        <div style="display: flex; justify-content: space-between; gap: 8px;">
-          <label style="font-weight: 600; color: #666;">Date:</label>
-          <span style="color: #333;">{{ appt.appt_date | date:'MMMM d, yyyy':'UTC' }}</span>
+        <div class="req-detail-item">
+          <span class="detail-label">Date</span>
+          <span class="detail-value">{{ appt.appt_date | date:'MMMM d, yyyy':'UTC' }}</span>
         </div>
-        <div style="display: flex; justify-content: space-between; gap: 8px;">
-          <label style="font-weight: 600; color: #666;">Time:</label>
-          <span style="color: #333;">{{ formatApptTime(appt.appt_time) }}</span>
+        <div class="req-detail-item">
+          <span class="detail-label">Time</span>
+          <span class="detail-value">{{ formatApptTime(appt.appt_time) }}</span>
         </div>
       </div>
 
-      <!-- Actions -->
-      <div>
+      <!-- Card Actions -->
+      <div class="req-actions">
         <button *ngIf="appt.status === 'confirmed'"
                 (click)="cancelAppointment(appt.id)"
-                style="padding: 6px 12px; background: #fdecea; color: #c0392b; border: 1px solid #e57373; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;">
+                class="btn-action btn-delete">
+          <i class="fa-solid fa-calendar-xmark"></i>
           Cancel Appointment
         </button>
-        <span *ngIf="appt.status === 'cancelled'" style="font-size: 12px; color: #aaa;">
-          Appointment was cancelled
+        <span *ngIf="appt.status === 'cancelled'" class="cancelled-note">
+          <i class="fa-solid fa-circle-xmark"></i> This appointment was cancelled
         </span>
       </div>
 

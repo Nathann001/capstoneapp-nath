@@ -1,47 +1,77 @@
 <div class="app-container">
-
-  <!-- Font Awesome -->
-  <link rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-
-  <!-- DOCUMENTS CONTENT -->
   <section class="documents-page">
-    <h2 class="page-title">Available Documents</h2>
 
+    <!-- ===== HERO HEADER ===== -->
+    <div class="page-hero">
+      <div class="hero-accent"></div>
+      <div class="hero-content">
+        <div class="hero-icon">
+          <i class="fa-solid fa-landmark"></i>
+        </div>
+        <div>
+          <p class="hero-eyebrow">Angeles City Civil Registry Office</p>
+          <h1 class="page-title">Available Documents</h1>
+          <p class="hero-subtitle">Request official civil registry documents online. Select a document below to view requirements or begin your application.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== DOCUMENT GRID ===== -->
     <div class="documents-list">
 
-      <!-- REGULAR DOCUMENT CARDS -->
-      <div *ngFor="let doc of documents">
+      <div *ngFor="let doc of documents; let i = index"
+           class="doc-wrapper"
+           [style.animation-delay]="(i * 80) + 'ms'">
 
-        <!-- ===== APPOINTMENT BOOKING CARD ===== -->
+        <!-- APPOINTMENT BOOKING CARD -->
         <div *ngIf="doc.isAppointment" class="document-card appointment-card">
-          <div class="appointment-icon">
+          <div class="card-stripe card-stripe--appt"></div>
+          <div class="card-icon-wrap appt-icon-wrap">
             <i class="fa-solid fa-calendar-check"></i>
           </div>
-          <h3>{{ doc.name }}</h3>
-          <p>Book a schedule for on-time or delayed registration of Birth, Death, or Marriage certificates. Available slots: 8:00 AM – 5:00 PM, up to 20 appointments per slot.</p>
+          <div class="card-body">
+            <span class="card-tag card-tag--appt">Appointment</span>
+            <h3 class="card-title">{{ doc.name }}</h3>
+            <p class="card-desc">Book a schedule for on-time or delayed registration of Birth, Death, or Marriage certificates. Slots available 8:00 AM – 5:00 PM, up to 20 appointments per slot.</p>
+          </div>
           <div class="document-actions">
-            <button class="apply-btn appointment-btn" (click)="applyForDocument(doc.applyRoute)">
-              <i class="fa-solid fa-calendar-plus" style="margin-right: 6px;"></i>
+            <button class="action-btn action-btn--appt" (click)="applyForDocument(doc.applyRoute)">
+              <i class="fa-solid fa-calendar-plus"></i>
               Book Appointment
             </button>
           </div>
         </div>
 
-        <!-- ===== REGULAR DOCUMENT CARD ===== -->
+        <!-- REGULAR DOCUMENT CARD -->
         <div *ngIf="!doc.isAppointment" class="document-card">
-          <h3>{{ doc.name }}</h3>
+          <div class="card-stripe card-stripe--doc"></div>
+          <div class="card-icon-wrap doc-icon-wrap">
+            <i [class]="getDocIcon(doc.name)"></i>
+          </div>
+          <div class="card-body">
+            <span class="card-tag card-tag--doc">Civil Registry</span>
+            <h3 class="card-title">{{ doc.name }}</h3>
+          </div>
           <div class="document-actions">
-            <button class="view-btn" (click)="viewDocument(doc.file)">
-              View Requirements
+            <button class="action-btn action-btn--view" (click)="viewDocument(doc.file)">
+              <i class="fa-solid fa-file-lines"></i>
+              Requirements
             </button>
-            <button class="apply-btn" (click)="applyForDocument(doc.applyRoute)">
-              Apply
+            <button class="action-btn action-btn--apply" (click)="applyForDocument(doc.applyRoute)">
+              <i class="fa-solid fa-pen-to-square"></i>
+              Apply Now
             </button>
           </div>
         </div>
 
       </div>
     </div>
+
+    <!-- ===== FOOTER NOTE ===== -->
+    <div class="page-footer-note">
+      <i class="fa-solid fa-circle-info"></i>
+      <span>For assistance, please visit the Civil Registry Office or call our hotline during office hours (Mon–Fri, 8:00 AM – 5:00 PM).</span>
+    </div>
+
   </section>
 </div>

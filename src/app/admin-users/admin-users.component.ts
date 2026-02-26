@@ -29,17 +29,20 @@ export class AdminUsersComponent implements OnInit {
 
   // Panel/modal state
   showCreateForm = false;
-  showEditModal = false;
+  showEditModal  = false;
   showDeleteModal = false;
   userToDelete: User | null = null;
 
-  // Current logged-in admin's permission
-  currentUserCanCreateAdmins: boolean = false;
-  currentUserCanEditAdmins: boolean = false;
-  currentUserCanDeleteAdmins: boolean = false
+  // Current logged-in admin's permissions
+  currentUserCanCreateAdmins = false;
+  currentUserCanEditAdmins   = false;
+  currentUserCanDeleteAdmins = false;
 
-  // Role options — dynamically filtered based on currentUserCanCreateAdmins
-  // Role 3 (User) is never shown — admins only create Admin or Staff
+  // ── Pagination ────────────────────────────────────────────
+  itemsPerPage   = 10;
+  currentPageUsers = 1;
+
+  // ── Role options ──────────────────────────────────────────
   get availableRoles(): Role[] {
     const roles: Role[] = [{ value: 2, label: 'Staff' }];
     if (this.currentUserCanCreateAdmins) {
@@ -48,27 +51,30 @@ export class AdminUsersComponent implements OnInit {
     return roles;
   }
 
-  // Roles shown in the filter dropdown (includes Admin only if current user can create admins)
   get filterRoles(): Role[] {
     return this.availableRoles;
   }
 
-  constructor(private fb: FormBuilder, private adminService: AdminService, private router: Router) {
+  constructor(
+    private fb: FormBuilder,
+    private adminService: AdminService,
+    private router: Router
+  ) {
     this.createForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required],
-      role: [2, Validators.required],
+      email:             ['', [Validators.required, Validators.email]],
+      password:          ['', Validators.required],
+      role:              [2, Validators.required],
       can_create_admins: [false],
-      can_edit_admins: [false],
+      can_edit_admins:   [false],
       can_delete_admins: [false]
     });
 
     this.editForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      role: [2, Validators.required],
-      password: [''],
+      email:             ['', [Validators.required, Validators.email]],
+      role:              [2, Validators.required],
+      password:          [''],
       can_create_admins: [false],
-      can_edit_admins: [false],
+      can_edit_admins:   [false],
       can_delete_admins: [false]
     });
   }
@@ -79,12 +85,12 @@ export class AdminUsersComponent implements OnInit {
       if (stored) {
         const parsed = JSON.parse(stored);
         this.currentUserCanCreateAdmins = !!parsed.can_create_admins;
-        this.currentUserCanEditAdmins = !!parsed.can_edit_admins;
+        this.currentUserCanEditAdmins   = !!parsed.can_edit_admins;
         this.currentUserCanDeleteAdmins = !!parsed.can_delete_admins;
       }
     } catch {
       this.currentUserCanCreateAdmins = false;
-      this.currentUserCanEditAdmins = false;
+      this.currentUserCanEditAdmins   = false;
       this.currentUserCanDeleteAdmins = false;
     }
     this.loadUsers();
@@ -104,11 +110,12 @@ export class AdminUsersComponent implements OnInit {
   }
 
   applyFilter() {
+    this.currentPageUsers = 1; // reset to first page on filter change
     this.filteredUsers = this.users.filter(user => {
       if (this.filterRole && user.role !== this.filterRole) return false;
       const fullName = user.full_name?.toLowerCase() || '';
-      const email = user.email?.toLowerCase() || '';
-      const term = this.searchTerm.toLowerCase();
+      const email    = user.email?.toLowerCase() || '';
+      const term     = this.searchTerm.toLowerCase();
       return fullName.includes(term) || email.includes(term);
     });
   }
@@ -123,15 +130,28 @@ export class AdminUsersComponent implements OnInit {
     this.applyFilter();
   }
 
+  // ── Pagination ────────────────────────────────────────────
+  getPaginatedUsers(): any[] {
+    const start = (this.currentPageUsers - 1) * this.itemsPerPage;
+    return this.filteredUsers.slice(start, start + this.itemsPerPage);
+  }
+
+  getTotalPagesUsers(): number[] {
+    return Array(Math.ceil(this.filteredUsers.length / this.itemsPerPage))
+      .fill(0).map((_, i) => i + 1);
+  }
+
+  // ── Role label ────────────────────────────────────────────
   getRoleLabel(roleValue: number): string {
     const map: Record<number, string> = { 1: 'Admin', 2: 'Staff', 3: 'User' };
     return map[roleValue] ?? 'Unknown';
   }
 
+  // ── Create ────────────────────────────────────────────────
   toggleCreateForm() {
     this.showCreateForm = !this.showCreateForm;
     if (!this.showCreateForm) {
-    this.createForm.reset({ role: 2, can_create_admins: false, can_edit_admins: false, can_delete_admins: false });
+      this.createForm.reset({ role: 2, can_create_admins: false, can_edit_admins: false, can_delete_admins: false });
     }
   }
 
@@ -140,21 +160,14 @@ export class AdminUsersComponent implements OnInit {
     this.loading = true;
 
     const formValue = { ...this.createForm.value, role: Number(this.createForm.value.role) };
+    if (![1, 2].includes(formValue.role)) { this.loading = false; return; }
 
-    // Never allow role 3 from this form
-    if (![1, 2].includes(formValue.role)) {
-      this.loading = false;
-      return;
-    }
-
-    // Strip can_create_admins if not an admin or current user can't grant it
     if (formValue.role !== 1 || !this.currentUserCanCreateAdmins) formValue.can_create_admins = false;
-    if (formValue.role !== 1 || !this.currentUserCanEditAdmins)   formValue.can_edit_admins = false;
+    if (formValue.role !== 1 || !this.currentUserCanEditAdmins)   formValue.can_edit_admins   = false;
     if (formValue.role !== 1 || !this.currentUserCanDeleteAdmins) formValue.can_delete_admins = false;
 
     this.adminService.createUser(formValue).subscribe({
       next: (res: any) => {
-        console.log(res.message);
         this.createForm.reset({ role: 2, can_create_admins: false, can_edit_admins: false, can_delete_admins: false });
         this.showCreateForm = false;
         this.loadUsers();
@@ -164,15 +177,15 @@ export class AdminUsersComponent implements OnInit {
     });
   }
 
-  // Open edit modal
+  // ── Edit ──────────────────────────────────────────────────
   selectUser(user: User) {
     this.selectedUser = user;
     this.editForm.patchValue({
-      email: user.email,
-      role: user.role,
-      password: '',
+      email:             user.email,
+      role:              user.role,
+      password:          '',
       can_create_admins: user.can_create_admins === 1,
-      can_edit_admins: user.can_edit_admins === 1,
+      can_edit_admins:   user.can_edit_admins   === 1,
       can_delete_admins: user.can_delete_admins === 1
     });
     this.showEditModal = true;
@@ -180,7 +193,7 @@ export class AdminUsersComponent implements OnInit {
 
   closeEditModal() {
     this.showEditModal = false;
-    this.selectedUser = null;
+    this.selectedUser  = null;
   }
 
   updateUser() {
@@ -188,21 +201,21 @@ export class AdminUsersComponent implements OnInit {
     this.loading = true;
 
     const role = Number(this.editForm.value.role);
-
     const payload: any = {
-      email: this.editForm.value.email,
+      email:             this.editForm.value.email,
       role,
       can_create_admins: (role === 1 && this.currentUserCanCreateAdmins) ? this.editForm.value.can_create_admins : false,
       can_edit_admins:   (role === 1 && this.currentUserCanEditAdmins)   ? this.editForm.value.can_edit_admins   : false,
       can_delete_admins: (role === 1 && this.currentUserCanDeleteAdmins) ? this.editForm.value.can_delete_admins : false,
     };
+
     this.adminService.updateUser(this.selectedUser.id, payload).subscribe({
       next: () => {
         const newPassword = this.editForm.value.password;
         if (newPassword) {
           this.adminService.updateUserPassword(this.selectedUser!.id, newPassword).subscribe({
-            next: () => { this.closeEditModal(); this.loadUsers(); },
-            error: (err) => console.error(err.error?.message || 'Failed to update password'),
+            next:     () => { this.closeEditModal(); this.loadUsers(); },
+            error:    (err) => console.error(err.error?.message || 'Failed to update password'),
             complete: () => this.loading = false
           });
         } else {
@@ -218,29 +231,22 @@ export class AdminUsersComponent implements OnInit {
     });
   }
 
+  // ── Delete ────────────────────────────────────────────────
   confirmDelete(user: User) {
-    this.userToDelete = user;
+    this.userToDelete   = user;
     this.showDeleteModal = true;
   }
 
   closeDeleteModal() {
     this.showDeleteModal = false;
-    this.userToDelete = null;
+    this.userToDelete    = null;
   }
 
   deleteUser() {
     if (!this.userToDelete) return;
-
     this.adminService.deleteUser(this.userToDelete.id).subscribe({
-      next: (res: any) => {
-        console.log(res.message);
-        this.closeDeleteModal();
-        this.loadUsers();
-      },
-      error: (err: any) => {
-        console.error(err.error?.message || 'Failed to delete user');
-        this.closeDeleteModal();
-      }
+      next:  (res: any) => { this.closeDeleteModal(); this.loadUsers(); },
+      error: (err: any) => { console.error(err.error?.message || 'Failed to delete user'); this.closeDeleteModal(); }
     });
   }
 }

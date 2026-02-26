@@ -49,6 +49,16 @@ export class DocumentsComponent {
     }
   ];
 
+  /** Returns an appropriate Font Awesome icon class based on document name keywords */
+  getDocIcon(name: string): string {
+    const n = name.toLowerCase();
+    if (n.includes('birth'))    return 'fa-solid fa-baby';
+    if (n.includes('death'))    return 'fa-solid fa-ribbon';
+    if (n.includes('marriage') && n.includes('license')) return 'fa-solid fa-rings-wedding';
+    if (n.includes('marriage')) return 'fa-solid fa-heart';
+    return 'fa-solid fa-file-certificate';
+  }
+
   viewDocument(file: string): void {
     window.open(file, '_blank', 'noopener,noreferrer');
   }

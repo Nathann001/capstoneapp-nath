@@ -1,8 +1,29 @@
 <div class="app-container">
   <div class="admin-container">
+
     <h2 class="dashboard-title">Archives</h2>
 
+    <!-- ================== SEARCH & FILTER ================== -->
+    <div class="search-bar">
+      <div class="search-input-wrap">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input
+          type="text"
+          placeholder="Search by name or document type..."
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="applyFilter()"
+        />
+      </div>
+    </div>
+
+    <!-- ================== ARCHIVES TABLE ================== -->
     <div class="card">
+      <div class="table-header table-header--archives">
+        <i class="fa-solid fa-box-archive"></i>
+        <h3>Archived Requests</h3>
+        <span class="record-count">{{ filteredRequests.length }} total</span>
+      </div>
+
       <table class="records-table">
         <thead>
           <tr>
@@ -14,58 +35,102 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let doc of archivedRequests">
+          <tr *ngFor="let doc of getPaginatedRequests()">
             <td>{{ doc.name || 'N/A' }}</td>
-            <td>{{ getDocumentLabel(doc.document_type || '') }}</td>
-            <td>{{ doc.status }}</td>
+            <td>
+              <span class="doc-badge">
+                <i class="fa-solid fa-file-lines"></i>
+                {{ getDocumentLabel(doc.document_type || '') }}
+              </span>
+            </td>
+            <td>
+              <span class="status-badge" [ngClass]="'status-' + doc.status?.toLowerCase()">
+                {{ doc.status }}
+              </span>
+            </td>
             <td>{{ doc.updated_at | date:'mediumDate' }}</td>
             <td>
-              <button (click)="confirmRestore(doc)" class="btn pending">Restore</button>
-              <button (click)="confirmDelete(doc)" class="btn record">Delete</button>
+              <div class="td-actions">
+                <button (click)="confirmRestore(doc)" class="btn-action btn-restore">
+                  <i class="fa-solid fa-rotate-left"></i> Restore
+                </button>
+                <button (click)="confirmDelete(doc)" class="btn-action btn-delete">
+                  <i class="fa-solid fa-trash-can"></i> Delete
+                </button>
+              </div>
             </td>
           </tr>
-          <tr *ngIf="archivedRequests.length === 0">
-            <td colspan="5" style="text-align: center; padding: 20px;">No archived requests.</td>
+          <tr *ngIf="getPaginatedRequests().length === 0">
+            <td colspan="5" class="empty-row">No archived requests found.</td>
           </tr>
         </tbody>
       </table>
+
+      <!-- Pagination -->
+      <div class="pagination" *ngIf="getTotalPages().length > 1">
+        <button *ngFor="let page of getTotalPages()"
+                (click)="currentPage = page"
+                [class.active]="currentPage === page"
+                class="page-btn">
+          {{ page }}
+        </button>
+      </div>
     </div>
 
   </div>
 </div>
 
-<!-- RESTORE MODAL -->
+<!-- ================== RESTORE MODAL ================== -->
 <div *ngIf="showRestoreModal" class="modal-overlay" (click)="closeModals()">
   <div class="modal-container modal-container--sm" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3 class="modal-title">Restore Request</h3>
+      <div>
+        <h3 class="modal-title">Restore Request</h3>
+        <p class="modal-subtitle">{{ selectedDoc?.name }}</p>
+      </div>
       <button class="modal-close" (click)="closeModals()">&#x2715;</button>
     </div>
     <div class="modal-body">
-      <p style="margin: 0 0 6px;">Are you sure you want to restore this request?</p>
-      <p style="margin: 0; font-weight: 600;">{{ selectedDoc?.name }}</p>
+      <p style="margin: 0 0 6px; color: #444;">Are you sure you want to restore this request?</p>
+      <p style="margin: 0; font-weight: 700; color: #1a3a4e;">{{ selectedDoc?.name }}</p>
+      <p style="margin: 10px 0 0; font-size: 13px; color: #1e6e3e; background: #eafaf1; padding: 8px 12px; border-radius: 6px; border: 1px solid #b7e4c7;">
+        <i class="fa-solid fa-circle-info"></i> This request will be moved back to active records.
+      </p>
       <div class="modal-actions" style="margin-top: 24px;">
-        <button type="button" (click)="closeModals()" class="btn pending">Cancel</button>
-        <button type="button" (click)="restore()" class="btn complete">Restore</button>
+        <button type="button" (click)="closeModals()" class="btn-action btn-cancel">
+          <i class="fa-solid fa-xmark"></i> Cancel
+        </button>
+        <button type="button" (click)="restore()" class="btn-action btn-restore">
+          <i class="fa-solid fa-rotate-left"></i> Restore
+        </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- DELETE MODAL -->
+<!-- ================== DELETE MODAL ================== -->
 <div *ngIf="showDeleteModal" class="modal-overlay" (click)="closeModals()">
   <div class="modal-container modal-container--sm" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3 class="modal-title">Delete Request</h3>
+      <div>
+        <h3 class="modal-title">Delete Request</h3>
+        <p class="modal-subtitle">{{ selectedDoc?.name }}</p>
+      </div>
       <button class="modal-close" (click)="closeModals()">&#x2715;</button>
     </div>
     <div class="modal-body">
-      <p style="margin: 0 0 6px;">Are you sure you want to permanently delete this request?</p>
-      <p style="margin: 0; font-weight: 600;">{{ selectedDoc?.name }}</p>
-      <p style="margin: 8px 0 0; color: #888; font-size: 0.875rem;">This action cannot be undone.</p>
+      <p style="margin: 0 0 6px; color: #444;">Are you sure you want to permanently delete this request?</p>
+      <p style="margin: 0; font-weight: 700; color: #1a3a4e;">{{ selectedDoc?.name }}</p>
+      <p style="margin: 10px 0 0; font-size: 13px; color: #e74c3c; background: #fdecea; padding: 8px 12px; border-radius: 6px; border: 1px solid #fcd5d5;">
+        <i class="fa-solid fa-circle-exclamation"></i> This action cannot be undone.
+      </p>
       <div class="modal-actions" style="margin-top: 24px;">
-        <button type="button" (click)="closeModals()" class="btn pending">Cancel</button>
-        <button type="button" (click)="permanentDelete()" class="btn record">Delete</button>
+        <button type="button" (click)="closeModals()" class="btn-action btn-cancel">
+          <i class="fa-solid fa-xmark"></i> Cancel
+        </button>
+        <button type="button" (click)="permanentDelete()" class="btn-action btn-delete">
+          <i class="fa-solid fa-trash-can"></i> Delete
+        </button>
       </div>
     </div>
   </div>

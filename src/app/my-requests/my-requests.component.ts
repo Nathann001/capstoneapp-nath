@@ -12,16 +12,17 @@ import { AuthService } from '../services/auth.service';
   imports: [CommonModule, RouterModule]
 })
 export class MyRequestsComponent implements OnInit {
-  // ---------- DOCUMENT REQUESTS ----------
+
+  // ── Document Requests ─────────────────────────────────────
   requests: any[] = [];
   historyMap: { [key: number]: any[] } = {};
   historyVisibility: { [key: number]: boolean } = {};
-  isLoading: boolean = true;
   loadingHistory: { [key: number]: boolean } = {};
+  isLoading = true;
 
-  // ---------- APPOINTMENTS ----------
+  // ── Appointments ──────────────────────────────────────────
   appointments: any[] = [];
-  isLoadingAppointments: boolean = true;
+  isLoadingAppointments = true;
 
   constructor(private authService: AuthService, private http: HttpClient) {}
 
@@ -30,11 +31,11 @@ export class MyRequestsComponent implements OnInit {
     this.fetchAppointments();
   }
 
-  // ========== DOCUMENT REQUESTS ==========
+  // ── Document Requests ─────────────────────────────────────
   fetchRequests() {
     this.isLoading = true;
     this.authService.getMyRequests().subscribe({
-      next: (res) => { this.requests = res; this.isLoading = false; },
+      next:  (res) => { this.requests = res; this.isLoading = false; },
       error: (err) => { console.error('Failed to fetch requests', err); this.isLoading = false; }
     });
   }
@@ -49,7 +50,7 @@ export class MyRequestsComponent implements OnInit {
   private fetchHistory(requestId: number) {
     this.loadingHistory[requestId] = true;
     this.authService.getRequestHistory(requestId).subscribe({
-      next: (res) => { this.historyMap[requestId] = res; this.loadingHistory[requestId] = false; },
+      next:  (res) => { this.historyMap[requestId] = res; this.loadingHistory[requestId] = false; },
       error: (err) => { console.error('Failed to fetch history', err); this.loadingHistory[requestId] = false; }
     });
   }
@@ -69,8 +70,8 @@ export class MyRequestsComponent implements OnInit {
     });
   }
 
-  isHistoryVisible(requestId: number): boolean  { return this.historyVisibility[requestId] || false; }
-  isHistoryLoading(requestId: number): boolean  { return this.loadingHistory[requestId] || false; }
+  isHistoryVisible(requestId: number): boolean { return this.historyVisibility[requestId] || false; }
+  isHistoryLoading(requestId: number): boolean { return this.loadingHistory[requestId]   || false; }
 
   getDocumentLabel(type: string): string {
     const map: Record<string, string> = {
@@ -81,14 +82,24 @@ export class MyRequestsComponent implements OnInit {
     return map[type] || type;
   }
 
-  // ========== APPOINTMENTS ==========
+  /** Returns a contextual FA icon class based on document type */
+  getDocIcon(type: string): string {
+    const map: Record<string, string> = {
+      birth:    'fa-solid fa-baby',
+      death:    'fa-solid fa-ribbon',
+      marriage: 'fa-solid fa-heart'
+    };
+    return map[type] || 'fa-solid fa-file-lines';
+  }
+
+  // ── Appointments ──────────────────────────────────────────
   fetchAppointments() {
     this.isLoadingAppointments = true;
     const token = localStorage.getItem('token') || '';
     this.http.get<any[]>('https://drtbackend-2cw3.onrender.com/api/my/appointments', {
       headers: { Authorization: `Bearer ${token}` }
     }).subscribe({
-      next: (res) => { this.appointments = res; this.isLoadingAppointments = false; },
+      next:  (res) => { this.appointments = res; this.isLoadingAppointments = false; },
       error: (err) => { console.error('Failed to fetch appointments', err); this.isLoadingAppointments = false; }
     });
   }
@@ -99,7 +110,7 @@ export class MyRequestsComponent implements OnInit {
     this.http.delete(`https://drtbackend-2cw3.onrender.com/api/my/appointments/${id}`, {
       headers: { Authorization: `Bearer ${token}` }
     }).subscribe({
-      next: () => {
+      next:  () => {
         this.appointments = this.appointments.map(a =>
           a.id === id ? { ...a, status: 'cancelled' } : a
         );
@@ -109,9 +120,10 @@ export class MyRequestsComponent implements OnInit {
   }
 
   formatApptTime(t: string): string {
+    if (!t) return '—';
     const [h, m] = t.split(':').map(Number);
     const period = h >= 12 ? 'PM' : 'AM';
-    const hour = h % 12 || 12;
+    const hour   = h % 12 || 12;
     return `${hour}:${String(m).padStart(2, '0')} ${period}`;
   }
 }

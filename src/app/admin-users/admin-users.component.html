@@ -5,60 +5,66 @@
 
     <!-- ================== CREATE ACCOUNT TOGGLE ================== -->
     <div style="margin-bottom: 20px;">
-      <button (click)="toggleCreateForm()" class="btn complete" style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 18px; line-height: 1;">{{ showCreateForm ? '✕' : '+' }}</span>
+      <button (click)="toggleCreateForm()" class="btn-create">
+        <i class="fa-solid" [ngClass]="showCreateForm ? 'fa-circle-xmark' : 'fa-user-plus'"></i>
         {{ showCreateForm ? 'Cancel' : 'Create Account' }}
       </button>
     </div>
 
     <!-- ================== CREATE USER PANEL ================== -->
     <div *ngIf="showCreateForm" class="card create-panel">
-      <h3 class="dashboard-title">Create Account</h3>
-      <form [formGroup]="createForm" (ngSubmit)="createUser()" style="display: flex; flex-direction: column; gap: 12px;">
-        <input formControlName="email" type="email" placeholder="Email" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-        <input formControlName="password" type="password" placeholder="Password" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+      <div class="table-header table-header--users">
+        <i class="fa-solid fa-user-gear"></i>
+        <h3>Create Account</h3>
+      </div>
+      <div class="create-form-body">
+        <form [formGroup]="createForm" (ngSubmit)="createUser()" style="display: flex; flex-direction: column; gap: 12px;">
+          <input formControlName="email" type="email" placeholder="Email" class="form-input">
+          <input formControlName="password" type="password" placeholder="Password" class="form-input">
 
-        <select formControlName="role" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-          <option *ngFor="let r of availableRoles" [value]="r.value">{{ r.label }}</option>
-        </select>
+          <select formControlName="role" class="form-input">
+            <option *ngFor="let r of availableRoles" [value]="r.value">{{ r.label }}</option>
+          </select>
 
-        <div *ngIf="createForm.value.role == '1' && currentUserCanCreateAdmins" style="margin: 4px 0;">
-          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-            <input type="checkbox" formControlName="can_create_admins">
-            Can create other admins
-          </label>
-        </div>
+          <div *ngIf="createForm.value.role == '1' && currentUserCanCreateAdmins" class="checkbox-row">
+            <label>
+              <input type="checkbox" formControlName="can_create_admins">
+              Can create other admins
+            </label>
+          </div>
+          <div *ngIf="createForm.value.role == '1' && currentUserCanEditAdmins" class="checkbox-row">
+            <label>
+              <input type="checkbox" formControlName="can_edit_admins">
+              Can edit other admins
+            </label>
+          </div>
+          <div *ngIf="createForm.value.role == '1' && currentUserCanDeleteAdmins" class="checkbox-row">
+            <label>
+              <input type="checkbox" formControlName="can_delete_admins">
+              Can delete other admins
+            </label>
+          </div>
 
-        <div *ngIf="createForm.value.role == '1' && currentUserCanEditAdmins" style="margin: 4px 0;">
-          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-            <input type="checkbox" formControlName="can_edit_admins">
-            Can edit other admins
-          </label>
-        </div>
-
-        <div *ngIf="createForm.value.role == '1' && currentUserCanDeleteAdmins" style="margin: 4px 0;">
-          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-            <input type="checkbox" formControlName="can_delete_admins">
-            Can delete other admins
-          </label>
-        </div>
-
-        <button type="submit" [disabled]="createForm.invalid || loading" class="btn complete" style="align-self: flex-start;">
-          {{ loading ? 'Creating...' : 'Create User' }}
-        </button>
-      </form>
+          <button type="submit" [disabled]="createForm.invalid || loading" class="btn-submit">
+            <i class="fa-solid fa-user-plus"></i>
+            {{ loading ? 'Creating...' : 'Create User' }}
+          </button>
+        </form>
+      </div>
     </div>
 
     <!-- ================== SEARCH & FILTER ================== -->
-    <div style="margin: 0 0 20px; display: flex; gap: 10px;">
-      <input
-        type="text"
-        placeholder="Search by name or email..."
-        [(ngModel)]="searchTerm"
-        (ngModelChange)="onSearchChange($event)"
-        style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"
-      />
-      <select [(ngModel)]="filterRole" (ngModelChange)="onRoleFilterChange($event)" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px; min-width: 150px;">
+    <div class="search-bar">
+      <div class="search-input-wrap">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input
+          type="text"
+          placeholder="Search by name or email..."
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchChange($event)"
+        />
+      </div>
+      <select [(ngModel)]="filterRole" (ngModelChange)="onRoleFilterChange($event)" class="filter-select">
         <option value="">All Roles</option>
         <option *ngFor="let role of filterRoles" [value]="role.value">{{ role.label }}</option>
       </select>
@@ -66,7 +72,11 @@
 
     <!-- ================== USERS TABLE ================== -->
     <div class="card">
-      <h3 class="dashboard-title">All Users</h3>
+      <div class="table-header table-header--users">
+        <i class="fa-solid fa-users"></i>
+        <h3>All Users</h3>
+        <span class="record-count">{{ filteredUsers.length }} total</span>
+      </div>
       <table class="records-table">
         <thead>
           <tr>
@@ -77,35 +87,49 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let user of filteredUsers">
+          <tr *ngFor="let user of getPaginatedUsers()">
             <td>{{ user.full_name || 'N/A' }}</td>
             <td>{{ user.email }}</td>
             <td>
-              {{ getRoleLabel(user.role) }}
-              <span *ngIf="user.role == 1 && user.can_create_admins" title="Can create admins" style="margin-left: 4px;">🔑</span>
-              <span *ngIf="user.role == 1 && user.can_edit_admins"   title="Can edit admins"   style="margin-left: 4px;">✏️</span>
-              <span *ngIf="user.role == 1 && user.can_delete_admins" title="Can delete admins" style="margin-left: 4px;">🗑️</span>
+              <span class="role-badge" [ngClass]="'role-' + user.role">
+                {{ getRoleLabel(user.role) }}
+              </span>
+              <i *ngIf="user.role == 1 && user.can_create_admins" class="fa-solid fa-user-plus  perm-icon perm-create" title="Can create admins"></i>
+              <i *ngIf="user.role == 1 && user.can_edit_admins"   class="fa-solid fa-user-pen   perm-icon perm-edit"   title="Can edit admins"></i>
+              <i *ngIf="user.role == 1 && user.can_delete_admins" class="fa-solid fa-user-minus  perm-icon perm-delete" title="Can delete admins"></i>
             </td>
             <td>
-              <button
-                (click)="selectUser(user)"
-                class="btn pending"
-                *ngIf="user.role != 1 || currentUserCanEditAdmins">
-                Edit
-              </button>
-              <button
-                (click)="confirmDelete(user)"
-                class="btn record"
-                *ngIf="user.role != 1 || currentUserCanDeleteAdmins">
-                Delete
-              </button>
+              <!-- ✅ Wrapper div keeps flex layout out of the <td> itself -->
+              <div class="td-actions">
+                <button
+                  (click)="selectUser(user)"
+                  class="btn-action btn-edit"
+                  *ngIf="user.role != 1 || currentUserCanEditAdmins">
+                  <i class="fa-solid fa-pen-to-square"></i> Edit
+                </button>
+                <button
+                  (click)="confirmDelete(user)"
+                  class="btn-action btn-delete"
+                  *ngIf="user.role != 1 || currentUserCanDeleteAdmins">
+                  <i class="fa-solid fa-trash-can"></i> Delete
+                </button>
+              </div>
             </td>
           </tr>
-          <tr *ngIf="filteredUsers.length === 0">
-            <td colspan="4" style="text-align: center; padding: 20px;">No users found.</td>
+          <tr *ngIf="getPaginatedUsers().length === 0">
+            <td colspan="4" class="empty-row">No users found.</td>
           </tr>
         </tbody>
       </table>
+
+      <div class="pagination" *ngIf="getTotalPagesUsers().length > 1">
+        <button *ngFor="let page of getTotalPagesUsers()"
+                (click)="currentPageUsers = page"
+                [class.active]="currentPageUsers === page"
+                class="page-btn">
+          {{ page }}
+        </button>
+      </div>
     </div>
 
   </div>
@@ -119,42 +143,43 @@
         <h3 class="modal-title">Edit User</h3>
         <p class="modal-subtitle">{{ selectedUser?.email }}</p>
       </div>
-      <button class="modal-close" (click)="closeEditModal()" aria-label="Close">&#x2715;</button>
+      <button class="modal-close" (click)="closeEditModal()">&#x2715;</button>
     </div>
     <div class="modal-body">
       <form [formGroup]="editForm" (ngSubmit)="updateUser()" style="display: flex; flex-direction: column; gap: 12px;">
-        <input formControlName="email" type="email" placeholder="Email" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+        <input formControlName="email" type="email" placeholder="Email" class="form-input">
 
-        <select formControlName="role" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+        <select formControlName="role" class="form-input">
           <option *ngFor="let r of availableRoles" [value]="r.value">{{ r.label }}</option>
         </select>
 
-        <div *ngIf="editForm.value.role == '1' && currentUserCanCreateAdmins" style="margin: 4px 0;">
-          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+        <div *ngIf="editForm.value.role == '1' && currentUserCanCreateAdmins" class="checkbox-row">
+          <label>
             <input type="checkbox" formControlName="can_create_admins">
             Can create other admins
           </label>
         </div>
-
-        <div *ngIf="editForm.value.role == '1' && currentUserCanEditAdmins" style="margin: 4px 0;">
-          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+        <div *ngIf="editForm.value.role == '1' && currentUserCanEditAdmins" class="checkbox-row">
+          <label>
             <input type="checkbox" formControlName="can_edit_admins">
             Can edit other admins
           </label>
         </div>
-
-        <div *ngIf="editForm.value.role == '1' && currentUserCanDeleteAdmins" style="margin: 4px 0;">
-          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+        <div *ngIf="editForm.value.role == '1' && currentUserCanDeleteAdmins" class="checkbox-row">
+          <label>
             <input type="checkbox" formControlName="can_delete_admins">
             Can delete other admins
           </label>
         </div>
 
-        <input formControlName="password" type="password" placeholder="New Password (optional)" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+        <input formControlName="password" type="password" placeholder="New Password (optional)" class="form-input">
 
         <div class="modal-actions">
-          <button type="button" (click)="closeEditModal()" class="btn pending">Cancel</button>
-          <button type="submit" [disabled]="editForm.invalid || loading" class="btn complete">
+          <button type="button" (click)="closeEditModal()" class="btn-action btn-cancel">
+            <i class="fa-solid fa-xmark"></i> Cancel
+          </button>
+          <button type="submit" [disabled]="editForm.invalid || loading" class="btn-submit">
+            <i class="fa-solid fa-floppy-disk"></i>
             {{ loading ? 'Updating...' : 'Update User' }}
           </button>
         </div>
@@ -168,15 +193,21 @@
   <div class="modal-container modal-container--sm" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3 class="modal-title">Delete User</h3>
-      <button class="modal-close" (click)="closeDeleteModal()" aria-label="Close">&#x2715;</button>
+      <button class="modal-close" (click)="closeDeleteModal()">&#x2715;</button>
     </div>
     <div class="modal-body">
-      <p style="margin: 0 0 6px;">Are you sure you want to delete this user?</p>
-      <p style="margin: 0; font-weight: 600;">{{ userToDelete?.email }}</p>
-      <p style="margin: 8px 0 0; color: #888; font-size: 0.875rem;">This action cannot be undone.</p>
+      <p style="margin: 0 0 6px; color: #444;">Are you sure you want to delete this user?</p>
+      <p style="margin: 0; font-weight: 700; color: #1a3a4e;">{{ userToDelete?.email }}</p>
+      <p style="margin: 10px 0 0; font-size: 13px; color: #e74c3c; background: #fdecea; padding: 8px 12px; border-radius: 6px; border: 1px solid #fcd5d5;">
+        <i class="fa-solid fa-circle-exclamation"></i> This action cannot be undone.
+      </p>
       <div class="modal-actions" style="margin-top: 24px;">
-        <button type="button" (click)="closeDeleteModal()" class="btn pending">Cancel</button>
-        <button type="button" (click)="deleteUser()" class="btn record">Delete</button>
+        <button type="button" (click)="closeDeleteModal()" class="btn-action btn-cancel">
+          <i class="fa-solid fa-xmark"></i> Cancel
+        </button>
+        <button type="button" (click)="deleteUser()" class="btn-action btn-delete">
+          <i class="fa-solid fa-trash-can"></i> Delete
+        </button>
       </div>
     </div>
   </div>

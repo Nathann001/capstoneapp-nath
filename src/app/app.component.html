@@ -7,13 +7,13 @@
   </button>
 
   <!-- Sidebar Overlay (for mobile) -->
-  <div class="sidebar-overlay" 
-       [class.active]="isMobileSidebarOpen" 
+  <div class="sidebar-overlay"
+       [class.active]="isMobileSidebarOpen"
        (click)="closeMobileSidebar()"
        *ngIf="showSidebar"></div>
 
   <!-- Sidebar -->
-  <aside class="sidebar" 
+  <aside class="sidebar"
          [class.mobile-open]="isMobileSidebarOpen"
          *ngIf="showSidebar">
     <div class="sidebar-logo">
@@ -22,21 +22,21 @@
 
     <!-- Regular User Links -->
     <ng-container *ngIf="!isAdmin && !isStaff">
-      <a class="side-btn" 
-         routerLink="/" 
-         routerLinkActive="active" 
+      <a class="side-btn"
+         routerLink="/"
+         routerLinkActive="active"
          [routerLinkActiveOptions]="{exact: true}"
          (click)="closeMobileSidebar()">
         <i class="fas fa-house"></i><span>Home</span>
       </a>
-      <a class="side-btn" 
-         routerLink="/documents" 
+      <a class="side-btn"
+         routerLink="/documents"
          routerLinkActive="active"
          (click)="closeMobileSidebar()">
         <i class="fas fa-file"></i><span>Documents</span>
       </a>
-      <a class="side-btn" 
-         routerLink="/my-requests" 
+      <a class="side-btn"
+         routerLink="/my-requests"
          routerLinkActive="active"
          (click)="closeMobileSidebar()">
         <i class="fa-solid fa-envelope-open-text"></i><span>Requests</span>
@@ -45,8 +45,8 @@
 
     <!-- Staff Links -->
     <ng-container *ngIf="isStaff">
-      <a class="side-btn" 
-         routerLink="/home-staff" 
+      <a class="side-btn"
+         routerLink="/home-staff"
          routerLinkActive="active"
          (click)="closeMobileSidebar()">
         <i class="fas fa-house"></i><span>Staff Home</span>
@@ -55,20 +55,20 @@
 
     <!-- Admin Links -->
     <ng-container *ngIf="isAdmin">
-      <a class="side-btn" 
-         routerLink="/admin" 
+      <a class="side-btn"
+         routerLink="/admin"
          routerLinkActive="active"
          (click)="closeMobileSidebar()">
         <i class="fa-solid fa-chart-line"></i><span>Admin</span>
       </a>
-      <a class="side-btn" 
-         routerLink="/admin-users" 
+      <a class="side-btn"
+         routerLink="/admin-users"
          routerLinkActive="active"
          (click)="closeMobileSidebar()">
         <i class="fa-solid fa-users"></i><span>Users</span>
       </a>
-      <a class="side-btn" 
-         routerLink="/archives" 
+      <a class="side-btn"
+         routerLink="/archives"
          routerLinkActive="active"
          (click)="closeMobileSidebar()">
         <i class="fa-solid fa-archive"></i><span>Archives</span>
@@ -77,14 +77,14 @@
 
     <!-- Bottom Links -->
     <div class="sidebar-bottom">
-      <a class="side-btn" 
-         routerLink="/account" 
+      <a class="side-btn"
+         routerLink="/account"
          routerLinkActive="active"
          (click)="closeMobileSidebar()">
         <i class="fa-solid fa-user"></i><span>Account</span>
       </a>
-      <a class="side-btn" 
-         (click)="logout()" 
+      <a class="side-btn"
+         (click)="logout()"
          style="cursor:pointer;">
         <i class="fa-solid fa-right-from-bracket"></i><span>Logout</span>
       </a>

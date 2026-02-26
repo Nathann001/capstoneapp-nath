@@ -3,110 +3,141 @@
 
     <h2 class="dashboard-title">Statistics Dashboard</h2>
 
-    <!-- ================== ROW 1 ================== -->
-    <div class="flex items-center gap-4 mb-4">
-      <label class="font-semibold">Row 1:</label>
-      <select [(ngModel)]="selectedRow1" class="border px-2 py-1 rounded">
+    <!-- ================== ROW 1 STAT CARDS ================== -->
+    <div class="stat-row-label">
+      <label>Row 1:</label>
+      <select [(ngModel)]="selectedRow1">
         <option value="approved">Approved</option>
         <option value="denied">Denied</option>
         <option value="pending">Pending</option>
         <option value="under_review">Under Review</option>
       </select>
     </div>
-
     <div class="statistics">
-      <div class="stat-card">
-        <h4>{{ formatStatName(selectedRow1) }} Today</h4>
-        <p>{{ stats[selectedRow1].today }}</p>
+      <div class="stat-card stat-card--row1">
+        <div class="stat-icon"><i class="fa-solid fa-calendar-day"></i></div>
+        <div class="stat-info">
+          <h4>Today</h4>
+          <p>{{ stats[selectedRow1].today }}</p>
+          <span>{{ formatStatName(selectedRow1) }}</span>
+        </div>
       </div>
-      <div class="stat-card">
-        <h4>{{ formatStatName(selectedRow1) }} This Week</h4>
-        <p>{{ stats[selectedRow1].week }}</p>
+      <div class="stat-card stat-card--row1">
+        <div class="stat-icon"><i class="fa-solid fa-calendar-week"></i></div>
+        <div class="stat-info">
+          <h4>This Week</h4>
+          <p>{{ stats[selectedRow1].week }}</p>
+          <span>{{ formatStatName(selectedRow1) }}</span>
+        </div>
       </div>
-      <div class="stat-card">
-        <h4>{{ formatStatName(selectedRow1) }} This Month</h4>
-        <p>{{ stats[selectedRow1].month }}</p>
-      </div>
-    </div>
-
-    <!-- ================== ROW 2 ================== -->
-    <div class="flex items-center gap-4 mb-4">
-      <label class="font-semibold">Row 2:</label>
-      <select [(ngModel)]="selectedRow2" class="border px-2 py-1 rounded">
-        <option value="approved">Approved</option>
-        <option value="denied">Denied</option>
-        <option value="pending">Pending</option>
-        <option value="under_review">Under Review</option>
-      </select>
-    </div>
-
-    <div class="statistics">
-      <div class="stat-card">
-        <h4>{{ formatStatName(selectedRow2) }} Today</h4>
-        <p>{{ stats[selectedRow2].today }}</p>
-      </div>
-      <div class="stat-card">
-        <h4>{{ formatStatName(selectedRow2) }} This Week</h4>
-        <p>{{ stats[selectedRow2].week }}</p>
-      </div>
-      <div class="stat-card">
-        <h4>{{ formatStatName(selectedRow2) }} This Month</h4>
-        <p>{{ stats[selectedRow2].month }}</p>
-      </div>
-    </div>
-
-    <!-- ================== PAGINATED GRID ================== -->
-    <div class="table-grid">
-      <div *ngFor="let row of rows" class="card">
-        <h3 class="dashboard-title">{{ formatStatName(row === 1 ? selectedRow1 : selectedRow2) }}</h3>
-        <table class="records-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Document Type</th>
-              <th>Date</th>
-              <th>Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let doc of getPaginatedItems(row)">
-              <td (click)="doc.status === 'under_review' ? viewInProcessDetail(doc) : viewRequestDetail(doc)"
-                  style="cursor: pointer;">
-                {{ doc.name }}
-              </td>
-              <td>{{ getDocumentLabel(doc.document_type) }}</td>
-              <td>{{ (doc.updated_at || doc.date_created) | date:'medium' }}</td>
-              <td class="status-{{ doc.status === 'under_review' ? 'pending' : doc.status }}">
-                {{ doc.status === 'under_review' ? 'Under Review' : doc.status }}
-              </td>
-              <td>
-                <button (click)="confirmArchive(doc, $event)" class="btn pending">
-                  Archive
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="getPaginatedItems(row).length === 0">
-              <td colspan="5" style="text-align:center; color:#999; padding:20px;">No records found.</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div style="display:flex; justify-content:flex-end; margin-top:15px; gap:5px;">
-          <button *ngFor="let page of getTotalPages(row)"
-                  (click)="changePage(row, page)"
-                  [style.backgroundColor]="(row === 1 ? currentPage1 : currentPage2) === page ? '#2a7ca8' : 'white'"
-                  [style.color]="(row === 1 ? currentPage1 : currentPage2) === page ? 'white' : '#333'"
-                  style="padding:8px 12px; border:1px solid #ddd; border-radius:4px; cursor:pointer;">
-            {{ page }}
-          </button>
+      <div class="stat-card stat-card--row1">
+        <div class="stat-icon"><i class="fa-solid fa-calendar"></i></div>
+        <div class="stat-info">
+          <h4>This Month</h4>
+          <p>{{ stats[selectedRow1].month }}</p>
+          <span>{{ formatStatName(selectedRow1) }}</span>
         </div>
       </div>
     </div>
 
+    <!-- ================== ROW 2 STAT CARDS ================== -->
+    <div class="stat-row-label">
+      <label>Row 2:</label>
+      <select [(ngModel)]="selectedRow2">
+        <option value="approved">Approved</option>
+        <option value="denied">Denied</option>
+        <option value="pending">Pending</option>
+        <option value="under_review">Under Review</option>
+      </select>
+    </div>
+    <div class="statistics">
+      <div class="stat-card stat-card--row2">
+        <div class="stat-icon"><i class="fa-solid fa-calendar-day"></i></div>
+        <div class="stat-info">
+          <h4>Today</h4>
+          <p>{{ stats[selectedRow2].today }}</p>
+          <span>{{ formatStatName(selectedRow2) }}</span>
+        </div>
+      </div>
+      <div class="stat-card stat-card--row2">
+        <div class="stat-icon"><i class="fa-solid fa-calendar-week"></i></div>
+        <div class="stat-info">
+          <h4>This Week</h4>
+          <p>{{ stats[selectedRow2].week }}</p>
+          <span>{{ formatStatName(selectedRow2) }}</span>
+        </div>
+      </div>
+      <div class="stat-card stat-card--row2">
+        <div class="stat-icon"><i class="fa-solid fa-calendar"></i></div>
+        <div class="stat-info">
+          <h4>This Month</h4>
+          <p>{{ stats[selectedRow2].month }}</p>
+          <span>{{ formatStatName(selectedRow2) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================== APPROVED TABLE ================== -->
+    <div class="card" style="margin-top: 28px;">
+      <div class="table-header table-header--approved">
+        <i class="fa-solid fa-circle-check"></i>
+        <h3>Approved Requests</h3>
+        <span class="record-count">{{ approved.length }} total</span>
+      </div>
+      <table class="records-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Document Type</th>
+            <th>Date</th>
+            <th>Assigned Staff</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let doc of getPaginatedApproved()">
+            <td (click)="viewRequestDetail(doc)" class="clickable-name">{{ doc.name }}</td>
+            <td>{{ getDocumentLabel(doc.document_type) }}</td>
+            <td>{{ (doc.updated_at || doc.date_created) | date:'mediumDate' }}</td>
+            <td>
+              <span *ngIf="getStaffName(doc); else noStaff" class="staff-name">
+                <i class="fa-solid fa-user-tie"></i>
+                {{ getStaffName(doc) }}
+              </span>
+              <ng-template #noStaff>
+                <span class="no-staff">—</span>
+              </ng-template>
+            </td>
+            <td><span class="status-badge status-approved">Approved</span></td>
+            <td>
+              <div class="td-actions">
+                <button (click)="confirmArchive(doc, $event)" class="btn-archive">
+                  <i class="fa-solid fa-box-archive"></i> Archive
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="getPaginatedApproved().length === 0">
+            <td colspan="6" class="empty-row">No approved requests found.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="pagination" *ngIf="getTotalPagesApproved().length > 1">
+        <button *ngFor="let page of getTotalPagesApproved()"
+                (click)="currentPageApproved = page"
+                [class.active]="currentPageApproved === page"
+                class="page-btn">{{ page }}</button>
+      </div>
+    </div>
+
     <!-- ================== FOR RELEASE TABLE ================== -->
-    <div class="card" style="margin-top: 32px;">
-      <h3 class="dashboard-title"><strong>FOR RELEASE</strong></h3>
+    <div class="card" style="margin-top: 24px;">
+      <div class="table-header table-header--release">
+        <i class="fa-solid fa-file-arrow-up"></i>
+        <h3>For Release</h3>
+        <span class="record-count">{{ for_release.length }} total</span>
+      </div>
       <table class="records-table">
         <thead>
           <tr>
@@ -114,33 +145,51 @@
             <th>Document Type</th>
             <th>For Release At</th>
             <th>Assigned Staff</th>
-            <th>Archive</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let doc of for_release">
+          <tr *ngFor="let doc of getPaginatedForRelease()">
             <td>{{ doc.name }}</td>
             <td>{{ getDocumentLabel(doc.document_type) }}</td>
-            <td>{{ doc.updated_at | date:'medium' }}</td>
-            <td>{{ doc.assigned_staff_name || '—' }}</td>
+            <td>{{ doc.updated_at | date:'mediumDate' }}</td>
             <td>
-              <button (click)="confirmArchive(doc, $event)" class="btn pending">
-                Archive
-              </button>
+              <span *ngIf="getStaffName(doc); else noStaffFR" class="staff-name">
+                <i class="fa-solid fa-user-tie"></i>
+                {{ getStaffName(doc) }}
+              </span>
+              <ng-template #noStaffFR>
+                <span class="no-staff">—</span>
+              </ng-template>
+            </td>
+            <td>
+              <div class="td-actions">
+                <button (click)="confirmArchive(doc, $event)" class="btn-archive">
+                  <i class="fa-solid fa-box-archive"></i> Archive
+                </button>
+              </div>
             </td>
           </tr>
-          <tr *ngIf="for_release.length === 0">
-            <td colspan="5" style="text-align:center; color:#999; padding:20px;">
-              No requests for release yet.
-            </td>
+          <tr *ngIf="getPaginatedForRelease().length === 0">
+            <td colspan="5" class="empty-row">No requests for release yet.</td>
           </tr>
         </tbody>
       </table>
+      <div class="pagination" *ngIf="getTotalPagesForRelease().length > 1">
+        <button *ngFor="let page of getTotalPagesForRelease()"
+                (click)="currentPageForRelease = page"
+                [class.active]="currentPageForRelease === page"
+                class="page-btn">{{ page }}</button>
+      </div>
     </div>
 
     <!-- ================== RELEASED TABLE ================== -->
     <div class="card" style="margin-top: 24px;">
-      <h3 class="dashboard-title"><strong>RELEASED</strong></h3>
+      <div class="table-header table-header--released">
+        <i class="fa-solid fa-check-double"></i>
+        <h3>Released</h3>
+        <span class="record-count">{{ released.length }} total</span>
+      </div>
       <table class="records-table">
         <thead>
           <tr>
@@ -148,28 +197,94 @@
             <th>Document Type</th>
             <th>Released At</th>
             <th>Assigned Staff</th>
-            <th>Archive</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let doc of released">
+          <tr *ngFor="let doc of getPaginatedReleased()">
             <td>{{ doc.name }}</td>
             <td>{{ getDocumentLabel(doc.document_type) }}</td>
-            <td>{{ doc.updated_at | date:'medium' }}</td>
-            <td>{{ doc.assigned_staff_name || '—' }}</td>
+            <td>{{ doc.updated_at | date:'mediumDate' }}</td>
             <td>
-              <button (click)="confirmArchive(doc, $event)" class="btn pending">
-                Archive
-              </button>
+              <span *ngIf="getStaffName(doc); else noStaffRL" class="staff-name">
+                <i class="fa-solid fa-user-tie"></i>
+                {{ getStaffName(doc) }}
+              </span>
+              <ng-template #noStaffRL>
+                <span class="no-staff">—</span>
+              </ng-template>
+            </td>
+            <td>
+              <div class="td-actions">
+                <button (click)="confirmArchive(doc, $event)" class="btn-archive">
+                  <i class="fa-solid fa-box-archive"></i> Archive
+                </button>
+              </div>
             </td>
           </tr>
-          <tr *ngIf="released.length === 0">
-            <td colspan="5" style="text-align:center; color:#999; padding:20px;">
-              No released requests yet.
-            </td>
+          <tr *ngIf="getPaginatedReleased().length === 0">
+            <td colspan="5" class="empty-row">No released requests yet.</td>
           </tr>
         </tbody>
       </table>
+      <div class="pagination" *ngIf="getTotalPagesReleased().length > 1">
+        <button *ngFor="let page of getTotalPagesReleased()"
+                (click)="currentPageReleased = page"
+                [class.active]="currentPageReleased === page"
+                class="page-btn">{{ page }}</button>
+      </div>
+    </div>
+
+    <!-- ================== DENIED TABLE ================== -->
+    <div class="card" style="margin-top: 24px;">
+      <div class="table-header table-header--denied">
+        <i class="fa-solid fa-circle-xmark"></i>
+        <h3>Denied Requests</h3>
+        <span class="record-count">{{ denied.length }} total</span>
+      </div>
+      <table class="records-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Document Type</th>
+            <th>Denied At</th>
+            <th>Assigned Staff</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let doc of getPaginatedDenied()">
+            <td>{{ doc.name }}</td>
+            <td>{{ getDocumentLabel(doc.document_type) }}</td>
+            <td>{{ (doc.updated_at || doc.date_created) | date:'mediumDate' }}</td>
+            <td>
+              <span *ngIf="getStaffName(doc); else noStaffDN" class="staff-name">
+                <i class="fa-solid fa-user-tie"></i>
+                {{ getStaffName(doc) }}
+              </span>
+              <ng-template #noStaffDN>
+                <span class="no-staff">—</span>
+              </ng-template>
+            </td>
+            <td>
+              <div class="td-actions">
+                <button (click)="confirmArchive(doc, $event)" class="btn-archive">
+                  <i class="fa-solid fa-box-archive"></i> Archive
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="getPaginatedDenied().length === 0">
+            <td colspan="5" class="empty-row">No denied requests yet.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="pagination" *ngIf="getTotalPagesDenied().length > 1">
+        <button *ngFor="let page of getTotalPagesDenied()"
+                (click)="currentPageDenied = page"
+                [class.active]="currentPageDenied === page"
+                class="page-btn">{{ page }}</button>
+      </div>
     </div>
 
   </div>
@@ -187,8 +302,12 @@
       <strong>{{ docToArchive?.name }}</strong>?
     </p>
     <div class="modal-actions">
-      <button class="modal-btn cancel" (click)="closeArchiveModal()">Cancel</button>
-      <button class="modal-btn confirm" (click)="archiveRequest()">Archive</button>
+      <button class="modal-btn cancel" (click)="closeArchiveModal()">
+        <i class="fa-solid fa-xmark"></i> Cancel
+      </button>
+      <button class="modal-btn confirm" (click)="archiveRequest()">
+        <i class="fa-solid fa-box-archive"></i> Archive
+      </button>
     </div>
   </div>
 </div>
@@ -202,7 +321,9 @@
     <h3 class="modal-title">{{ resultModalType === 'success' ? 'Success' : 'Error' }}</h3>
     <p class="modal-message">{{ resultModalMessage }}</p>
     <div class="modal-actions">
-      <button class="modal-btn confirm" (click)="closeResultModal()">OK</button>
+      <button class="modal-btn confirm" (click)="closeResultModal()">
+        <i class="fa-solid fa-check"></i> OK
+      </button>
     </div>
   </div>
 </div>
