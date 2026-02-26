@@ -15,7 +15,6 @@ import { FormsModule } from '@angular/forms';
 export class ProcessRequestComponent implements OnInit {
   requestId!: number;
   request: any;
-  documentType: string = '';
   loading = true;
   errorMessage = '';
   showDenyModal = false;
@@ -50,7 +49,6 @@ export class ProcessRequestComponent implements OnInit {
   ngOnInit() {
     this.requestId = +this.route.snapshot.paramMap.get('id')!;
     this.fetchRequestDetail();
-    this.fetchDocumentType();
   }
 
   private getAuthHeaders(): HttpHeaders {
@@ -91,25 +89,6 @@ export class ProcessRequestComponent implements OnInit {
           this.loading = false;
         }
       });
-  }
-
-  // Fetch document_type from document_request table
-  fetchDocumentType() {
-    const token = localStorage.getItem('token');
-
-    this.http.get<any[]>(`${this.backendUrl}/api/document_request`, {
-      headers: { Authorization: `Bearer ${token}` }
-    }).subscribe({
-      next: (data) => {
-        const match = data.find((r: any) => r.RequestID === this.requestId || r.id === this.requestId);
-        if (match) {
-          this.documentType = match.document_type || '—';
-        }
-      },
-      error: (err) => {
-        console.error('Failed to fetch document type:', err);
-      }
-    });
   }
 
   // Lightbox controls

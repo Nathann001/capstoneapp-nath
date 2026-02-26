@@ -28,7 +28,7 @@ import { MarriageComponent } from './certificate_types/marriage/marriage.compone
 import { DeathdelayedComponent } from './certificate_types/deathdelayed/deathdelayed.component';
 import { MarriagedelayedComponent } from './certificate_types/marriagedelayed/marriagedelayed.component';
 import { BirthdelayedComponent } from './certificate_types/birthdelayed/birthdelayed.component';
-import { MarriagelicenseComponent } from './certificate_types/marriagelicense/marriagelicense.component';
+import { MarriageLicenseComponent } from './certificate_types/marriagelicense/marriagelicense.component';
 import { OthersComponent } from './certificate_types/others/others.component';
 import { AppointmentBookingComponent } from './certificate_types/appointment-booking/appointment-booking';
 export const routes: Routes = [
@@ -62,7 +62,7 @@ export const routes: Routes = [
     { path: 'deathdelayed', component: DeathdelayedComponent },
     { path: 'marriagedelayed', component: MarriagedelayedComponent },
     { path: 'birthdelayed', component: BirthdelayedComponent },
-    { path: 'marriagelicense', component: MarriagelicenseComponent },
+    { path: 'marriagelicense', component: MarriageLicenseComponent },
     { path: 'others', component: OthersComponent },
     { path: 'appointment-booking', component: AppointmentBookingComponent }
 ];

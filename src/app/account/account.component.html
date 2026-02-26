@@ -1,105 +1,169 @@
-<div class="account-container">
-  <div class="profile-settings" style="margin-top:20px">
+<div class="account-page">
 
-    <!-- DISPLAY MODE -->
+  <!-- Sidebar -->
+  <aside class="account-sidebar">
+    <div class="sidebar-avatar">
+      <div class="avatar-ring">
+        <div class="avatar-initials">
+          {{ (profileForm.get('firstName')?.value?.[0] || '') + (profileForm.get('lastName')?.value?.[0] || '') || '?' }}
+        </div>
+      </div>
+      <p class="sidebar-name">
+        {{ profileForm.get('firstName')?.value || 'Your Name' }}
+        {{ profileForm.get('lastName')?.value }}
+      </p>
+      <p class="sidebar-email">{{ profileForm.get('email')?.value }}</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="sidebar-link active">
+        <i class="fa-solid fa-user"></i> My Profile
+      </a>
+    </nav>
+
+    <button class="sidebar-logout" (click)="logout()">
+      <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+    </button>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="account-main">
+
+    <!-- First Login Banner -->
+    <div class="first-login-banner" *ngIf="isFirstLogin">
+      <div class="banner-icon">
+        <i class="fa-solid fa-hand-wave"></i>
+      </div>
+      <div class="banner-text">
+        <strong>Welcome to the Angeles City Document Request System!</strong>
+        <p>Before you can submit requests, please complete your profile below. All fields are required.</p>
+      </div>
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">{{ isFirstLogin ? 'Complete Your Profile' : 'My Profile' }}</h1>
+        <p class="page-sub">{{ isFirstLogin ? 'Fill in your personal details to get started.' : 'Manage your personal information and account settings.' }}</p>
+      </div>
+      <div class="header-actions" *ngIf="!editMode && !isFirstLogin">
+        <button class="btn-edit" (click)="toggleEdit()">
+          <i class="fa-solid fa-pen"></i> Edit Profile
+        </button>
+      </div>
+    </div>
+
+    <!-- ─── DISPLAY MODE ─── -->
     <ng-container *ngIf="!editMode; else editTemplate">
+      <div class="profile-card">
+        <div class="card-section-title">Personal Information</div>
 
-      <div class="section" style="margin-top:40px">
-        <label>First Name:</label>
-        <p>{{ profileForm.get('firstName')?.value }}</p>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">First Name</span>
+            <span class="info-value">{{ profileForm.get('firstName')?.value || '—' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Middle Name</span>
+            <span class="info-value">{{ profileForm.get('middleName')?.value || '—' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Last Name</span>
+            <span class="info-value">{{ profileForm.get('lastName')?.value || '—' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Email Address</span>
+            <span class="info-value">{{ profileForm.get('email')?.value || '—' }}</span>
+          </div>
+          <div class="info-item full-width">
+            <span class="info-label">Home Address</span>
+            <span class="info-value">{{ profileForm.get('address')?.value || '—' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Contact Number</span>
+            <span class="info-value">{{ profileForm.get('contactNo')?.value || '—' }}</span>
+          </div>
+        </div>
+
+        <div class="card-divider"></div>
+
+        <div class="danger-zone">
+          <div>
+            <p class="danger-title">Delete Account</p>
+            <p class="danger-desc">Permanently remove your account and all associated data. This cannot be undone.</p>
+          </div>
+          <button class="btn-danger" (click)="deleteAccount()">
+            <i class="fa-solid fa-trash"></i> Delete Account
+          </button>
+        </div>
       </div>
-
-      <div class="section">
-        <label>Middle Name:</label>
-        <p>{{ profileForm.get('middleName')?.value }}</p>
-      </div>
-
-      <div class="section">
-        <label>Last Name:</label>
-        <p>{{ profileForm.get('lastName')?.value }}</p>
-      </div>
-
-      <div class="section">
-        <label>Address:</label>
-        <p>{{ profileForm.get('address')?.value }}</p>
-      </div>
-
-      <div class="section">
-        <label>Contact Number:</label>
-        <p>{{ profileForm.get('contactNo')?.value }}</p>
-      </div>
-
-      <div class="section">
-        <label>Email:</label>
-        <p>{{ profileForm.get('email')?.value }}</p>
-      </div>
-
-      <div class="section" style="margin-top:60px">
-        <button type="button" class="save" (click)="toggleEdit()" style="margin-right: 10px;">
-          Edit Profile
-        </button>
-
-        <button type="button" class="danger" (click)="deleteAccount()">
-          Delete my account
-        </button>
-      </div>
-
-      <div class="section">
-        <button type="button" class="LogoutB" (click)="logout()">Log out</button>
-      </div>
-
     </ng-container>
 
-
-    <!-- EDIT MODE -->
+    <!-- ─── EDIT MODE ─── -->
     <ng-template #editTemplate>
-      <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" style="margin-top:20px">
+      <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+        <div class="profile-card">
+          <div class="card-section-title">Personal Information</div>
 
-        <div class="section">
-          <label>First Name:</label>
-          <input type="text" formControlName="firstName" />
+          <div class="form-grid">
+
+            <div class="form-group">
+              <label class="form-label">First Name <span class="required">*</span></label>
+              <input class="form-input" type="text" formControlName="firstName" placeholder="e.g. Juan" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Middle Name</label>
+              <input class="form-input" type="text" formControlName="middleName" placeholder="e.g. Santos" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Last Name <span class="required">*</span></label>
+              <input class="form-input" type="text" formControlName="lastName" placeholder="e.g. dela Cruz" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Contact Number <span class="required">*</span></label>
+              <input class="form-input" type="text" formControlName="contactNo" placeholder="e.g. 09XX XXX XXXX" />
+            </div>
+
+            <div class="form-group full-width">
+              <label class="form-label">Home Address <span class="required">*</span></label>
+              <input class="form-input" type="text" formControlName="address" placeholder="e.g. 123 Rizal St., Angeles City, Pampanga" />
+            </div>
+
+            <div class="form-group full-width">
+              <label class="form-label">Email Address</label>
+              <input class="form-input readonly" type="email" formControlName="email" readonly />
+              <span class="form-hint">Email cannot be changed.</span>
+            </div>
+
+          </div>
+
+          <div class="card-divider"></div>
+          <div class="card-section-title">Change Password <span class="optional-badge">Optional</span></div>
+          <p class="section-desc">Leave blank to keep your current password.</p>
+
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label class="form-label">New Password</label>
+              <input class="form-input" type="password" formControlName="newPassword" placeholder="Leave blank to keep current password" />
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-save">
+              <i class="fa-solid fa-floppy-disk"></i>
+              {{ isFirstLogin ? 'Save & Continue' : 'Save Changes' }}
+            </button>
+            <button type="button" class="btn-cancel" (click)="cancelEdit()" *ngIf="!isFirstLogin">
+              Cancel
+            </button>
+          </div>
+
         </div>
-
-        <div class="section">
-          <label>Middle Name:</label>
-          <input type="text" formControlName="middleName" />
-        </div>
-
-        <div class="section">
-          <label>Last Name:</label>
-          <input type="text" formControlName="lastName" />
-        </div>
-
-        <div class="section">
-          <label>Address:</label>
-          <input type="text" formControlName="address" />
-        </div>
-
-        <div class="section">
-          <label>Contact Number:</label>
-          <input type="text" formControlName="contactNo" />
-        </div>
-
-        <!-- EMAIL is READ-ONLY (matches TypeScript) -->
-        <div class="section">
-          <label>Email:</label>
-          <input type="email" formControlName="email" readonly />
-        </div>
-
-        <div class="section">
-          <label>New Password:</label>
-          <input type="password" formControlName="newPassword" placeholder="Enter new password" />
-        </div>
-
-        <div class="section" style="margin-top:60px">
-          <!-- remove invalid blocking during testing -->
-          <button type="submit" class="save">Save Changes</button>
-
-          <button type="button" class="danger" (click)="cancelEdit()">Cancel</button>
-        </div>
-
       </form>
     </ng-template>
 
-  </div>
+  </main>
 </div>

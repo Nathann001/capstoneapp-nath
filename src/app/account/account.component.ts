@@ -22,7 +22,7 @@ interface UserDetails {
 export class AccountComponent implements OnInit {
   profileForm: FormGroup;
   editMode = false;
-
+  isFirstLogin = false;
   selectedFile: File | null = null;
 
   constructor(
@@ -43,6 +43,19 @@ export class AccountComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadAccountData();
+    this.checkFirstLogin();
+  }
+
+  // 🔹 Detect first login and auto-open edit mode
+  checkFirstLogin(): void {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      if (!user.detailsCompleted) {
+        this.isFirstLogin = true;
+        this.toggleEdit();
+      }
+    }
   }
 
   // 🔹 Load account data
@@ -55,16 +68,12 @@ export class AccountComponent implements OnInit {
 
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
-    // Load email from localStorage
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       const user = JSON.parse(storedUser);
-      this.profileForm.patchValue({
-        email: user.email ?? ''
-      });
+      this.profileForm.patchValue({ email: user.email ?? '' });
     }
 
-    // Load user details from DB
     this.http.get<UserDetails>('https://drtbackend-2cw3.onrender.com/api/user/details', { headers })
       .subscribe({
         next: (details) => {
@@ -85,29 +94,16 @@ export class AccountComponent implements OnInit {
   // 🔹 Enable edit mode
   toggleEdit(): void {
     this.editMode = true;
-
-    const editableFields = [
-      'firstName',
-      'middleName',
-      'lastName',
-      'address',
-      'contactNo',
-      'newPassword'
-    ];
-
-    editableFields.forEach(field => {
-      this.profileForm.get(field)?.enable();
-    });
+    const editableFields = ['firstName', 'middleName', 'lastName', 'address', 'contactNo', 'newPassword'];
+    editableFields.forEach(field => this.profileForm.get(field)?.enable());
   }
 
   // 🔹 Cancel editing
   cancelEdit(): void {
     this.editMode = false;
-
     Object.keys(this.profileForm.controls).forEach(key => {
       this.profileForm.get(key)?.disable();
     });
-
     this.loadAccountData();
   }
 
@@ -120,73 +116,94 @@ export class AccountComponent implements OnInit {
 
   // 🔹 Save profile
   saveProfile(): void {
-  const token = localStorage.getItem('token');
-  if (!token) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
 
-  const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    const newPassword = this.profileForm.get('newPassword')?.value;
 
-  const body = {
-    firstName: this.profileForm.get('firstName')?.value,
-    middleName: this.profileForm.get('middleName')?.value,
-    lastName: this.profileForm.get('lastName')?.value,
-    address: this.profileForm.get('address')?.value,
-    contactNo: this.profileForm.get('contactNo')?.value
-  };
+    const body: any = {
+      firstName: this.profileForm.get('firstName')?.value,
+      middleName: this.profileForm.get('middleName')?.value,
+      lastName: this.profileForm.get('lastName')?.value,
+      address: this.profileForm.get('address')?.value,
+      contactNo: this.profileForm.get('contactNo')?.value
+    };
 
-  this.http.post('https://drtbackend-2cw3.onrender.com/api/user/details', body, { headers })
-    .subscribe({
-      next: () => {
-        alert('Profile details updated successfully!');
-        this.editMode = false;
-        this.loadAccountData();
-      },
-      error: (err) => {
-        console.error('Failed to update user details:', err);
-        alert('Failed to update profile details.');
-      }
-    });
-}
-
-deleteAccount(): void {
-  const confirmDelete = confirm('Are you sure you want to delete your account?');
-  if (!confirmDelete) return;
-
-  const token = localStorage.getItem('token');
-  if (!token) {
-    alert('No authentication token found. Please log in again.');
-    return;
-  }
-
-  const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
-  // Get user ID from localStorage
-  const storedUser = localStorage.getItem('user');
-  const userId = storedUser ? JSON.parse(storedUser).id : null;
-
-  if (!userId) {
-    alert('Unable to delete account: User ID not found.');
-    return;
-  }
-
-  console.log('Deleting user ID:', userId); // ✅ Debug log
-
-  this.http.delete(`https://drtbackend-2cw3.onrender.com/api/admin/users/${userId}`, { headers })
-  .subscribe({
-    next: (res: any) => {
-      console.log('Delete response:', res); // logs success
-      alert(res.message || 'Account deleted.');
-      this.logout();
-    },
-    error: (err) => {
-      console.error('Delete error full object:', err); // logs full error
-      if (err.error && err.error.message) {
-        alert(`Failed to delete account: ${err.error.message}`);
-      } else {
-        alert(`Failed to delete account. Status: ${err.status} ${err.statusText}`);
-      }
+    // Only send password if user actually typed one
+    if (newPassword && newPassword.trim() !== '') {
+      body.newPassword = newPassword;
     }
-  });
 
-}
+    this.http.post('https://drtbackend-2cw3.onrender.com/api/user/details', body, { headers })
+      .subscribe({
+        next: () => {
+          const wasFirstLogin = this.isFirstLogin;
 
+          // Mark details as completed in localStorage
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) {
+            const user = JSON.parse(storedUser);
+            user.detailsCompleted = true;
+            localStorage.setItem('user', JSON.stringify(user));
+          }
+
+          this.isFirstLogin = false;
+          this.editMode = false;
+
+          Object.keys(this.profileForm.controls).forEach(key => {
+            this.profileForm.get(key)?.disable();
+          });
+
+          this.loadAccountData();
+
+          if (wasFirstLogin) {
+            // Redirect home after completing first-time profile setup
+            this.router.navigate(['/']);
+          } else {
+            alert('Profile updated successfully!');
+          }
+        },
+        error: (err) => {
+          console.error('Failed to update user details:', err);
+          alert('Failed to update profile. Please try again.');
+        }
+      });
+  }
+
+  // 🔹 Delete account
+  deleteAccount(): void {
+    const confirmDelete = confirm('Are you sure you want to delete your account? This cannot be undone.');
+    if (!confirmDelete) return;
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('No authentication token found. Please log in again.');
+      return;
+    }
+
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    const storedUser = localStorage.getItem('user');
+    const userId = storedUser ? JSON.parse(storedUser).id : null;
+
+    if (!userId) {
+      alert('Unable to delete account: User ID not found.');
+      return;
+    }
+
+    this.http.delete(`https://drtbackend-2cw3.onrender.com/api/admin/users/${userId}`, { headers })
+      .subscribe({
+        next: (res: any) => {
+          alert(res.message || 'Account deleted.');
+          this.logout();
+        },
+        error: (err) => {
+          if (err.error && err.error.message) {
+            alert(`Failed to delete account: ${err.error.message}`);
+          } else {
+            alert(`Failed to delete account. Status: ${err.status} ${err.statusText}`);
+          }
+        }
+      });
+  }
 }

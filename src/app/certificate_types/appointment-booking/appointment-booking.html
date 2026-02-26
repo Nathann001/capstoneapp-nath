@@ -76,7 +76,7 @@
               *ngFor="let type of certificateTypes"
               class="option-card"
               [class.option-selected]="selectedCertType === type"
-              (click)="selectedCertType = type">
+              (click)="onCertTypeChange(type)">
               <div class="option-icon-wrap">
                 <i class="fa-solid"
                    [ngClass]="{
@@ -102,7 +102,7 @@
               *ngFor="let type of registrationTypes"
               class="option-card"
               [class.option-selected]="selectedRegType === type"
-              (click)="selectedRegType = type">
+              (click)="onRegTypeChange(type)">
               <div class="option-icon-wrap">
                 <i class="fa-solid"
                    [ngClass]="{
@@ -116,6 +116,60 @@
           </div>
         </div>
 
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- REQUIREMENTS PANEL                                           -->
+      <!-- Shows when BOTH cert type AND reg type are selected          -->
+      <!-- ============================================================ -->
+      <div class="requirements-panel" *ngIf="selectedCertType && selectedRegType">
+        <div class="requirements-header">
+          <i class="fa-solid fa-clipboard-list req-header-icon"></i>
+          <div>
+            <h4 class="req-title">Requirements</h4>
+            <p class="req-subtitle">
+              Please bring the following documents for your
+              <strong>{{ selectedCertType }}</strong> certificate
+              (<strong>{{ selectedRegType }}</strong> registration)
+            </p>
+          </div>
+        </div>
+
+        <ul class="req-list">
+          <ng-container *ngFor="let entry of getRequirements(); let i = index">
+
+            <!-- Section heading -->
+            <li class="req-section-header" *ngIf="isSection(entry)">
+              <i class="fa-solid fa-chevron-right req-section-icon"></i>
+              {{ entry.section }}
+            </li>
+
+            <!-- Requirement item -->
+            <li class="req-item" *ngIf="!isSection(entry)">
+              <span class="req-number">{{ getItemIndex(getRequirements(), i) }}</span>
+              <div class="req-content">
+                <span class="req-name">{{ entry.name }}</span>
+                <span class="req-note" *ngIf="entry.note">{{ entry.note }}</span>
+              </div>
+              <span class="req-copies" *ngIf="entry.copies">
+                <i class="fa-solid fa-copy"></i>
+                {{ entry.copies }}
+              </span>
+            </li>
+
+          </ng-container>
+        </ul>
+
+        <div class="req-footer">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          Incomplete documents may result in your appointment being rescheduled.
+        </div>
+      </div>
+
+      <!-- Prompt if only one is chosen -->
+      <div class="requirements-prompt" *ngIf="(selectedCertType && !selectedRegType) || (!selectedCertType && selectedRegType)">
+        <i class="fa-solid fa-arrow-pointer"></i>
+        <span>Select both a certificate type and registration type to see the required documents.</span>
       </div>
 
       <div class="divider"></div>

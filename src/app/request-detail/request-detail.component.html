@@ -37,8 +37,12 @@
           <span class="rd-info-value rd-id">#{{ request.RequestID }}</span>
         </div>
         <div class="rd-info-item">
-          <span class="rd-info-label">Applicant Name</span>
-          <span class="rd-info-value">{{ request.name }}</span>
+          <span class="rd-info-label">Requested By</span>
+          <span class="rd-info-value">{{ request.full_name || request.email || '—' }}</span>
+        </div>
+        <div class="rd-info-item">
+          <span class="rd-info-label">Recipient Name</span>
+          <span class="rd-info-value">{{ request.name || '—' }}</span>
         </div>
         <div class="rd-info-item">
           <span class="rd-info-label">Document Type</span>
@@ -53,6 +57,143 @@
           <span class="rd-info-value">{{ request.updated_at | date:'MMM d, y · h:mm a' }}</span>
         </div>
       </div>
+    </div>
+
+    <!-- Applicant Details Card -->
+    <div class="rd-card rd-info-card">
+
+      <!-- BIRTH CERTIFICATE -->
+      <ng-container *ngIf="request.document_type === 'birth'">
+        <div class="rd-card-header">
+          <span class="rd-card-icon">👶</span>
+          <h2 class="rd-card-title">Birth Certificate Details</h2>
+        </div>
+        <div class="rd-info-grid">
+          <div class="rd-info-item">
+            <span class="rd-info-label">First Name</span>
+            <span class="rd-info-value">{{ request.First_Name || '—' }}</span>
+          </div>
+          <div class="rd-info-item">
+            <span class="rd-info-label">Middle Name</span>
+            <span class="rd-info-value">{{ request.Middle_Name || '—' }}</span>
+          </div>
+          <div class="rd-info-item">
+            <span class="rd-info-label">Last Name</span>
+            <span class="rd-info-value">{{ request.Last_Name || '—' }}</span>
+          </div>
+          <div class="rd-info-item">
+            <span class="rd-info-label">Date of Birth</span>
+            <span class="rd-info-value">{{ request.Doc_Date | date:'MMM d, y' }}</span>
+          </div>
+          <div class="rd-info-item">
+            <span class="rd-info-label">Father's Name</span>
+            <span class="rd-info-value">{{ request.Fathers_Name || '—' }}</span>
+          </div>
+          <div class="rd-info-item">
+            <span class="rd-info-label">Mother's Name</span>
+            <span class="rd-info-value">{{ request.Mothers_Name || '—' }}</span>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- DEATH CERTIFICATE -->
+      <ng-container *ngIf="request.document_type === 'death'">
+        <div class="rd-card-header">
+          <span class="rd-card-icon">📜</span>
+          <h2 class="rd-card-title">Death Certificate Details</h2>
+        </div>
+        <div class="rd-info-grid">
+          <div class="rd-info-item">
+            <span class="rd-info-label">First Name</span>
+            <span class="rd-info-value">{{ request.First_Name || '—' }}</span>
+          </div>
+          <div class="rd-info-item">
+            <span class="rd-info-label">Last Name</span>
+            <span class="rd-info-value">{{ request.Last_Name || '—' }}</span>
+          </div>
+          <div class="rd-info-item">
+            <span class="rd-info-label">Date of Death</span>
+            <span class="rd-info-value">{{ request.Doc_Date | date:'MMM d, y' }}</span>
+          </div>
+          <div class="rd-info-item">
+            <span class="rd-info-label">Place of Death</span>
+            <span class="rd-info-value">{{ request.Death_Place || '—' }}</span>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- MARRIAGE CERTIFICATE -->
+      <ng-container *ngIf="request.document_type === 'marriage'">
+        <div class="rd-card-header">
+          <span class="rd-card-icon">💍</span>
+          <h2 class="rd-card-title">Marriage Certificate Details</h2>
+        </div>
+        <div class="rd-info-grid">
+          <div class="rd-info-item">
+            <span class="rd-info-label">Husband's First Name</span>
+            <span class="rd-info-value">{{ request.First_Name || '—' }}</span>
+          </div>
+          <div class="rd-info-item">
+            <span class="rd-info-label">Husband's Last Name</span>
+            <span class="rd-info-value">{{ request.Last_Name || '—' }}</span>
+          </div>
+          <div class="rd-info-item">
+            <span class="rd-info-label">Wife's Name</span>
+            <span class="rd-info-value">{{ request.Wife_Name || '—' }}</span>
+          </div>
+          <div class="rd-info-item">
+            <span class="rd-info-label">Date of Marriage</span>
+            <span class="rd-info-value">{{ request.Doc_Date | date:'MMM d, y' }}</span>
+          </div>
+          <div class="rd-info-item">
+            <span class="rd-info-label">Place of Marriage</span>
+            <span class="rd-info-value">{{ request.Marriage_Place || '—' }}</span>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- MARRIAGE LICENSE -->
+      <ng-container *ngIf="request.document_type === 'marriage_license'">
+        <div class="rd-card-header">
+          <span class="rd-card-icon">📋</span>
+          <h2 class="rd-card-title">Marriage License Details</h2>
+        </div>
+        <div class="rd-info-grid">
+          <div class="rd-info-item">
+            <span class="rd-info-label">Groom's First Name</span>
+            <span class="rd-info-value">{{ request.Groom_First_Name || '—' }}</span>
+          </div>
+          <div class="rd-info-item">
+            <span class="rd-info-label">Groom's Middle Name</span>
+            <span class="rd-info-value">{{ request.Groom_Middle_Name || '—' }}</span>
+          </div>
+          <div class="rd-info-item">
+            <span class="rd-info-label">Groom's Last Name</span>
+            <span class="rd-info-value">{{ request.Groom_Last_Name || '—' }}</span>
+          </div>
+          <div class="rd-info-item">
+            <span class="rd-info-label">Groom's Date of Birth</span>
+            <span class="rd-info-value">{{ request.Groom_DOB | date:'MMM d, y' }}</span>
+          </div>
+          <div class="rd-info-item">
+            <span class="rd-info-label">Bride's First Name</span>
+            <span class="rd-info-value">{{ request.Bride_First_Name || '—' }}</span>
+          </div>
+          <div class="rd-info-item">
+            <span class="rd-info-label">Bride's Middle Name</span>
+            <span class="rd-info-value">{{ request.Bride_Middle_Name || '—' }}</span>
+          </div>
+          <div class="rd-info-item">
+            <span class="rd-info-label">Bride's Last Name</span>
+            <span class="rd-info-value">{{ request.Bride_Last_Name || '—' }}</span>
+          </div>
+          <div class="rd-info-item">
+            <span class="rd-info-label">Bride's Date of Birth</span>
+            <span class="rd-info-value">{{ request.Bride_DOB | date:'MMM d, y' }}</span>
+          </div>
+        </div>
+      </ng-container>
+
     </div>
 
     <!-- Files Card -->

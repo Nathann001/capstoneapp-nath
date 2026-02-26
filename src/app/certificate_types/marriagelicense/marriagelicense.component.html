@@ -1,27 +1,283 @@
 <div class="form-panel">
-  <h2>Marriage License Request</h2>
+  <h2>Marriage License Application</h2>
 
   <form [formGroup]="documentForm" (ngSubmit)="submitDocumentRequest()">
+
+    <!-- INPUT DETAILS -->
     <div class="form-group">
-      <label>Recipient Name*</label>
-      <input type="text" formControlName="name" />
-      <div *ngIf="f['name']?.invalid && f['name']?.touched" class="error">
-        Name is required (max 50 characters)
+
+      <!-- ── GROOM'S INFORMATION ── -->
+      <label class="section-label">
+        <i class="fa-solid fa-person"></i> Groom's Information
+      </label>
+
+      <label>First Name*</label>
+      <input type="text" formControlName="Groom_First_Name" />
+      <div *ngIf="f['Groom_First_Name']?.invalid && f['Groom_First_Name']?.touched" class="error">
+        First Name is required!
+      </div>
+
+      <label>Middle Name*</label>
+      <input type="text" formControlName="Groom_Middle_Name" />
+      <div *ngIf="f['Groom_Middle_Name']?.invalid && f['Groom_Middle_Name']?.touched" class="error">
+        Middle Name is required!
+      </div>
+
+      <label>Last Name*</label>
+      <input type="text" formControlName="Groom_Last_Name" />
+      <div *ngIf="f['Groom_Last_Name']?.invalid && f['Groom_Last_Name']?.touched" class="error">
+        Last Name is required!
+      </div>
+
+      <label>Date of Birth*</label>
+      <input type="date" formControlName="Groom_DOB" />
+      <div *ngIf="f['Groom_DOB']?.invalid && f['Groom_DOB']?.touched" class="error">
+        Date of Birth is required!
+      </div>
+
+      <!-- ── BRIDE'S INFORMATION ── -->
+      <label class="section-label" style="margin-top: 1rem;">
+        <i class="fa-solid fa-person-dress"></i> Bride's Information
+      </label>
+
+      <label>First Name*</label>
+      <input type="text" formControlName="Bride_First_Name" />
+      <div *ngIf="f['Bride_First_Name']?.invalid && f['Bride_First_Name']?.touched" class="error">
+        First Name is required!
+      </div>
+
+      <label>Middle Name*</label>
+      <input type="text" formControlName="Bride_Middle_Name" />
+      <div *ngIf="f['Bride_Middle_Name']?.invalid && f['Bride_Middle_Name']?.touched" class="error">
+        Middle Name is required!
+      </div>
+
+      <label>Last Name*</label>
+      <input type="text" formControlName="Bride_Last_Name" />
+      <div *ngIf="f['Bride_Last_Name']?.invalid && f['Bride_Last_Name']?.touched" class="error">
+        Last Name is required!
+      </div>
+
+      <label>Date of Birth*</label>
+      <input type="date" formControlName="Bride_DOB" />
+      <div *ngIf="f['Bride_DOB']?.invalid && f['Bride_DOB']?.touched" class="error">
+        Date of Birth is required!
+      </div>
+
+    </div>
+
+    <!-- ── REQUIRED FILE UPLOADS ── -->
+
+    <!-- Valid ID - Groom -->
+    <div class="form-group required-field">
+      <label>
+        Valid ID — Groom
+        <span class="badge required">Required</span>
+      </label>
+      <small>Any government-issued ID</small>
+      <input type="file" (change)="onFileSelected($event, 1)" accept="image/*,.pdf" />
+      <div class="file-status" *ngIf="isFileSelected(1); else notUploaded1">
+        <span class="success">✓ {{ getFileName(1) }}</span>
+      </div>
+      <ng-template #notUploaded1>
+        <div class="file-status"><span class="error">✗ This document is required</span></div>
+      </ng-template>
+    </div>
+
+    <!-- Valid ID - Bride -->
+    <div class="form-group required-field">
+      <label>
+        Valid ID — Bride
+        <span class="badge required">Required</span>
+      </label>
+      <small>Any government-issued ID</small>
+      <input type="file" (change)="onFileSelected($event, 2)" accept="image/*,.pdf" />
+      <div class="file-status" *ngIf="isFileSelected(2); else notUploaded2">
+        <span class="success">✓ {{ getFileName(2) }}</span>
+      </div>
+      <ng-template #notUploaded2>
+        <div class="file-status"><span class="error">✗ This document is required</span></div>
+      </ng-template>
+    </div>
+
+    <!-- Certificate of Live Birth - Groom -->
+    <div class="form-group required-field">
+      <label>
+        Certificate of Live Birth — Groom
+        <span class="badge required">Required</span>
+      </label>
+      <small>PSA-issued birth certificate</small>
+      <input type="file" (change)="onFileSelected($event, 3)" accept="image/*,.pdf" />
+      <div class="file-status" *ngIf="isFileSelected(3); else notUploaded3">
+        <span class="success">✓ {{ getFileName(3) }}</span>
+      </div>
+      <ng-template #notUploaded3>
+        <div class="file-status"><span class="error">✗ This document is required</span></div>
+      </ng-template>
+    </div>
+
+    <!-- Certificate of Live Birth - Bride -->
+    <div class="form-group required-field">
+      <label>
+        Certificate of Live Birth — Bride
+        <span class="badge required">Required</span>
+      </label>
+      <small>PSA-issued birth certificate</small>
+      <input type="file" (change)="onFileSelected($event, 4)" accept="image/*,.pdf" />
+      <div class="file-status" *ngIf="isFileSelected(4); else notUploaded4">
+        <span class="success">✓ {{ getFileName(4) }}</span>
+      </div>
+      <ng-template #notUploaded4>
+        <div class="file-status"><span class="error">✗ This document is required</span></div>
+      </ng-template>
+    </div>
+
+    <!-- PSA CENOMAR - Groom -->
+    <div class="form-group required-field">
+      <label>
+        PSA CENOMAR — Groom
+        <span class="badge required">Required</span>
+      </label>
+      <small>Certificate of No Marriage Record (CRS Form 4)</small>
+      <input type="file" (change)="onFileSelected($event, 5)" accept="image/*,.pdf" />
+      <div class="file-status" *ngIf="isFileSelected(5); else notUploaded5">
+        <span class="success">✓ {{ getFileName(5) }}</span>
+      </div>
+      <ng-template #notUploaded5>
+        <div class="file-status"><span class="error">✗ This document is required</span></div>
+      </ng-template>
+    </div>
+
+    <!-- PSA CENOMAR - Bride -->
+    <div class="form-group required-field">
+      <label>
+        PSA CENOMAR — Bride
+        <span class="badge required">Required</span>
+      </label>
+      <small>Certificate of No Marriage Record (CRS Form 4)</small>
+      <input type="file" (change)="onFileSelected($event, 6)" accept="image/*,.pdf" />
+      <div class="file-status" *ngIf="isFileSelected(6); else notUploaded6">
+        <span class="success">✓ {{ getFileName(6) }}</span>
+      </div>
+      <ng-template #notUploaded6>
+        <div class="file-status"><span class="error">✗ This document is required</span></div>
+      </ng-template>
+    </div>
+
+    <!-- Responsible Parenthood Seminar Certificate -->
+    <div class="form-group required-field">
+      <label>
+        Responsible Parenthood Seminar Certificate
+        <span class="badge required">Required</span>
+      </label>
+      <small>Attendance certificate from the seminar</small>
+      <input type="file" (change)="onFileSelected($event, 7)" accept="image/*,.pdf" />
+      <div class="file-status" *ngIf="isFileSelected(7); else notUploaded7">
+        <span class="success">✓ {{ getFileName(7) }}</span>
+      </div>
+      <ng-template #notUploaded7>
+        <div class="file-status"><span class="error">✗ This document is required</span></div>
+      </ng-template>
+    </div>
+
+    <!-- ── OPTIONAL FILE UPLOADS ── -->
+
+    <!-- Parental Consent / Advice -->
+    <div class="form-group optional-field">
+      <label>
+        Parental Consent / Advice
+        <span class="badge optional">If aged 18–24</span>
+      </label>
+      <small>Required if either party is 18–20 (Consent) or 21–24 (Advice). Include Pre-Marriage Counseling cert.</small>
+      <input type="file" (change)="onFileSelected($event, 8)" accept="image/*,.pdf" />
+      <div class="file-status" *ngIf="isFileSelected(8)">
+        <span class="success">✓ {{ getFileName(8) }}</span>
+      </div>
+      <div class="file-status" *ngIf="!isFileSelected(8)">
+        <span class="muted">— Not uploaded (only if applicable)</span>
       </div>
     </div>
 
-    <div class="form-group">
-      <label>Upload File 1</label>
-      <input type="file" (change)="onFileSelected($event, 1)" />
+    <!-- Annulment Decree or Death Certificate -->
+    <div class="form-group optional-field">
+      <label>
+        Annulment Decree or Death Certificate
+        <span class="badge optional">If previously married</span>
+      </label>
+      <small>Required if either party was previously married.</small>
+      <input type="file" (change)="onFileSelected($event, 9)" accept="image/*,.pdf" />
+      <div class="file-status" *ngIf="isFileSelected(9)">
+        <span class="success">✓ {{ getFileName(9) }}</span>
+      </div>
+      <div class="file-status" *ngIf="!isFileSelected(9)">
+        <span class="muted">— Not uploaded (only if applicable)</span>
+      </div>
     </div>
 
-    <div class="form-group">
-      <label>Upload File 2</label>
-      <input type="file" (change)="onFileSelected($event, 2)" />
+    <!-- Certificate of Legal Capacity to Marry -->
+    <div class="form-group optional-field">
+      <label>
+        Certificate of Legal Capacity to Marry
+        <span class="badge optional">Foreign applicants only</span>
+      </label>
+      <small>Required if either party is a foreign national.</small>
+      <input type="file" (change)="onFileSelected($event, 10)" accept="image/*,.pdf" />
+      <div class="file-status" *ngIf="isFileSelected(10)">
+        <span class="success">✓ {{ getFileName(10) }}</span>
+      </div>
+      <div class="file-status" *ngIf="!isFileSelected(10)">
+        <span class="muted">— Not uploaded (only if applicable)</span>
+      </div>
+    </div>
+
+    <!-- Status Message -->
+    <div class="status-message" [ngClass]="areRequiredFilesSelected() ? 'success' : 'warning'">
+      <strong>Status:</strong>
+      <span *ngIf="areRequiredFilesSelected()">✓ All required documents uploaded — Ready to submit</span>
+      <span *ngIf="!areRequiredFilesSelected()">✗ Please upload all required documents ({{ uploadedRequiredCount() }}/7 uploaded)</span>
     </div>
 
     <div class="button-group">
-      <button type="submit" class="btn btn-req">Submit</button>
+      <button
+        type="submit"
+        class="btn btn-req"
+        [disabled]="!areRequiredFilesSelected() || isSubmitting"
+      >
+        {{ isSubmitting ? 'Submitting...' : 'Submit' }}
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="resetFiles()">
+        Clear All
+      </button>
     </div>
+
   </form>
+</div>
+
+<!-- ── Modal Dialog ── -->
+<div class="modal-overlay" *ngIf="modal.visible" (click)="closeModal()">
+  <div class="modal-box" [ngClass]="modal.type" (click)="$event.stopPropagation()">
+
+    <div class="modal-icon">
+      <span *ngIf="modal.type === 'success'">✓</span>
+      <span *ngIf="modal.type === 'error'">✕</span>
+      <span *ngIf="modal.type === 'warning'">⚠</span>
+    </div>
+
+    <h3 class="modal-title">{{ modal.title }}</h3>
+    <p class="modal-message">{{ modal.message }}</p>
+
+    <div class="modal-request-id" *ngIf="modal.type === 'success' && modal.requestId">
+      <span>Request ID:</span>
+      <strong>{{ modal.requestId }}</strong>
+    </div>
+
+    <p class="modal-redirect-note" *ngIf="modal.type === 'success'">
+      You will be redirected to your documents page.
+    </p>
+
+    <button class="modal-close-btn" (click)="closeModal()">
+      {{ modal.type === 'success' ? 'Go to Documents' : 'Close' }}
+    </button>
+
+  </div>
 </div>

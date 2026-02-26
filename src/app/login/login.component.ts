@@ -1,4 +1,3 @@
-// login.component.ts
 import { Component, HostListener } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -16,7 +15,7 @@ export class LoginComponent {
   loginForm: FormGroup;
   showPassword: boolean = false;
   loading: boolean = false;
-  loginError: string = ''; // <-- New variable for error messages
+  loginError: string = '';
 
   constructor(
     private fb: FormBuilder,
@@ -33,7 +32,7 @@ export class LoginComponent {
       const user = JSON.parse(storedUser);
       if (user.role === 1) this.router.navigate(['/admin']);
       else if (user.role === 2) this.router.navigate(['/home-staff']);
-      else if (user.role === 3 && !user.detailsCompleted) this.router.navigate(['/edit-profile']);
+      else if (user.role === 3 && !user.detailsCompleted) this.router.navigate(['/account']);
       else this.router.navigate(['/']);
     }
   }
@@ -44,7 +43,7 @@ export class LoginComponent {
   togglePassword(): void { this.showPassword = !this.showPassword; }
 
   onSubmit(): void {
-    this.loginError = ''; // reset previous errors
+    this.loginError = '';
 
     if (!this.loginForm.valid) {
       this.loginError = 'Please enter a valid email and password.';
@@ -57,6 +56,7 @@ export class LoginComponent {
       next: (res: any) => {
         if (!res.token || !res.user) {
           this.loginError = res.message || 'Invalid email or password.';
+          this.loading = false;
           return;
         }
 
@@ -67,13 +67,15 @@ export class LoginComponent {
         if (res.user.role === 1) this.router.navigate(['/admin']);
         else if (res.user.role === 2) this.router.navigate(['/home-staff']);
         else if (res.user.role === 3) {
-          if (!res.user.detailsCompleted) this.router.navigate(['/edit-profile']);
+          // First login — profile not yet completed, go to account to fill in details
+          if (!res.user.detailsCompleted) this.router.navigate(['/account']);
           else this.router.navigate(['/']);
         } else this.router.navigate(['/']);
       },
       error: (err) => {
         console.error('Login failed:', err);
         this.loginError = err.error?.message || 'Incorrect email or password.';
+        this.loading = false;
       },
       complete: () => {
         this.loading = false;

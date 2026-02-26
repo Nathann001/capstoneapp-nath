@@ -440,7 +440,7 @@ app.post('/api/auth/resend-otp', (req, res) => {
 
     const pendingUser = results[0];
     const now = new Date();
-    const lastSent = new Date(pendingUser.otp_expires_at.getTime() - 10 * 60 * 1000);
+    const lastSent = new Date(new Date(pendingUser.otp_expires_at).getTime() - 10 * 60 * 1000);
     const cooldown = 60 * 1000;
 
     if (now - lastSent < cooldown) {
@@ -762,16 +762,21 @@ app.delete('/api/admin/staff/:id', verifyToken, checkRoles([1]), (req, res) => {
 
 app.get('/api/document_request', verifyToken, checkRoles([1, 2]), (req, res) => {
   const sql = `
-    SELECT * FROM document_request
-    WHERE (status = 'pending' AND assigned_staff_id IS NULL)
-       OR assigned_staff_id = ?
-    ORDER BY date_created DESC
+    SELECT dr.*,
+           ud.User_FullName AS requester_name
+    FROM document_request dr
+    LEFT JOIN users u ON dr.user_id = u.id
+    LEFT JOIN user_details ud ON u.id = ud.UserID
+    WHERE (dr.status = 'pending' AND dr.assigned_staff_id IS NULL)
+       OR dr.assigned_staff_id = ?
+    ORDER BY dr.date_created DESC
   `;
   db.query(sql, [req.user.id], (err, results) => {
     if (err) return res.status(500).json({ error: 'Failed to fetch document requests' });
     res.json(results);
   });
 });
+
 
 app.get('/api/document_request/for_release', verifyToken, checkRoles([1,2]), (req, res) => {
   db.query(
@@ -813,8 +818,14 @@ app.get('/api/document_request/released_list', verifyToken, checkRoles([1, 2]), 
 app.get('/api/document_request/:id', verifyToken, (req, res) => {
   const requestId = parseInt(req.params.id, 10);
   const sql = `
-    SELECT dr.RequestID, dr.name, dr.date_created, dr.status, dr.updated_at,
-           dr.file_path, u.email,
+    SELECT dr.RequestID, dr.name, dr.document_type, dr.date_created, dr.status, dr.updated_at,
+           dr.file_path, dr.denial_reason,
+           dr.First_Name, dr.Middle_Name, dr.Last_Name,
+           dr.Fathers_Name, dr.Mothers_Name, dr.Doc_Date,
+           dr.Death_Place, dr.Marriage_Place, dr.Wife_Name,
+           dr.Groom_First_Name, dr.Groom_Middle_Name, dr.Groom_Last_Name, dr.Groom_DOB,
+           dr.Bride_First_Name, dr.Bride_Middle_Name, dr.Bride_Last_Name, dr.Bride_DOB,
+           u.email,
            CONCAT(ud.User_FName, ' ', ud.User_LName) AS full_name
     FROM document_request dr
     LEFT JOIN users u ON dr.user_id = u.id
@@ -1164,7 +1175,7 @@ app.get('/api/my/requests/:id/download', verifyToken, checkRoles([3]), (req, res
 });
 
 // POST /api/document_request — Submit a new document request (role 3)
-const uploadDocMultiple = multer({ storage: multer.memoryStorage() }).array('files', 5);
+const uploadDocMultiple = multer({ storage: multer.memoryStorage() }).array('files', 10);
 
 app.post('/api/document_request', verifyToken, checkRoles([3]), (req, res) => {
   uploadDocMultiple(req, res, async (err) => {
@@ -1174,7 +1185,9 @@ app.post('/api/document_request', verifyToken, checkRoles([3]), (req, res) => {
       document_type,
       First_Name, Middle_Name, Last_Name,
       Fathers_Name, Mothers_Name,
-      Doc_Date, Death_Place, Marriage_Place, Wife_Name
+      Doc_Date, Death_Place, Marriage_Place, Wife_Name,
+      Groom_First_Name, Groom_Middle_Name, Groom_Last_Name, Groom_DOB,
+      Bride_First_Name, Bride_Middle_Name, Bride_Last_Name, Bride_DOB,
     } = req.body;
 
     const userId = req.user.id;
@@ -1183,7 +1196,8 @@ app.post('/api/document_request', verifyToken, checkRoles([3]), (req, res) => {
     const requiredFields = {
       birth:    ['First_Name', 'Middle_Name', 'Last_Name', 'Doc_Date', 'Fathers_Name', 'Mothers_Name'],
       death:    ['First_Name', 'Last_Name', 'Doc_Date', 'Death_Place'],
-      marriage: ['First_Name', 'Last_Name', 'Doc_Date', 'Marriage_Place', 'Wife_Name']
+      marriage: ['First_Name', 'Last_Name', 'Doc_Date', 'Marriage_Place', 'Wife_Name'],
+      marriage_license: ['Groom_First_Name', 'Groom_Last_Name', 'Groom_DOB', 'Bride_First_Name', 'Bride_Last_Name', 'Bride_DOB'],
     };
 
     if (!document_type) return res.status(400).json({ error: 'Document type is required' });
@@ -1195,7 +1209,7 @@ app.post('/api/document_request', verifyToken, checkRoles([3]), (req, res) => {
       }
     }
 
-    const typeMap = { birth: 'Birth Certificate', death: 'Death Certificate', marriage: 'Marriage Certificate' };
+    const typeMap = { birth: 'Birth Certificate', death: 'Death Certificate', marriage: 'Marriage Certificate', marriage_license: 'Marriage License', };
     const displayDocumentType = typeMap[document_type] || document_type;
 
     db.getConnection(async (connErr, connection) => {
@@ -1221,21 +1235,27 @@ app.post('/api/document_request', verifyToken, checkRoles([3]), (req, res) => {
         }
 
         const filePathString = savedFiles.join(',');
-        const name = `${First_Name || ''} ${Middle_Name || ''} ${Last_Name || ''}`.trim();
+        const name = document_type === 'marriage_license'
+        ? `${Groom_First_Name || ''} ${Groom_Last_Name || ''} & ${Bride_First_Name || ''} ${Bride_Last_Name || ''}`.trim()
+        : `${First_Name || ''} ${Middle_Name || ''} ${Last_Name || ''}`.trim();
 
-        connection.query(
-          `INSERT INTO document_request
-             (name, document_type, file_path, user_id,
-              First_Name, Middle_Name, Last_Name,
-              Fathers_Name, Mothers_Name, Doc_Date,
-              Death_Place, Marriage_Place, Wife_Name)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            name, document_type, filePathString, userId,
-            First_Name || null, Middle_Name || null, Last_Name || null,
-            Fathers_Name || null, Mothers_Name || null, Doc_Date || null,
-            Death_Place || null, Marriage_Place || null, Wife_Name || null
-          ],
+       connection.query(
+        `INSERT INTO document_request
+          (name, document_type, file_path, user_id, status, date_created,
+            First_Name, Middle_Name, Last_Name,
+            Fathers_Name, Mothers_Name, Doc_Date,
+            Death_Place, Marriage_Place, Wife_Name,
+            Groom_First_Name, Groom_Middle_Name, Groom_Last_Name, Groom_DOB,
+            Bride_First_Name, Bride_Middle_Name, Bride_Last_Name, Bride_DOB)
+        VALUES (?, ?, ?, ?, 'pending', NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          name, document_type, filePathString, userId,
+          First_Name || null, Middle_Name || null, Last_Name || null,
+          Fathers_Name || null, Mothers_Name || null, Doc_Date || null,
+          Death_Place || null, Marriage_Place || null, Wife_Name || null,
+          Groom_First_Name || null, Groom_Middle_Name || null, Groom_Last_Name || null, Groom_DOB || null,
+          Bride_First_Name || null, Bride_Middle_Name || null, Bride_Last_Name || null, Bride_DOB || null,
+        ],
           async (insertErr, result) => {
             connection.release();
 
@@ -1255,6 +1275,11 @@ app.post('/api/document_request', verifyToken, checkRoles([3]), (req, res) => {
               if (userEmailResults.length > 0 && userEmailResults[0].email) {
                 await sendRequestStatusEmail(userEmailResults[0].email, 'pending', null, displayDocumentType);
                 console.log(`✓ Email sent`);
+                db.query(
+                'INSERT INTO request_status_history (RequestID, status, email_message) VALUES (?, ?, ?)',
+                [requestId, 'pending', `Your request for ${displayDocumentType} has been submitted and is now pending review.`],
+                (err) => { if (err) console.error('Failed to log pending history', err); }
+              );
               }
             } catch (emailErr) {
               console.error('Failed to send pending email:', emailErr.message);

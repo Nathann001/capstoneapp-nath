@@ -22,44 +22,24 @@ export class DocumentsComponent {
 
   documents: CityDocument[] = [
     {
-      name: 'Registration of Birth Certificate (On-Time Registration)',
-      file: '/assets/documents/registration-of-birth-on-time.pdf',
+      name: 'Issuance of Certified True Copy of Birth Certificate',
+      file: '/assets/documents/issuance-of-certified-copy-of-birth-others.pdf',
       applyRoute: '/registration-of-birth-on-time'
     },
     {
-      name: 'Registration of Death Certificate (On-Time Registration)',
-      file: '/assets/documents/registration-of-death-on-time.pdf',
+      name: 'Issuance of Certified True Copy of Death Certificate',
+      file: '/assets/documents/issuance-of-certified-copy-of-birth-others.pdf',
       applyRoute: '/registration-of-death-on-time'
     },
     {
-      name: 'Registration of Marriage Certificate (On-Time Registration)',
-      file: '/assets/documents/registration-of-marriage-on-time.pdf',
-      applyRoute: '/registration-of-marriage-on-time'
-    },
-    {
-      name: 'Issuance of Certified True Copy of Birth, Marriage, Death and Other Registry Documents',
+      name: 'Issuance of Certified True Copy of Marriage Certificate',
       file: '/assets/documents/issuance-of-certified-copy-of-birth-others.pdf',
-      applyRoute: '/issuance-of-certified-copy-of-birth-others'
+      applyRoute: '/registration-of-marriage-on-time'
     },
     {
       name: 'Issuance of Marriage License',
       file: '/assets/documents/issuance-of-marriage-license.pdf',
       applyRoute: '/issuance-of-married-license'
-    },
-    {
-      name: 'Delayed Registration of Birth Certificate',
-      file: '/assets/documents/delayed-registration-of-birth.pdf',
-      applyRoute: '/delayed-registration-of-birth'
-    },
-    {
-      name: 'Delayed Registration of Marriage Certificate',
-      file: '/assets/documents/delayed-registration-of-marriage.pdf',
-      applyRoute: '/delayed-registration-of-marriage'
-    },
-    {
-      name: 'Delayed Registration of Death Certificate',
-      file: '/assets/documents/delayed-registration-of-death.pdf',
-      applyRoute: '/delayed-registration-of-death'
     },
     {
       name: 'Appointment Booking for Registration of Certificates',
