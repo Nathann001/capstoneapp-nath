@@ -110,7 +110,6 @@
               type="date"
               class="form-control date-input"
               [(ngModel)]="eventDate"
-              [max]="maxEventDate"
               [disabled]="!selectedCertType"
               (change)="onEventDateChange()"
             />
@@ -210,6 +209,7 @@
             class="form-control date-input"
             [(ngModel)]="selectedDate"
             [min]="minDate"
+            [max]="maxDate"
             (change)="onDateChange()"
           />
           <span class="date-hint" *ngIf="!selectedDate">Choose a date to see available slots</span>

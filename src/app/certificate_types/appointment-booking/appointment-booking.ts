@@ -40,7 +40,7 @@ export class AppointmentBookingComponent implements OnInit {
   selectedRegType: string = '';
   eventDate: string = '';
   minDate: string = '';
-  maxEventDate: string = '';
+  maxDate: string = '';
 
   certificateTypes = ['Birth', 'Death', 'Marriage'];
 
@@ -59,10 +59,13 @@ export class AppointmentBookingComponent implements OnInit {
   constructor(private http: HttpClient) {}
 
   ngOnInit() {
-    const today = new Date();
-    this.minDate = today.toISOString().split('T')[0];
-    this.maxEventDate = today.toISOString().split('T')[0];
-  }
+  const today = new Date();
+  this.minDate = today.toISOString().split('T')[0];
+
+  const maxD = new Date();
+  maxD.setMonth(maxD.getMonth() + 1);
+  this.maxDate = maxD.toISOString().split('T')[0];
+}
 
   get token() { return localStorage.getItem('token') || ''; }
 

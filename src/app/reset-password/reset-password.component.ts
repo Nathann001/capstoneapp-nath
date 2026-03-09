@@ -12,13 +12,15 @@ import { Router, RouterModule } from '@angular/router';
   styleUrls: ['./reset-password.component.css']
 })
 export class ResetPasswordComponent {
-  step: 1 | 2 = 1; // Step 1: enter email, Step 2: enter OTP + new password
+  step: 1 | 2 = 1;
   emailForm: FormGroup;
   resetForm: FormGroup;
   message = '';
   error = '';
   loading = false;
   submittedEmail = '';
+  showPassword = false;
+  showConfirm = false;
 
   constructor(
     private fb: FormBuilder,
@@ -50,7 +52,7 @@ export class ResetPasswordComponent {
     this.loading = true;
     this.submittedEmail = this.emailForm.value.email;
 
-    this.http.post('https://its-certificate-generator.onrender.com/api/auth/forgot-password', {
+    this.http.post('https://drtbackend-2cw3.onrender.com/api/auth/forgot-password', {
       email: this.submittedEmail
     }).subscribe({
       next: () => {
@@ -59,7 +61,7 @@ export class ResetPasswordComponent {
         this.loading = false;
       },
       error: (err) => {
-        this.error = err.error?.message || 'Something went wrong.';
+        this.error = err.error?.message || 'Something went wrong. Please try again.';
         this.loading = false;
       }
     });
@@ -73,7 +75,7 @@ export class ResetPasswordComponent {
     this.loading = true;
     const { otp, password } = this.resetForm.value;
 
-    this.http.post('https://its-certificate-generator.onrender.com/api/auth/reset-password', {
+    this.http.post('https://drtbackend-2cw3.onrender.com/api/auth/reset-password', {
       email: this.submittedEmail,
       otp,
       newPassword: password
@@ -84,7 +86,7 @@ export class ResetPasswordComponent {
         setTimeout(() => this.router.navigate(['/login']), 2000);
       },
       error: (err) => {
-        this.error = err.error?.message || 'Something went wrong.';
+        this.error = err.error?.message || 'Something went wrong. Please try again.';
         this.loading = false;
       },
       complete: () => { this.loading = false; }
