@@ -15,9 +15,9 @@
         <div class="otp-icon-wrap"><i class="fa-solid fa-envelope-open-text"></i></div>
         <h2 class="form-title">Check your email</h2>
         <p class="otp-text" *ngIf="otpSent">
-        We sent a 6-digit code to<br>
-        <strong class="email-highlight">{{ otpForm.value.contact }}</strong>
-</p>
+          We sent a 6-digit code to<br>
+          <strong class="email-highlight">{{ otpForm.value.contact }}</strong>
+        </p>
       </div>
 
       <!-- OTP FORM -->
@@ -39,9 +39,15 @@
           <div class="input-wrap">
             <i class="fa-solid fa-key input-icon"></i>
             <input type="text" formControlName="otp" maxlength="6"
+              class="otp-input"
               placeholder="Enter 6-digit OTP"
               [class.input-invalid]="otpForm.get('otp')?.invalid && otpForm.get('otp')?.touched" />
           </div>
+        </div>
+
+        <!-- Verify error -->
+        <div class="error-msg" *ngIf="verifyError">
+          <i class="fa-solid fa-circle-exclamation"></i> {{ verifyError }}
         </div>
 
         <!-- VERIFY BUTTON -->
@@ -61,8 +67,11 @@
           {{ resendCooldown > 0 ? 'Resend in ' + resendCooldown + 's' : 'Resend OTP' }}
         </button>
 
-        <p class="resend-ok" *ngIf="message">
+        <p class="resend-ok" *ngIf="message && !resendError">
           <i class="fa-solid fa-circle-check"></i> {{ message }}
+        </p>
+        <p class="resend-fail" *ngIf="resendError">
+          <i class="fa-solid fa-circle-exclamation"></i> {{ resendError }}
         </p>
       </div>
 
@@ -73,7 +82,7 @@
   <div class="right-panel">
     <div class="panel-overlay"></div>
     <div class="panel-content">
-      <img src="/assets/images/angeles_city_logo.png" alt="Angeles City Seal" class="mobile-seal" routerLink="/" style="cursor:pointer" />
+      <img src="/assets/images/angeles_city_logo.png" alt="Angeles City Seal" class="seal" routerLink="/" style="cursor:pointer" />
       <h1 class="panel-title">Angeles City</h1>
       <p class="panel-eyebrow">Republic of the Philippines</p>
       <div class="panel-rule"></div>

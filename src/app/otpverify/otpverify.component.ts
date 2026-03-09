@@ -19,7 +19,9 @@ export class OtpVerificationComponent implements OnInit {
   resendCooldown = 0;
   contact: string = '';
   message: string = '';
-  otpSent = false; // controls display of "We sent OTP to …"
+  resendError: string = '';
+  verifyError: string = '';
+  otpSent = false;
 
   constructor(
     private fb: FormBuilder,
@@ -27,13 +29,12 @@ export class OtpVerificationComponent implements OnInit {
     private router: Router
   ) {
     this.otpForm = this.fb.group({
-      contact: ['', [Validators.required]], // Editable email/phone
+      contact: ['', [Validators.required]],
       otp: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(6)]]
     });
   }
 
   ngOnInit() {
-    // Prefill contact from navigation state or sessionStorage
     const stateContact = history.state?.contact;
     const savedContact = sessionStorage.getItem('otpContact');
 
@@ -51,6 +52,7 @@ export class OtpVerificationComponent implements OnInit {
     if (this.otpForm.invalid) return;
 
     this.loading = true;
+    this.verifyError = '';
     const contact = this.otpForm.get('contact')?.value;
     const otp = this.otpForm.get('otp')?.value;
 
@@ -65,7 +67,8 @@ export class OtpVerificationComponent implements OnInit {
         this.router.navigate(['/login']);
       },
       error: (err) => {
-        console.error(err.error?.message || 'OTP verification failed');
+        this.verifyError = err.error?.message || 'OTP verification failed. Please try again.';
+        this.loading = false;
       },
       complete: () => {
         this.loading = false;
@@ -79,14 +82,18 @@ export class OtpVerificationComponent implements OnInit {
     const contact = this.otpForm.get('contact')?.value;
 
     if (!contact) {
-      this.message = 'Please enter your email or phone number.';
+      this.resendError = 'Please enter your email or phone number.';
       return;
     }
+
+    this.message = '';
+    this.resendError = '';
 
     this.authService.resendOtp(contact).subscribe({
       next: () => {
         this.message = 'OTP resent successfully!';
-        this.otpSent = true; // <-- Show the "We sent OTP to ..." text
+        this.resendError = '';
+        this.otpSent = true;
         this.resendCooldown = 60;
 
         const countdown$ = timer(0, 1000);
@@ -100,7 +107,8 @@ export class OtpVerificationComponent implements OnInit {
         });
       },
       error: (err) => {
-        this.message = err.error?.message || 'Failed to resend OTP';
+        this.resendError = err.error?.message || 'Failed to resend OTP. Please try again.';
+        this.message = '';
       }
     });
   }

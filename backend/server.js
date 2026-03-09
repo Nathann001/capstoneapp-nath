@@ -371,14 +371,15 @@ app.post('/api/auth/register', async (req, res) => {
       db.query(
         'INSERT INTO pending_users (email, phone, password, otp, otp_expires_at) VALUES (?, ?, ?, ?, ?)',
         [email, phone, hashedPassword, otp, expiresAt],
-        async (err2) => {
+        (err2) => {
           if (err2) { console.error('DB INSERT error:', err2); return res.status(500).json({ message: 'Database error' }); }
           console.log('OTP:', otp);
+
+          res.status(201).json({ message: 'OTP sent. Please verify to complete registration.' });
+
           if (email) {
-            try { await sendOtpEmail(email, otp); }
-            catch (e) { console.error('sendOtpEmail error:', e); }
+            sendOtpEmail(email, otp).catch(e => console.error('sendOtpEmail error:', e));
           }
-          return res.status(201).json({ message: 'OTP sent. Please verify to complete registration.' });
         }
       );
     });
@@ -453,13 +454,15 @@ app.post('/api/auth/resend-otp', (req, res) => {
     db.query(
       'UPDATE pending_users SET otp = ?, otp_expires_at = ? WHERE id = ?',
       [otp, expiresAt, pendingUser.id],
-      async (err) => {
+      (err) => {
         if (err) return res.status(500).json({ message: 'Failed to update OTP' });
-        if (email) {
-          try { await sendOtpEmail(email, otp); }
-          catch (e) { console.error('Error sending OTP email:', e); }
-        }
+
+        // Respond immediately, send email in background
         res.json({ message: 'OTP resent successfully' });
+
+        if (email) {
+          sendOtpEmail(email, otp).catch(e => console.error('Error sending OTP email:', e));
+        }
       }
     );
   });
@@ -517,13 +520,14 @@ app.post('/api/auth/forgot-password', (req, res) => {
 
     db.query(
       `INSERT INTO password_reset_otps (email, otp, expires_at) VALUES (?, ?, ?)
-       ON DUPLICATE KEY UPDATE otp = ?, expires_at = ?`,
+      ON DUPLICATE KEY UPDATE otp = ?, expires_at = ?`,
       [email, otp, expiresAt, otp, expiresAt],
-      async (err) => {
+      (err) => {
         if (err) return res.status(500).json({ message: 'Server error' });
-        try { await sendOtpEmail(email, otp); }
-        catch (e) { console.error('Failed to send reset OTP:', e); }
+
         res.json({ message: 'If this email exists, an OTP has been sent.' });
+
+        sendOtpEmail(email, otp).catch(e => console.error('Failed to send reset OTP:', e));
       }
     );
   });

@@ -1,7 +1,7 @@
 // ================================================================
 // appointment-booking.component.ts  (REDESIGNED)
 // ================================================================
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -38,9 +38,11 @@ export class AppointmentBookingComponent implements OnInit {
   selectedTime: string = '';
   selectedCertType: string = '';
   selectedRegType: string = '';
+  regTypeReason: string = '';
   eventDate: string = '';
   minDate: string = '';
   maxDate: string = '';
+  maxEventDate: string = '';
 
   certificateTypes = ['Birth', 'Death', 'Marriage'];
 
@@ -59,13 +61,14 @@ export class AppointmentBookingComponent implements OnInit {
   constructor(private http: HttpClient) {}
 
   ngOnInit() {
-  const today = new Date();
-  this.minDate = today.toISOString().split('T')[0];
+    const today = new Date();
+    this.minDate = today.toISOString().split('T')[0];
+    this.maxEventDate = today.toISOString().split('T')[0];
 
-  const maxD = new Date();
-  maxD.setMonth(maxD.getMonth() + 1);
-  this.maxDate = maxD.toISOString().split('T')[0];
-}
+    const maxD = new Date();
+    maxD.setMonth(maxD.getMonth() + 1);
+    this.maxDate = maxD.toISOString().split('T')[0];
+  }
 
   get token() { return localStorage.getItem('token') || ''; }
 
@@ -86,30 +89,41 @@ export class AppointmentBookingComponent implements OnInit {
   onCertTypeChange(type: string) {
     this.selectedCertType = type;
     this.selectedRegType = '';
+    this.regTypeReason = '';
     this.eventDate = '';
   }
 
   onEventDateChange() {
     if (!this.eventDate || !this.selectedCertType) {
       this.selectedRegType = '';
+      this.regTypeReason = '';
       return;
     }
 
-    const event = new Date(this.eventDate);
+    const [year, month, day] = this.eventDate.split('-').map(Number);
+    const event = new Date(year, month - 1, day);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     event.setHours(0, 0, 0, 0);
 
-    // Day of event counts as day 1
     const daysDiff = Math.floor((today.getTime() - event.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
     if (daysDiff <= 0) {
       this.selectedRegType = '';
+      this.regTypeReason = '';
       return;
     }
 
     const threshold = this.selectedCertType === 'Marriage' ? 15 : 30;
-    this.selectedRegType = daysDiff <= threshold ? 'On Time' : 'Delayed';
+    const daysOver = daysDiff - threshold;
+
+    if (daysDiff <= threshold) {
+      this.selectedRegType = 'On Time';
+      this.regTypeReason = `Registered on day ${daysDiff} of the ${threshold}-day reglementary period.`;
+    } else {
+      this.selectedRegType = 'Delayed';
+      this.regTypeReason = `The ${this.selectedCertType.toLowerCase()} occurred ${daysDiff - 1} day${daysDiff - 1 !== 1 ? 's' : ''} ago, which is ${daysOver} day${daysOver !== 1 ? 's' : ''} past the ${threshold}-day reglementary period.`;
+    }
   }
 
   private requirementsMap: Record<string, RequirementEntry[]> = {
@@ -218,24 +232,25 @@ export class AppointmentBookingComponent implements OnInit {
   }
 
   isWeekend(dateStr: string): boolean {
-  const date = new Date(dateStr);
-  const day = date.getUTCDay();
-  return day === 0 || day === 6;
-}
-
-onDateChange() {
-  this.selectedTime = '';
-  if (!this.selectedDate) { this.slots = []; return; }
-
-  if (this.isWeekend(this.selectedDate)) {
-    this.selectedDate = '';
-    this.slots = [];
-    this.showModal('error', 'Appointments are only available Monday to Friday. Please select a weekday.');
-    return;
+    const date = new Date(dateStr);
+    const day = date.getUTCDay();
+    return day === 0 || day === 6;
   }
 
-  this.fetchSlots();
-}
+  onDateChange() {
+    this.selectedTime = '';
+    if (!this.selectedDate) { this.slots = []; return; }
+
+    if (this.isWeekend(this.selectedDate)) {
+      this.selectedDate = '';
+      this.slots = [];
+      this.showModal('error', 'Appointments are only available Monday to Friday. Please select a weekday.');
+      return;
+    }
+
+    this.fetchSlots();
+  }
+
   fetchSlots() {
     this.loadingSlots = true;
     this.slots = [];
@@ -279,6 +294,7 @@ onDateChange() {
         this.selectedTime = '';
         this.selectedCertType = '';
         this.selectedRegType = '';
+        this.regTypeReason = '';
         this.eventDate = '';
         this.slots = [];
       },

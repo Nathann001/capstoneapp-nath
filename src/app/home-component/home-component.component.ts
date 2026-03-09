@@ -1,6 +1,8 @@
-import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, NavigationEnd } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-home-component',
@@ -9,9 +11,10 @@ import { RouterModule, Router } from '@angular/router';
   templateUrl: './home-component.component.html',
   styleUrls: ['./home-component.component.css']
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
 
-  isLoggedIn = !!localStorage.getItem('token');
+  isLoggedIn = false;
+  private routerSub!: Subscription;
 
   hotlines = [
     {
@@ -54,6 +57,23 @@ export class HomeComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Check immediately on load
+    this.checkAuth();
+
+    // Re-check every time any navigation completes (including after logout)
+    this.routerSub = this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      this.checkAuth();
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.routerSub) this.routerSub.unsubscribe();
+  }
+
+  private checkAuth(): void {
+    this.isLoggedIn = !!localStorage.getItem('token');
   }
 
   navigateToLogin() {

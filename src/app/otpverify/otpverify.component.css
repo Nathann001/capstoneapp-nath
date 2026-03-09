@@ -17,13 +17,11 @@
   font-family: 'Source Sans 3', 'Segoe UI', sans-serif;
 }
 
-/* Page Layout */
 .otp-page {
   display: flex;
   min-height: 100vh;
 }
 
-/* Left Panel */
 .left-panel {
   flex: 0.9;
   background: var(--off);
@@ -45,7 +43,6 @@
   to { opacity:1; transform:translateY(0); }
 }
 
-/* Mobile header */
 .mobile-header {
   display: none;
   flex-direction: column;
@@ -58,7 +55,6 @@
   font-size: 22px; font-weight: 700; color: var(--red-deep);
 }
 
-/* Titles */
 .form-title {
   font-family: 'Playfair Display', 'Georgia', serif;
   font-size: 30px; font-weight: 700;
@@ -66,7 +62,6 @@
 }
 .form-sub { font-size: 14px; color: var(--txt-light); margin-bottom: 28px; }
 
-/* Fields */
 .field-group { display: flex; flex-direction: column; margin-bottom: 16px; }
 .field-label {
   font-size: 12px; font-weight: 700; text-transform: uppercase;
@@ -89,10 +84,8 @@
 }
 .input-wrap input.input-invalid { border-color: #e57373; }
 
-/* OTP Input */
 .otp-input { letter-spacing: 4px; font-size: 18px; font-weight: 700; text-align: center; }
 
-/* Submit button */
 .btn-submit {
   width: 100%; margin-top: 4px;
   padding: 13px; background: var(--red); color: #fff;
@@ -108,7 +101,16 @@
 }
 .btn-submit:disabled { opacity: .6; cursor: not-allowed; }
 
-/* Resend OTP */
+.btn-spinner-wrap { display: flex; align-items: center; gap: 8px; }
+
+.spinner {
+  display: inline-block; width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,.35);
+  border-top-color: #fff;
+  border-radius: 50%; animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
 .resend-wrap {
   display: flex; flex-direction: column;
   align-items: center; gap: 10px; margin-top: 18px;
@@ -125,9 +127,38 @@
   border-color: var(--red); color: var(--red); background: var(--red-soft);
 }
 .btn-resend:disabled { opacity: .5; cursor: not-allowed; }
-.resend-ok { font-size: 12.5px; color: #2e7d32; display: flex; align-items: center; gap: 6px; }
 
-/* Right Panel */
+.resend-ok {
+  font-size: 12.5px;
+  color: #2e7d32;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── New additions ── */
+.error-msg {
+  background: #fdf0f0;
+  border: 1px solid #f5c6c6;
+  border-left: 3px solid var(--red);
+  color: var(--red-deep);
+  border-radius: var(--r);
+  padding: 10px 14px;
+  font-size: 13.5px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.resend-fail {
+  font-size: 12.5px;
+  color: var(--red);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .right-panel {
   flex: 1.1;
   position: relative;
@@ -162,7 +193,6 @@
 .panel-desc { font-size: 15px; color: rgba(255,255,255,.65); line-height: 1.7; max-width: 320px; margin-left: auto; }
 .panel-footer { position: absolute; bottom: 28px; right: 56px; z-index: 1; font-size: 11px; color: rgba(255,255,255,.35); }
 
-/* Responsive */
 @media (max-width: 860px) {
   .otp-page { flex-direction: column; }
   .right-panel { display: none; }

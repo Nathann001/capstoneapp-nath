@@ -1,6 +1,3 @@
-<!-- ================================================================ -->
-<!-- appointment-booking.component.html  (REDESIGNED)                -->
-<!-- ================================================================ -->
 <div class="app-container">
   <aside class="sidebar"></aside>
 
@@ -98,7 +95,7 @@
           </div>
         </div>
 
-        <!-- Event Date → auto-detects On Time / Delayed -->
+        <!-- Event Date -->
         <div class="form-group">
           <label class="form-label">
             <i class="fa-solid fa-calendar-day label-icon"></i>
@@ -110,6 +107,7 @@
               type="date"
               class="form-control date-input"
               [(ngModel)]="eventDate"
+              [max]="maxEventDate"
               [disabled]="!selectedCertType"
               (change)="onEventDateChange()"
             />
@@ -128,10 +126,10 @@
                [class.badge-delayed]="selectedRegType === 'Delayed'">
             <i class="fa-solid"
                [ngClass]="selectedRegType === 'On Time' ? 'fa-circle-check' : 'fa-clock-rotate-left'"></i>
-            <span>{{ selectedRegType }} Registration</span>
-            <span class="badge-sub">
-              {{ selectedRegType === 'On Time' ? 'Within the allowed period' : 'Past the allowed period' }}
-            </span>
+            <div class="badge-text">
+              <span>{{ selectedRegType }} Registration</span>
+              <span class="badge-sub">{{ regTypeReason }}</span>
+            </div>
           </div>
         </div>
 
@@ -212,7 +210,7 @@
             [max]="maxDate"
             (change)="onDateChange()"
           />
-          <span class="date-hint" *ngIf="!selectedDate">Choose a date to see available slots</span>
+          <span class="date-hint" *ngIf="!selectedDate">Choose a weekday within the next month</span>
         </div>
       </div>
 
@@ -278,6 +276,7 @@
       <div class="info-text">
         Office hours are <strong>8:00 AM – 5:00 PM</strong>, Monday to Friday.
         Each time slot accepts up to <strong>20 appointments</strong>.
+        Appointments can be booked up to <strong>1 month</strong> in advance.
         A confirmation email will be sent after booking, and a reminder email will be sent on the day of your appointment.
       </div>
     </div>

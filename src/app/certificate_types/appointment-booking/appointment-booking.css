@@ -856,6 +856,12 @@
   flex-shrink: 0;
 }
 
+.badge-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 /* ── Mobile ── */
 @media (max-width: 768px) {
   .requirements-header { padding: 14px 15px; gap: 10px; }
@@ -865,3 +871,4 @@
   .counter-number { font-size: 2.2rem; }
   .counter-name { font-size: 13px; }
 }
+
