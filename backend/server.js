@@ -503,18 +503,52 @@ app.post('/api/auth/login', (req, res) => {
   });
 });
 
-app.post('/api/auth/reset-password', async (req, res) => {
-  const { email, newPassword } = req.body;
-  if (!email || !newPassword) return res.status(400).json({ message: 'Email and new password are required' });
+app.post('/api/auth/forgot-password', (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ message: 'Email is required' });
 
-  db.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
+  db.query('SELECT id FROM users WHERE email = ?', [email], async (err, results) => {
     if (err) return res.status(500).json({ message: 'Database error' });
-    if (results.length === 0) return res.status(404).json({ message: 'User not found with this email' });
+
+    if (results.length === 0) return res.json({ message: 'If this email exists, an OTP has been sent.' });
+
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    db.query(
+      `INSERT INTO password_reset_otps (email, otp, expires_at) VALUES (?, ?, ?)
+       ON DUPLICATE KEY UPDATE otp = ?, expires_at = ?`,
+      [email, otp, expiresAt, otp, expiresAt],
+      async (err) => {
+        if (err) return res.status(500).json({ message: 'Server error' });
+        try { await sendOtpEmail(email, otp); }
+        catch (e) { console.error('Failed to send reset OTP:', e); }
+        res.json({ message: 'If this email exists, an OTP has been sent.' });
+      }
+    );
+  });
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+  if (!email || !otp || !newPassword)
+    return res.status(400).json({ message: 'Email, OTP, and new password are required' });
+
+  db.query('SELECT * FROM password_reset_otps WHERE email = ?', [email], async (err, results) => {
+    if (err) return res.status(500).json({ message: 'Database error' });
+    if (results.length === 0) return res.status(400).json({ message: 'Invalid or expired OTP' });
+
+    const record = results[0];
+    if (new Date(record.expires_at) < new Date())
+      return res.status(400).json({ message: 'OTP has expired' });
+    if (String(record.otp) !== String(otp))
+      return res.status(400).json({ message: 'Invalid OTP' });
 
     try {
       const hashedPassword = await bcrypt.hash(newPassword, 10);
       db.query('UPDATE users SET password = ? WHERE email = ?', [hashedPassword, email], (err) => {
         if (err) return res.status(500).json({ message: 'Error updating password' });
+        db.query('DELETE FROM password_reset_otps WHERE email = ?', [email]);
         res.json({ message: 'Password updated successfully' });
       });
     } catch (error) {

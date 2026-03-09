@@ -7,7 +7,6 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 
-// ---- Requirement shape ----
 interface Requirement {
   name: string;
   note?: string;
@@ -15,7 +14,7 @@ interface Requirement {
 }
 
 interface RequirementSection {
-  section: string;          // section heading
+  section: string;
 }
 
 type RequirementEntry = Requirement | RequirementSection;
@@ -39,10 +38,11 @@ export class AppointmentBookingComponent implements OnInit {
   selectedTime: string = '';
   selectedCertType: string = '';
   selectedRegType: string = '';
+  eventDate: string = '';
   minDate: string = '';
+  maxEventDate: string = '';
 
   certificateTypes = ['Birth', 'Death', 'Marriage'];
-  registrationTypes = ['On Time', 'Delayed'];
 
   // ---- Slots ----
   slots: any[] = [];
@@ -61,68 +61,92 @@ export class AppointmentBookingComponent implements OnInit {
   ngOnInit() {
     const today = new Date();
     this.minDate = today.toISOString().split('T')[0];
+    this.maxEventDate = today.toISOString().split('T')[0];
   }
 
   get token() { return localStorage.getItem('token') || ''; }
 
+  get eventDateLabel(): string {
+    if (this.selectedCertType === 'Birth') return 'Date of Birth';
+    if (this.selectedCertType === 'Death') return 'Date of Death';
+    if (this.selectedCertType === 'Marriage') return 'Date of Marriage';
+    return 'Date of Event';
+  }
+
+  get counterInfo(): { number: number; label: string } | null {
+    if (!this.selectedRegType) return null;
+    return this.selectedRegType === 'On Time'
+      ? { number: 2, label: 'Counter 2 – On Time Registration' }
+      : { number: 1, label: 'Counter 1 – Late / Delayed Registration' };
+  }
+
   onCertTypeChange(type: string) {
     this.selectedCertType = type;
     this.selectedRegType = '';
+    this.eventDate = '';
   }
 
-  onRegTypeChange(type: string) {
-    this.selectedRegType = type;
+  onEventDateChange() {
+    if (!this.eventDate || !this.selectedCertType) {
+      this.selectedRegType = '';
+      return;
+    }
+
+    const event = new Date(this.eventDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    event.setHours(0, 0, 0, 0);
+
+    // Day of event counts as day 1
+    const daysDiff = Math.floor((today.getTime() - event.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+    if (daysDiff <= 0) {
+      this.selectedRegType = '';
+      return;
+    }
+
+    const threshold = this.selectedCertType === 'Marriage' ? 15 : 30;
+    this.selectedRegType = daysDiff <= threshold ? 'On Time' : 'Delayed';
   }
 
   private requirementsMap: Record<string, RequirementEntry[]> = {
 
-    // ── Birth · On Time ──────────────────────────────────────────
     'Birth|On Time': [
       { section: 'Mandatory Document' },
       { name: 'Duly accomplished and signed Certificate of Live Birth' },
-
       { section: 'For Unmarried Parents' },
       { name: 'Affidavit of Acknowledgment / Admission of Paternity' },
       { name: 'Affidavit to Use the Surname of the Father (RA 9255)' },
       { name: 'Both parents must be present during registration', note: 'in person' },
-
       { section: 'Fee Breakdown (Unmarried)' },
       { name: 'Affidavit to Use Surname of Father', copies: '₱300.00' },
       { name: '3 Certifications (₱50.00 each)', copies: '₱150.00' },
       { name: 'UP Law Center (UPLC)', copies: '₱10.00' },
-
       { section: 'Who May File' },
       { name: 'Hospital Representative, Attendant at Birth, or Parents' },
     ],
 
-    // ── Birth · Delayed ──────────────────────────────────────────
     'Birth|Delayed': [
       { section: 'Mandatory Documents' },
       { name: 'Duly accomplished and signed Certificate of Live Birth' },
       { name: 'PSA Certificate of No Registration' },
-
       { section: 'For Adults (18–59 years old)' },
       { name: 'Any two: Baptismal, Voter\'s Certification, Form 137, SSS E-1, or Passport', note: 'choose 2' },
-
       { section: 'For Minors (under 18)' },
       { name: 'Baptismal Certificate and School Record (Form 137)' },
       { name: 'Medical Certificate or Immunization Card' },
-
       { section: 'If Parents are Unmarried' },
       { name: 'Affidavit of Admission of Paternity' },
       { name: 'Affidavit to Use the Surname of the Father (RA 9255)' },
     ],
 
-    // ── Death · On Time ──────────────────────────────────────────
     'Death|On Time': [
       { section: 'Mandatory Document' },
       { name: 'Duly accomplished and signed Death Certificate (MF 103)' },
-
       { section: 'Authorized Reporters' },
       { name: 'Physician who last attended the deceased' },
       { name: 'Nearest relative or person with knowledge of the death' },
       { name: 'Funeral Provider' },
-
       { section: 'Permit Fees' },
       { name: 'Burial Permit', copies: '₱50.00' },
       { name: 'Cremation Permit', copies: '₱500.00' },
@@ -130,61 +154,49 @@ export class AppointmentBookingComponent implements OnInit {
       { name: 'Disinterment Permit', copies: '₱75.00' },
     ],
 
-    // ── Death · Delayed ──────────────────────────────────────────
     'Death|Delayed': [
       { section: 'Mandatory Documents' },
       { name: 'Duly accomplished and signed Death Certificate Form' },
       { name: 'Resident Certificate / Cedula' },
-
       { section: 'Less than 1 year from death' },
       { name: 'Official Receipt of Certification from Funeral Parlor' },
-
       { section: 'More than 1 year from death' },
       { name: 'PSA Certificate of No Registration' },
       { name: 'Official Receipt of Certification from Funeral Parlor' },
     ],
 
-    // ── Marriage · On Time ────────────────────────────────────────
     'Marriage|On Time': [
       { section: 'Mandatory Document' },
       { name: 'Duly accomplished and signed Marriage Certificate (MF 102)' },
-
       { section: 'Who May File' },
       { name: 'Solemnizing Officer' },
       { name: 'Married couple (husband or wife)' },
       { name: 'Parents' },
     ],
 
-    // ── Marriage · Delayed ────────────────────────────────────────
     'Marriage|Delayed': [
       { section: 'Mandatory Document' },
       { name: 'Duly accomplished Marriage Certificate (MF 102)' },
-
       { section: 'Less than 1 year from marriage' },
       { name: 'Unregistered Marriage Contract (MF 102)', copies: '4 copies' },
       { name: 'PSA Certificate of No Marriage (CENOMAR)' },
       { name: 'Marriage License or Affidavit of Cohabitation' },
-
       { section: 'More than 1 year from marriage' },
       { name: 'PSA Certificate of No Marriage (CENOMAR)' },
       { name: 'PSA Certificate of No Registration' },
       { name: 'Resident Certificate / Cedula of Informant' },
-
       { section: 'Service Schedule' },
       { name: 'Monday – Friday', note: '8:00 AM – 5:00 PM (No noon break)' },
     ],
   };
 
-  /** Exposes the section/item helper so the template can use it. */
   isSection = isSection;
 
-  /** Returns the requirements for the current cert + reg type selection. */
   getRequirements(): RequirementEntry[] {
     const key = `${this.selectedCertType}|${this.selectedRegType}`;
     return this.requirementsMap[key] ?? [];
   }
 
-  /** Tracks the flat item index (skipping section headings) for numbering. */
   getItemIndex(entries: RequirementEntry[], currentIdx: number): number {
     return entries.slice(0, currentIdx).filter(e => !isSection(e)).length + 1;
   }
@@ -202,15 +214,25 @@ export class AppointmentBookingComponent implements OnInit {
     this.modalVisible = false;
   }
 
-  // ================================================================
-  // SLOTS
-  // ================================================================
-  onDateChange() {
-    this.selectedTime = '';
-    if (!this.selectedDate) { this.slots = []; return; }
-    this.fetchSlots();
+  isWeekend(dateStr: string): boolean {
+  const date = new Date(dateStr);
+  const day = date.getUTCDay();
+  return day === 0 || day === 6;
+}
+
+onDateChange() {
+  this.selectedTime = '';
+  if (!this.selectedDate) { this.slots = []; return; }
+
+  if (this.isWeekend(this.selectedDate)) {
+    this.selectedDate = '';
+    this.slots = [];
+    this.showModal('error', 'Appointments are only available Monday to Friday. Please select a weekday.');
+    return;
   }
 
+  this.fetchSlots();
+}
   fetchSlots() {
     this.loadingSlots = true;
     this.slots = [];
@@ -234,7 +256,7 @@ export class AppointmentBookingComponent implements OnInit {
   // ================================================================
   bookAppointment() {
     if (!this.selectedDate || !this.selectedTime || !this.selectedCertType || !this.selectedRegType) {
-      this.showModal('error', 'Please fill in all fields — certificate type, registration type, date, and time slot — before confirming.');
+      this.showModal('error', 'Please fill in all fields — certificate type, event date, appointment date, and time slot — before confirming.');
       return;
     }
 
@@ -254,6 +276,7 @@ export class AppointmentBookingComponent implements OnInit {
         this.selectedTime = '';
         this.selectedCertType = '';
         this.selectedRegType = '';
+        this.eventDate = '';
         this.slots = [];
       },
       error: (err) => {

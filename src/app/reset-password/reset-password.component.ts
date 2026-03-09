@@ -7,67 +7,87 @@ import { Router, RouterModule } from '@angular/router';
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    HttpClientModule,
-    RouterModule
-  ],
+  imports: [CommonModule, ReactiveFormsModule, HttpClientModule, RouterModule],
   templateUrl: './reset-password.component.html',
   styleUrls: ['./reset-password.component.css']
 })
 export class ResetPasswordComponent {
-  form: FormGroup;
+  step: 1 | 2 = 1; // Step 1: enter email, Step 2: enter OTP + new password
+  emailForm: FormGroup;
+  resetForm: FormGroup;
   message = '';
   error = '';
+  loading = false;
+  submittedEmail = '';
 
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
-    private router: Router   // <-- Inject Router here
+    private router: Router
   ) {
-    this.form = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
+    this.emailForm = this.fb.group({
+      email: ['', [Validators.required, Validators.email]]
+    });
+
+    this.resetForm = this.fb.group({
+      otp: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(6)]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', Validators.required]
     }, { validators: this.passwordMatchValidator });
   }
 
-  // Custom validator: check if passwords match
   passwordMatchValidator(group: FormGroup) {
     const pass = group.get('password')?.value;
     const confirm = group.get('confirmPassword')?.value;
     return pass === confirm ? null : { mismatch: true };
   }
 
-  submit(): void {
+  requestOtp(): void {
     this.message = '';
     this.error = '';
+    if (this.emailForm.invalid) return;
 
-    if (this.form.invalid) {
-      this.error = "Please fill in all fields correctly.";
-      return;
-    }
+    this.loading = true;
+    this.submittedEmail = this.emailForm.value.email;
 
-    const { email, password } = this.form.value;
-
-    this.http.post('https://its-certificate-generator.onrender.com/api/auth/reset-password', {
-      email,
-      newPassword: password
-    })
-    .subscribe({
-      next: (res: any) => {
-        this.message = res.message || 'Password reset successful!';
-        this.form.reset();
-
-        // Redirect to login after successful reset
-        setTimeout(() => {
-          this.router.navigate(['/login']); // <-- make sure '/login' matches your route
-        }, 2000); // optional 2-second delay to show message
+    this.http.post('https://its-certificate-generator.onrender.com/api/auth/forgot-password', {
+      email: this.submittedEmail
+    }).subscribe({
+      next: () => {
+        this.step = 2;
+        this.message = 'OTP sent to your email.';
+        this.loading = false;
       },
       error: (err) => {
         this.error = err.error?.message || 'Something went wrong.';
+        this.loading = false;
       }
+    });
+  }
+
+  submit(): void {
+    this.message = '';
+    this.error = '';
+    if (this.resetForm.invalid) return;
+
+    this.loading = true;
+    const { otp, password } = this.resetForm.value;
+
+    this.http.post('https://its-certificate-generator.onrender.com/api/auth/reset-password', {
+      email: this.submittedEmail,
+      otp,
+      newPassword: password
+    }).subscribe({
+      next: (res: any) => {
+        this.message = res.message || 'Password reset successful!';
+        this.resetForm.reset();
+        setTimeout(() => this.router.navigate(['/login']), 2000);
+      },
+      error: (err) => {
+        this.error = err.error?.message || 'Something went wrong.';
+        this.loading = false;
+      },
+      complete: () => { this.loading = false; }
     });
   }
 }

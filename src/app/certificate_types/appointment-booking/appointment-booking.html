@@ -19,13 +19,19 @@
 
     <!-- MODAL OVERLAY -->
     <div class="modal-overlay" *ngIf="modalVisible" (click)="closeModal()">
-      <div class="modal-box" [class.modal-success]="modalType === 'success'" [class.modal-error]="modalType === 'error'" (click)="$event.stopPropagation()">
+      <div class="modal-box"
+           [class.modal-success]="modalType === 'success'"
+           [class.modal-error]="modalType === 'error'"
+           (click)="$event.stopPropagation()">
         <div class="modal-icon">
-          <i class="fa-solid" [ngClass]="modalType === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'"></i>
+          <i class="fa-solid"
+             [ngClass]="modalType === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'"></i>
         </div>
         <h3 class="modal-title">{{ modalType === 'success' ? 'Booking Confirmed!' : 'Something went wrong' }}</h3>
         <p class="modal-message">{{ modalMessage }}</p>
-        <button class="modal-btn" (click)="closeModal()">{{ modalType === 'success' ? 'Great, thanks!' : 'Try Again' }}</button>
+        <button class="modal-btn" (click)="closeModal()">
+          {{ modalType === 'success' ? 'Great, thanks!' : 'Try Again' }}
+        </button>
       </div>
     </div>
 
@@ -41,11 +47,12 @@
           </div>
           <span>Certificate</span>
         </div>
-        <div class="step-line" [class.step-line-done]="selectedCertType && selectedRegType"></div>
-        <div class="step" [class.step-active]="selectedRegType" [class.step-done]="selectedRegType">
+        <div class="step-line" [class.step-line-done]="selectedCertType && eventDate"></div>
+        <div class="step" [class.step-active]="eventDate" [class.step-done]="eventDate && selectedRegType">
           <div class="step-circle">
-            <i class="fa-solid fa-list-check" *ngIf="!selectedRegType"></i>
-            <i class="fa-solid fa-check" *ngIf="selectedRegType"></i>
+            <i class="fa-solid fa-list-check" *ngIf="!eventDate"></i>
+            <i class="fa-solid fa-check" *ngIf="eventDate && selectedRegType"></i>
+            <i class="fa-solid fa-list-check" *ngIf="eventDate && !selectedRegType"></i>
           </div>
           <span>Type</span>
         </div>
@@ -62,7 +69,7 @@
 
       <div class="divider"></div>
 
-      <!-- ROW 1: Certificate Type + Registration Type -->
+      <!-- ROW 1: Certificate Type + Event Date -->
       <div class="two-col-grid">
 
         <!-- Certificate Type -->
@@ -91,37 +98,47 @@
           </div>
         </div>
 
-        <!-- Registration Type -->
+        <!-- Event Date → auto-detects On Time / Delayed -->
         <div class="form-group">
           <label class="form-label">
-            <i class="fa-solid fa-clock label-icon"></i>
-            Registration Type
+            <i class="fa-solid fa-calendar-day label-icon"></i>
+            {{ eventDateLabel }}
           </label>
-          <div class="option-group">
-            <div
-              *ngFor="let type of registrationTypes"
-              class="option-card"
-              [class.option-selected]="selectedRegType === type"
-              (click)="onRegTypeChange(type)">
-              <div class="option-icon-wrap">
-                <i class="fa-solid"
-                   [ngClass]="{
-                     'fa-clock':             type === 'On Time',
-                     'fa-clock-rotate-left': type === 'Delayed'
-                   }">
-                </i>
-              </div>
-              <span>{{ type }}</span>
-            </div>
+
+          <div class="date-input-wrap">
+            <input
+              type="date"
+              class="form-control date-input"
+              [(ngModel)]="eventDate"
+              [max]="maxEventDate"
+              [disabled]="!selectedCertType"
+              (change)="onEventDateChange()"
+            />
+          </div>
+
+          <span class="date-hint" *ngIf="!selectedCertType" style="margin-top:6px;">
+            Select a certificate type first
+          </span>
+          <span class="date-hint" *ngIf="selectedCertType && !eventDate" style="margin-top:6px;">
+            Enter the date to determine registration type
+          </span>
+
+          <!-- Auto-detected badge -->
+          <div *ngIf="selectedRegType" class="reg-type-badge"
+               [class.badge-ontime]="selectedRegType === 'On Time'"
+               [class.badge-delayed]="selectedRegType === 'Delayed'">
+            <i class="fa-solid"
+               [ngClass]="selectedRegType === 'On Time' ? 'fa-circle-check' : 'fa-clock-rotate-left'"></i>
+            <span>{{ selectedRegType }} Registration</span>
+            <span class="badge-sub">
+              {{ selectedRegType === 'On Time' ? 'Within the allowed period' : 'Past the allowed period' }}
+            </span>
           </div>
         </div>
 
       </div>
 
-      <!-- ============================================================ -->
-      <!-- REQUIREMENTS PANEL                                           -->
-      <!-- Shows when BOTH cert type AND reg type are selected          -->
-      <!-- ============================================================ -->
+      <!-- REQUIREMENTS PANEL -->
       <div class="requirements-panel" *ngIf="selectedCertType && selectedRegType">
         <div class="requirements-header">
           <i class="fa-solid fa-clipboard-list req-header-icon"></i>
@@ -137,14 +154,10 @@
 
         <ul class="req-list">
           <ng-container *ngFor="let entry of getRequirements(); let i = index">
-
-            <!-- Section heading -->
             <li class="req-section-header" *ngIf="isSection(entry)">
               <i class="fa-solid fa-chevron-right req-section-icon"></i>
               {{ entry.section }}
             </li>
-
-            <!-- Requirement item -->
             <li class="req-item" *ngIf="!isSection(entry)">
               <span class="req-number">{{ getItemIndex(getRequirements(), i) }}</span>
               <div class="req-content">
@@ -156,7 +169,6 @@
                 {{ entry.copies }}
               </span>
             </li>
-
           </ng-container>
         </ul>
 
@@ -166,10 +178,22 @@
         </div>
       </div>
 
-      <!-- Prompt if only one is chosen -->
-      <div class="requirements-prompt" *ngIf="(selectedCertType && !selectedRegType) || (!selectedCertType && selectedRegType)">
+      <!-- COUNTER BANNER -->
+      <div class="counter-banner" *ngIf="counterInfo">
+        <div class="counter-icon">
+          <i class="fa-solid fa-person-booth"></i>
+        </div>
+        <div class="counter-text">
+          <span class="counter-label">Please proceed to</span>
+          <span class="counter-name">{{ counterInfo.label }}</span>
+        </div>
+        <div class="counter-number">{{ counterInfo.number }}</div>
+      </div>
+
+      <!-- Prompt if cert type chosen but no event date yet -->
+      <div class="requirements-prompt" *ngIf="selectedCertType && !eventDate">
         <i class="fa-solid fa-arrow-pointer"></i>
-        <span>Select both a certificate type and registration type to see the required documents.</span>
+        <span>Enter the {{ eventDateLabel.toLowerCase() }} to see required documents and your registration type.</span>
       </div>
 
       <div class="divider"></div>
@@ -178,7 +202,7 @@
       <div class="form-group date-group">
         <label class="form-label">
           <i class="fa-solid fa-calendar-days label-icon"></i>
-          Select Date
+          Select Appointment Date
         </label>
         <div class="date-input-wrap">
           <input

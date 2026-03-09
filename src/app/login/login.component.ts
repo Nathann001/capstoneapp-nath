@@ -94,6 +94,6 @@ export class LoginComponent {
   }
 
   goToRegister(): void { this.router.navigate(['/register']); }
-  goToForgotPassword(event: Event): void { event.preventDefault(); this.router.navigate(['/']); }
+  goToForgotPassword(event: Event): void { event.preventDefault(); this.router.navigate(['/reset-password']); }
   goToOtp(): void { this.router.navigate(['/otpverify']); }
 }

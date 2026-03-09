@@ -1,8 +1,7 @@
 /* ================================================================
    appointment-booking.component.css  (REDESIGNED)
-   /*================================================================ */
+================================================================ */
 
-/* ── Variables ─────────────────────────────────────────────────── */
 :host {
   --blue-deep:    #1a5f7a;
   --blue-mid:     #2a7ca8;
@@ -28,14 +27,12 @@
   font-family: 'DM Sans', sans-serif;
 }
 
-/* ── Admin Container ────────────────────────────────────────────── */
 .admin-container {
   padding: 32px 36px;
   max-width: 860px;
   margin: 0 auto;
 }
 
-/* ── Page Header ────────────────────────────────────────────────── */
 .page-header {
   display: flex;
   align-items: center;
@@ -73,7 +70,6 @@
   font-weight: 400;
 }
 
-/* ── Card ───────────────────────────────────────────────────────── */
 .card {
   background: var(--white);
   border-radius: var(--radius);
@@ -88,7 +84,6 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Progress Steps ─────────────────────────────────────────────── */
 .progress-steps {
   display: flex;
   align-items: center;
@@ -156,7 +151,6 @@
   background: var(--blue-mid);
 }
 
-/* ── Divider ────────────────────────────────────────────────────── */
 .divider {
   height: 1px;
   background: var(--border);
@@ -164,7 +158,6 @@
   opacity: 0.7;
 }
 
-/* ── Two Col Grid ───────────────────────────────────────────────── */
 .two-col-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -177,7 +170,6 @@
   .card { padding: 20px 18px; }
 }
 
-/* ── Form Group ─────────────────────────────────────────────────── */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -200,7 +192,6 @@
   font-size: 11px;
 }
 
-/* ── Option Cards ───────────────────────────────────────────────── */
 .option-group {
   display: flex;
   gap: 8px;
@@ -268,7 +259,6 @@
   color: #fff !important;
 }
 
-/* ── Date Input ─────────────────────────────────────────────────── */
 .date-group {
   margin-bottom: 4px;
 }
@@ -299,13 +289,17 @@
   box-shadow: 0 0 0 3px rgba(42,124,168,0.08);
 }
 
+.date-input:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .date-hint {
   font-size: 12px;
   color: var(--text-light);
   font-style: italic;
 }
 
-/* ── Slots ──────────────────────────────────────────────────────── */
 .slot-section {
   animation: fadeSlideIn 0.25s ease both;
 }
@@ -421,9 +415,6 @@
   transition: width 0.3s ease;
 }
 
-
-
-/* ── Confirm Button ─────────────────────────────────────────────── */
 .confirm-wrap {
   margin-top: 28px;
   display: flex;
@@ -481,7 +472,6 @@
   animation: spin 0.7s linear infinite;
 }
 
-/* ── Info Banner ────────────────────────────────────────────────── */
 .info-banner {
   display: flex;
   align-items: flex-start;
@@ -510,7 +500,6 @@
 
 .info-text strong { color: var(--blue-deep); }
 
-/* ── Modal ──────────────────────────────────────────────────────── */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -540,13 +529,8 @@
   border-top: 5px solid var(--blue-mid);
 }
 
-.modal-success {
-  border-top-color: #27ae60;
-}
-
-.modal-error {
-  border-top-color: var(--error);
-}
+.modal-success { border-top-color: #27ae60; }
+.modal-error   { border-top-color: var(--error); }
 
 @keyframes modalIn {
   from { opacity: 0; transform: scale(0.88) translateY(16px); }
@@ -559,7 +543,7 @@
 }
 
 .modal-success .modal-icon { color: #27ae60; }
-.modal-error  .modal-icon { color: var(--error); }
+.modal-error  .modal-icon  { color: var(--error); }
 
 .modal-title {
   font-family: 'Lora', serif;
@@ -606,10 +590,8 @@
 }
 
 /* ================================================================
-   REQUIREMENTS PANEL — add to appointment-booking.css
+   REQUIREMENTS PANEL
 ================================================================ */
-
-/* ---- Outer panel ---- */
 .requirements-panel {
   margin: 8px 0 4px;
   border: 1.5px solid #d0e8f5;
@@ -623,7 +605,6 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ---- Header ---- */
 .requirements-header {
   display: flex;
   align-items: flex-start;
@@ -659,7 +640,6 @@
   font-weight: 700;
 }
 
-/* ---- List ---- */
 .req-list {
   list-style: none;
   margin: 0;
@@ -667,7 +647,6 @@
   background: #fff;
 }
 
-/* ---- Section heading ---- */
 .req-section-header {
   display: flex;
   align-items: center;
@@ -694,7 +673,6 @@
   opacity: 0.7;
 }
 
-/* ---- Each item ---- */
 .req-item {
   display: flex;
   align-items: flex-start;
@@ -704,15 +682,9 @@
   transition: background 0.15s;
 }
 
-.req-item:last-child {
-  border-bottom: none;
-}
+.req-item:last-child { border-bottom: none; }
+.req-item:hover { background: #f5f9fc; }
 
-.req-item:hover {
-  background: #f5f9fc;
-}
-
-/* Number badge */
 .req-number {
   flex-shrink: 0;
   width: 24px;
@@ -728,7 +700,6 @@
   margin-top: 1px;
 }
 
-/* Text block */
 .req-content {
   flex: 1;
   display: flex;
@@ -749,7 +720,6 @@
   font-style: italic;
 }
 
-/* Copies / fee badge */
 .req-copies {
   flex-shrink: 0;
   display: flex;
@@ -765,11 +735,8 @@
   margin-top: 2px;
 }
 
-.req-copies i {
-  font-size: 11px;
-}
+.req-copies i { font-size: 11px; }
 
-/* ---- Footer warning ---- */
 .req-footer {
   display: flex;
   align-items: center;
@@ -788,7 +755,6 @@
   flex-shrink: 0;
 }
 
-/* ---- Prompt (only one side chosen) ---- */
 .requirements-prompt {
   display: flex;
   align-items: center;
@@ -808,23 +774,94 @@
   color: #2a7ca8;
 }
 
-/* ---- Mobile ---- */
+/* ================================================================
+   REGISTRATION TYPE BADGE
+================================================================ */
+.reg-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 9px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  flex-wrap: wrap;
+}
+
+.badge-ontime {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+.badge-delayed {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.badge-sub {
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.75;
+}
+
+/* ================================================================
+   COUNTER BANNER
+================================================================ */
+.counter-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, #1a5f7a, #2a7ca8);
+  border-radius: 12px;
+  padding: 16px 22px;
+  margin: 12px 0 4px;
+  color: white;
+  animation: reqFadeIn 0.3s ease;
+}
+
+.counter-icon {
+  font-size: 1.8rem;
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+
+.counter-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 2px;
+}
+
+.counter-label {
+  font-size: 11px;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.counter-name {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+}
+
+.counter-number {
+  font-size: 3rem;
+  font-weight: 900;
+  opacity: 0.9;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ── Mobile ── */
 @media (max-width: 768px) {
-  .requirements-header {
-    padding: 14px 15px;
-    gap: 10px;
-  }
-
-  .req-item {
-    padding: 10px 15px;
-    gap: 10px;
-  }
-
-  .req-footer {
-    padding: 10px 15px;
-  }
-
-  .req-copies {
-    display: none;
-  }
+  .requirements-header { padding: 14px 15px; gap: 10px; }
+  .req-item { padding: 10px 15px; gap: 10px; }
+  .req-footer { padding: 10px 15px; }
+  .req-copies { display: none; }
+  .counter-number { font-size: 2.2rem; }
+  .counter-name { font-size: 13px; }
 }
