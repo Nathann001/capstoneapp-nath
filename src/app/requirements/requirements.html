@@ -1,0 +1,106 @@
+<div class="app-container">
+  <section class="req-page">
+
+    <!-- Not found -->
+    <div class="not-found" *ngIf="!doc">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      <h2>Requirements not found</h2>
+      <p>The document type you're looking for doesn't exist.</p>
+      <button class="btn-back" (click)="goBack()">
+        <i class="fa-solid fa-arrow-left"></i> Back to Documents
+      </button>
+    </div>
+
+    <ng-container *ngIf="doc">
+
+      <!-- HERO -->
+      <div class="req-hero" [style.--accent]="doc.color">
+        <div class="req-hero-inner">
+
+          <div class="hero-top-row">
+            <button class="btn-back-hero" (click)="goBack()">
+              <i class="fa-solid fa-arrow-left"></i> Back to Documents
+            </button>
+          </div>
+
+          <div class="req-hero-content">
+            <div class="req-hero-icon">
+              <i [class]="doc.icon"></i>
+            </div>
+            <div>
+              <p class="req-eyebrow">Requirements Guide</p>
+              <h1 class="req-title">{{ doc.title }}</h1>
+              <p class="req-desc">{{ doc.description }}</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- FAQ ACCORDION -->
+      <div class="req-body">
+        <div class="faq-header">
+          <i class="fa-solid fa-circle-question"></i>
+          <h2>Frequently Asked Questions</h2>
+        </div>
+
+        <div class="faq-list">
+          <div
+            class="faq-item"
+            *ngFor="let faq of doc.faqs; let i = index"
+            [class.faq-open]="activeIndex === i">
+
+            <button class="faq-question" (click)="toggle(i)">
+              <span class="faq-num">{{ i + 1 }}</span>
+              <span class="faq-q-text">{{ faq.question }}</span>
+              <i class="fa-solid fa-chevron-down faq-chevron"></i>
+            </button>
+
+            <div class="faq-answer" *ngIf="activeIndex === i">
+              <p class="faq-ans-text">{{ faq.answer }}</p>
+
+              <!-- Bullet list -->
+              <ul class="faq-list-items" *ngIf="faq.items && faq.items.length">
+                <li *ngFor="let item of faq.items">
+                  <i class="fa-solid fa-check-circle"></i>
+                  <span>{{ item }}</span>
+                </li>
+              </ul>
+
+              <!-- Fees table -->
+              <div class="faq-fees" *ngIf="faq.fees && faq.fees.length">
+                <div class="fee-row" *ngFor="let fee of faq.fees">
+                  <span class="fee-label">{{ fee.label }}</span>
+                  <span class="fee-amount">{{ fee.amount }}</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="req-cta">
+          <i class="fa-solid fa-circle-info"></i>
+          <span>Ready to proceed? Visit the Civil Registry Office or submit your request online.</span>
+        </div>
+
+        <!-- PDF Download -->
+        <div class="req-pdf-row" *ngIf="doc.pdfPath">
+          <div class="req-pdf-info">
+            <i class="fa-solid fa-file-pdf"></i>
+            <div>
+              <span class="req-pdf-label">Official Requirements PDF</span>
+              <span class="req-pdf-name">{{ doc.title }} — Civil Registry Office, Angeles City</span>
+            </div>
+          </div>
+          <button class="btn-pdf" (click)="openPdf()">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Open PDF
+          </button>
+        </div>
+
+      </div>
+
+    </ng-container>
+  </section>
+</div>

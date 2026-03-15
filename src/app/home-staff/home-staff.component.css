@@ -501,6 +501,11 @@ html, body {
 .modal-btn.confirm      { background: #2a5a8a; color: #fff; }
 .modal-btn.confirm:hover{ background: #1e3f63; }
 
+.profile-block-overlay {
+  pointer-events: all;
+  cursor: default;
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
   .admin-container { padding: 15px 12px; }

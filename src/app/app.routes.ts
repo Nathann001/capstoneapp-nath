@@ -13,6 +13,7 @@ import { ProcessRequestComponent } from './process-request/process-request.compo
 import { AdminComponent } from './admin/admin.component';
 import { MyRequestsComponent } from './my-requests/my-requests.component';
 import { authGuard } from './auth.guard';
+import { profileGuard } from './profile.guard';
 import { ArchivesComponent } from './archives/archives.component';
 import { DocumentsComponent } from './documents/documents.component';
 import { DelayedRegistrationOfBirthComponent } from './delayed-registration-of-birth/delayed-registration-of-birth.component';
@@ -31,6 +32,7 @@ import { BirthdelayedComponent } from './certificate_types/birthdelayed/birthdel
 import { MarriageLicenseComponent } from './certificate_types/marriagelicense/marriagelicense.component';
 import { OthersComponent } from './certificate_types/others/others.component';
 import { AppointmentBookingComponent } from './certificate_types/appointment-booking/appointment-booking';
+
 export const routes: Routes = [
     { path: '', component: HomeComponent },
     { path: 'login', loadComponent: () => import('./login/login.component').then(m => m.LoginComponent), canActivate: [authGuard] },
@@ -43,26 +45,27 @@ export const routes: Routes = [
     { path: 'reset-password', component: ResetPasswordComponent },
     { path: 'admin-users', component: AdminUsersComponent, canActivate: [authGuard] },
     { path: 'edit-profile', component: EditProfileComponent, canActivate: [authGuard] },
-    { path: 'home-staff', component: HomeStaffComponent, canActivate: [authGuard] },
+    { path: 'home-staff', component: HomeStaffComponent, canActivate: [authGuard, profileGuard] },
     { path: 'process-request/:id', component: ProcessRequestComponent, canActivate: [authGuard] },
     { path: 'admin', component: AdminComponent, canActivate: [authGuard] },
-    { path: 'my-requests', component: MyRequestsComponent, canActivate: [authGuard] },
+    { path: 'my-requests', component: MyRequestsComponent, canActivate: [authGuard, profileGuard] },
     { path: 'archives', component: ArchivesComponent },
-    { path: 'documents', component: DocumentsComponent },
-    { path: 'delayed-registration-of-birth', component: DelayedRegistrationOfBirthComponent },
-    { path: 'delayed-registration-of-marriage', component: DelayedRegistrationOfMarriageComponent },
-    { path: 'delayed-registration-of-death', component: DelayedRegistrationOfDeathComponent },
-    { path: 'registration-of-birth-on-time', component: RegistrationOfBirthOnTimeComponent },
-    { path: 'registration-of-death-on-time', component: RegistrationOfDeathOnTimeComponent },
-    { path: 'registration-of-marriage-on-time', component: RegistrationOfMarriageOnTimeComponent },
-    { path: 'issuance-of-certified-copy-of-birth-others', component: IssuanceOfCertifiedCopyOfBirthOthersComponent },
-    { path: 'issuance-of-married-license', component: IssuanceOfMarriedLicenseComponent },
-    { path: 'death', component: DeathComponent },
-    { path: 'marriage', component: MarriageComponent },
-    { path: 'deathdelayed', component: DeathdelayedComponent },
-    { path: 'marriagedelayed', component: MarriagedelayedComponent },
-    { path: 'birthdelayed', component: BirthdelayedComponent },
-    { path: 'marriagelicense', component: MarriageLicenseComponent },
-    { path: 'others', component: OthersComponent },
-    { path: 'appointment-booking', component: AppointmentBookingComponent }
+    { path: 'documents', component: DocumentsComponent, canActivate: [profileGuard] },
+    { path: 'delayed-registration-of-birth', component: DelayedRegistrationOfBirthComponent, canActivate: [profileGuard] },
+    { path: 'delayed-registration-of-marriage', component: DelayedRegistrationOfMarriageComponent, canActivate: [profileGuard] },
+    { path: 'delayed-registration-of-death', component: DelayedRegistrationOfDeathComponent, canActivate: [profileGuard] },
+    { path: 'registration-of-birth-on-time', component: RegistrationOfBirthOnTimeComponent, canActivate: [profileGuard] },
+    { path: 'registration-of-death-on-time', component: RegistrationOfDeathOnTimeComponent, canActivate: [profileGuard] },
+    { path: 'registration-of-marriage-on-time', component: RegistrationOfMarriageOnTimeComponent, canActivate: [profileGuard] },
+    { path: 'issuance-of-certified-copy-of-birth-others', component: IssuanceOfCertifiedCopyOfBirthOthersComponent, canActivate: [profileGuard] },
+    { path: 'issuance-of-married-license', component: IssuanceOfMarriedLicenseComponent, canActivate: [profileGuard] },
+    { path: 'death', component: DeathComponent, canActivate: [profileGuard] },
+    { path: 'marriage', component: MarriageComponent, canActivate: [profileGuard] },
+    { path: 'deathdelayed', component: DeathdelayedComponent, canActivate: [profileGuard] },
+    { path: 'marriagedelayed', component: MarriagedelayedComponent, canActivate: [profileGuard] },
+    { path: 'birthdelayed', component: BirthdelayedComponent, canActivate: [profileGuard] },
+    { path: 'marriagelicense', component: MarriageLicenseComponent, canActivate: [profileGuard] },
+    { path: 'others', component: OthersComponent, canActivate: [profileGuard] },
+    { path: 'appointment-booking', component: AppointmentBookingComponent, canActivate: [profileGuard] },
+    { path: 'requirements/:docType', loadComponent: () => import('./requirements/requirements').then(m => m.RequirementsComponent), canActivate: [profileGuard] }
 ];

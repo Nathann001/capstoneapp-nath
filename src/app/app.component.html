@@ -95,4 +95,111 @@
   <main class="content-area" [ngClass]="{'no-sidebar': !showSidebar}">
     <router-outlet></router-outlet>
   </main>
+
+  <!-- 🔒 Profile Incomplete Modal -->
+  <div class="modal-backdrop" *ngIf="showProfileIncompleteModal" (click)="closeProfileModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-icon">
+        <i class="fa-solid fa-circle-exclamation"></i>
+      </div>
+      <h2 class="modal-title">Complete Your Profile First</h2>
+      <p class="modal-message">
+        You need to fill in your personal information before you can access documents or make requests.
+      </p>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn--primary" (click)="goToAccount()">
+          <i class="fa-solid fa-user-pen"></i> Go to Account
+        </button>
+        <button class="modal-btn modal-btn--secondary" (click)="closeProfileModal()">
+          Maybe Later
+        </button>
+      </div>
+    </div>
+  </div>
+
 </div>
+
+<style>
+  /* Modal Backdrop */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(3px);
+    animation: fadeIn 0.2s ease;
+  }
+
+  /* Modal Box */
+  .modal-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 2rem 2.5rem;
+    max-width: 420px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    animation: slideUp 0.25s ease;
+  }
+
+  .modal-icon {
+    font-size: 3rem;
+    color: #f59e0b;
+    margin-bottom: 1rem;
+  }
+
+  .modal-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 0.75rem;
+  }
+
+  .modal-message {
+    font-size: 0.95rem;
+    color: #64748b;
+    margin: 0 0 1.5rem;
+    line-height: 1.6;
+  }
+
+  .modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .modal-btn {
+    padding: 0.7rem 1.5rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.2s;
+  }
+
+  .modal-btn:hover { opacity: 0.88; }
+
+  .modal-btn--primary {
+    background: #2563eb;
+    color: #fff;
+  }
+
+  .modal-btn--secondary {
+    background: #f1f5f9;
+    color: #475569;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+</style>

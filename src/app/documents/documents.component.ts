@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 
 interface CityDocument {
   name: string;
-  file: string;
+  docType: string;
   applyRoute: string;
   isAppointment?: boolean;
 }
@@ -23,33 +23,32 @@ export class DocumentsComponent {
   documents: CityDocument[] = [
     {
       name: 'Issuance of Certified True Copy of Birth Certificate',
-      file: '/assets/documents/issuance-of-certified-copy-of-birth-others.pdf',
+      docType: 'birth',
       applyRoute: '/registration-of-birth-on-time'
     },
     {
       name: 'Issuance of Certified True Copy of Death Certificate',
-      file: '/assets/documents/issuance-of-certified-copy-of-birth-others.pdf',
+      docType: 'death',
       applyRoute: '/registration-of-death-on-time'
     },
     {
       name: 'Issuance of Certified True Copy of Marriage Certificate',
-      file: '/assets/documents/issuance-of-certified-copy-of-birth-others.pdf',
+      docType: 'marriage',
       applyRoute: '/registration-of-marriage-on-time'
     },
     {
       name: 'Issuance of Marriage License',
-      file: '/assets/documents/issuance-of-marriage-license.pdf',
+      docType: 'marriage-license',
       applyRoute: '/issuance-of-married-license'
     },
     {
       name: 'Appointment Booking for Registration of Certificates',
-      file: '',
+      docType: '',
       applyRoute: '/appointment-booking',
       isAppointment: true
     }
   ];
 
-  /** Returns an appropriate Font Awesome icon class based on document name keywords */
   getDocIcon(name: string): string {
     const n = name.toLowerCase();
     if (n.includes('birth'))    return 'fa-solid fa-baby';
@@ -59,8 +58,8 @@ export class DocumentsComponent {
     return 'fa-solid fa-file-certificate';
   }
 
-  viewDocument(file: string): void {
-    window.open(file, '_blank', 'noopener,noreferrer');
+  viewRequirements(docType: string): void {
+    this.router.navigate(['/requirements', docType]);
   }
 
   applyForDocument(route: string): void {

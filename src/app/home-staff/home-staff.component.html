@@ -11,6 +11,8 @@
         <option value="denied">Denied</option>
         <option value="pending">Pending</option>
         <option value="under_review">Under Review</option>
+        <option value="for_release">For Release</option>
+        <option value="released">Released</option>
       </select>
     </div>
     <div class="statistics">
@@ -18,7 +20,7 @@
         <div class="stat-icon"><i class="fa-solid fa-calendar-day"></i></div>
         <div class="stat-info">
           <h4>Today</h4>
-          <p>{{ stats[selectedRow1].today }}</p>
+          <p>{{ stats[$any(selectedRow1)].today }}</p>
           <span>{{ formatStatName(selectedRow1) }}</span>
         </div>
       </div>
@@ -26,7 +28,7 @@
         <div class="stat-icon"><i class="fa-solid fa-calendar-week"></i></div>
         <div class="stat-info">
           <h4>This Week</h4>
-          <p>{{ stats[selectedRow1].week }}</p>
+          <p>{{ stats[$any(selectedRow1)].week }}</p>
           <span>{{ formatStatName(selectedRow1) }}</span>
         </div>
       </div>
@@ -34,7 +36,7 @@
         <div class="stat-icon"><i class="fa-solid fa-calendar"></i></div>
         <div class="stat-info">
           <h4>This Month</h4>
-          <p>{{ stats[selectedRow1].month }}</p>
+          <p>{{ stats[$any(selectedRow1)].month }}</p>
           <span>{{ formatStatName(selectedRow1) }}</span>
         </div>
       </div>
@@ -48,6 +50,8 @@
         <option value="denied">Denied</option>
         <option value="pending">Pending</option>
         <option value="under_review">Under Review</option>
+        <option value="for_release">For Release</option>
+        <option value="released">Released</option>
       </select>
     </div>
     <div class="statistics">
@@ -55,7 +59,7 @@
         <div class="stat-icon"><i class="fa-solid fa-calendar-day"></i></div>
         <div class="stat-info">
           <h4>Today</h4>
-          <p>{{ stats[selectedRow2].today }}</p>
+          <p>{{ stats[$any(selectedRow2)].today }}</p>
           <span>{{ formatStatName(selectedRow2) }}</span>
         </div>
       </div>
@@ -63,7 +67,7 @@
         <div class="stat-icon"><i class="fa-solid fa-calendar-week"></i></div>
         <div class="stat-info">
           <h4>This Week</h4>
-          <p>{{ stats[selectedRow2].week }}</p>
+          <p>{{ stats[$any(selectedRow2)].week }}</p>
           <span>{{ formatStatName(selectedRow2) }}</span>
         </div>
       </div>
@@ -71,7 +75,7 @@
         <div class="stat-icon"><i class="fa-solid fa-calendar"></i></div>
         <div class="stat-info">
           <h4>This Month</h4>
-          <p>{{ stats[selectedRow2].month }}</p>
+          <p>{{ stats[$any(selectedRow2)].month }}</p>
           <span>{{ formatStatName(selectedRow2) }}</span>
         </div>
       </div>
@@ -83,7 +87,7 @@
       <span>Document Requests</span>
     </div>
 
-    <!-- ================== PENDING TABLE (no Assigned Staff column) ================== -->
+    <!-- ================== PENDING TABLE ================== -->
     <div class="card">
       <div class="table-header table-header--pending">
         <i class="fa-solid fa-clock"></i>
@@ -478,6 +482,24 @@
     <div class="modal-actions">
       <button class="modal-btn confirm" (click)="closeResultModal()">
         <i class="fa-solid fa-check"></i> OK
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ================== PROFILE INCOMPLETE MODAL (STAFF) ================== -->
+<div *ngIf="showProfileModal" class="modal-overlay profile-block-overlay">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-icon" style="color: #f59e0b; font-size: 3rem; margin-bottom: 1rem;">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+    </div>
+    <h3 class="modal-title">Complete Your Profile First</h3>
+    <p class="modal-message">
+      Before you can use the Staff Dashboard, you must complete your profile information.
+    </p>
+    <div class="modal-actions">
+      <button class="modal-btn confirm" (click)="goToProfile()">
+        <i class="fa-solid fa-user-pen"></i> Go to My Profile
       </button>
     </div>
   </div>

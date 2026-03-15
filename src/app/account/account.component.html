@@ -1,6 +1,5 @@
 <div class="account-page">
 
-  <!-- Main Content -->
   <main class="account-main">
 
     <!-- First Login Banner -->
@@ -10,7 +9,7 @@
       </div>
       <div class="banner-text">
         <strong>Welcome to the Angeles City Document Request System!</strong>
-        <p>Before you can submit requests, please complete your profile below. All fields are required.</p>
+        <p>Before you can submit or view requests, please complete your profile below. All fields are required.</p>
       </div>
     </div>
 
@@ -114,17 +113,36 @@
 
           </div>
 
+          <!-- ─── CHANGE PASSWORD ─── -->
           <div class="card-divider"></div>
-          <div class="card-section-title">Change Password <span class="optional-badge">Optional</span></div>
-          <p class="section-desc">Leave blank to keep your current password.</p>
 
-          <div class="form-grid">
+          <div class="password-section-header">
+            <div>
+              <div class="card-section-title">
+                Change Password <span class="optional-badge">Optional</span>
+              </div>
+              <p class="section-desc">Update your account password.</p>
+            </div>
+            <button type="button" class="btn-toggle-password" (click)="togglePasswordField()">
+              <i class="fa-solid" [ngClass]="showPasswordField ? 'fa-eye-slash' : 'fa-key'"></i>
+              {{ showPasswordField ? 'Cancel' : 'Change Password' }}
+            </button>
+          </div>
+
+          <div class="form-grid password-field-reveal" *ngIf="showPasswordField">
             <div class="form-group full-width">
               <label class="form-label">New Password</label>
-              <input class="form-input" type="password" formControlName="newPassword" placeholder="Leave blank to keep current password" />
+              <input
+                class="form-input"
+                type="password"
+                formControlName="newPassword"
+                placeholder="Enter your new password"
+                autofocus
+              />
             </div>
           </div>
 
+          <!-- ─── FORM ACTIONS ─── -->
           <div class="form-actions">
             <button type="submit" class="btn-save">
               <i class="fa-solid fa-floppy-disk"></i>
@@ -141,3 +159,163 @@
 
   </main>
 </div>
+
+<!-- ✅ Profile Updated Success Modal -->
+<div class="modal-backdrop" *ngIf="showSuccessModal" (click)="closeSuccessModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-icon success">
+      <i class="fa-solid fa-circle-check"></i>
+    </div>
+    <h2 class="modal-title">Profile Updated!</h2>
+    <p class="modal-message">Your personal information has been saved successfully.</p>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn--primary" (click)="closeSuccessModal()">
+        Done
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ❌ Validation / Error Modal -->
+<div class="modal-backdrop" *ngIf="showErrorModal" (click)="closeErrorModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-icon error">
+      <i class="fa-solid fa-circle-exclamation"></i>
+    </div>
+    <h2 class="modal-title">Incomplete Information</h2>
+    <p class="modal-message">{{ errorModalMessage }}</p>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn--danger" (click)="closeErrorModal()">
+        OK, Got It
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(3px);
+    animation: fadeIn 0.2s ease;
+  }
+
+  .modal-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 2rem 2.5rem;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    animation: slideUp 0.25s ease;
+  }
+
+  .modal-icon {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .modal-icon.success {
+    color: #22c55e;
+  }
+
+  .modal-icon.error {
+    color: #ef4444;
+  }
+
+  .modal-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 0.6rem;
+  }
+
+  .modal-message {
+    font-size: 0.95rem;
+    color: #64748b;
+    margin: 0 0 1.5rem;
+    line-height: 1.6;
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+  }
+
+  .modal-btn {
+    padding: 0.7rem 2rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.2s;
+  }
+
+  .modal-btn:hover { opacity: 0.88; }
+
+  .modal-btn--primary {
+    background: #2563eb;
+    color: #fff;
+  }
+
+  .modal-btn--danger {
+    background: #ef4444;
+    color: #fff;
+  }
+
+  .password-section-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-toggle-password {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.1rem;
+    border-radius: 8px;
+    border: 1.5px solid #2563eb;
+    background: transparent;
+    color: #2563eb;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn-toggle-password:hover {
+    background: #2563eb;
+    color: #fff;
+  }
+
+  .password-field-reveal {
+    animation: slideDown 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>

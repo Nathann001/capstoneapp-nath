@@ -25,6 +25,11 @@ export class AccountComponent implements OnInit {
   isFirstLogin = false;
   selectedFile: File | null = null;
 
+  showSuccessModal = false;
+  showErrorModal = false;
+  errorModalMessage = '';
+  showPasswordField = false;
+
   constructor(
     private fb: FormBuilder,
     private router: Router,
@@ -43,14 +48,13 @@ export class AccountComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadAccountData();
-    this.checkFirstLogin();
   }
 
-  // 🔹 Detect first login and auto-open edit mode
   checkFirstLogin(): void {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       const user = JSON.parse(storedUser);
+      if (user.role === 1) return;
       if (!user.detailsCompleted) {
         this.isFirstLogin = true;
         this.toggleEdit();
@@ -58,7 +62,6 @@ export class AccountComponent implements OnInit {
     }
   }
 
-  // 🔹 Load account data
   loadAccountData(): void {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -84,53 +87,85 @@ export class AccountComponent implements OnInit {
             address: details.User_Address ?? '',
             contactNo: details.User_ContactNo ?? ''
           });
+          this.checkFirstLogin();
         },
         error: () => {
           console.warn('No user details found.');
+          this.checkFirstLogin();
         }
       });
   }
 
-  // 🔹 Enable edit mode
   toggleEdit(): void {
     this.editMode = true;
     const editableFields = ['firstName', 'middleName', 'lastName', 'address', 'contactNo', 'newPassword'];
     editableFields.forEach(field => this.profileForm.get(field)?.enable());
   }
 
-  // 🔹 Cancel editing
   cancelEdit(): void {
     this.editMode = false;
+    this.showPasswordField = false;
     Object.keys(this.profileForm.controls).forEach(key => {
       this.profileForm.get(key)?.disable();
     });
     this.loadAccountData();
   }
 
-  // 🔹 Logout
+  // ← the missing method
+  togglePasswordField(): void {
+    this.showPasswordField = !this.showPasswordField;
+    if (!this.showPasswordField) {
+      this.profileForm.get('newPassword')?.setValue('');
+    }
+  }
+
+  closeSuccessModal(): void {
+    this.showSuccessModal = false;
+  }
+
+  closeErrorModal(): void {
+    this.showErrorModal = false;
+    this.errorModalMessage = '';
+  }
+
   logout(): void {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     this.router.navigate(['/login']);
   }
 
-  // 🔹 Save profile
   saveProfile(): void {
     const token = localStorage.getItem('token');
     if (!token) return;
+
+    const firstName = this.profileForm.get('firstName')?.value?.trim();
+    const lastName  = this.profileForm.get('lastName')?.value?.trim();
+    const address   = this.profileForm.get('address')?.value?.trim();
+    const contactNo = this.profileForm.get('contactNo')?.value?.trim();
+
+    const missing: string[] = [];
+    if (!firstName) missing.push('First Name');
+    if (!lastName)  missing.push('Last Name');
+    if (!address)   missing.push('Home Address');
+    if (!contactNo) missing.push('Contact Number');
+
+    if (missing.length > 0) {
+      this.errorModalMessage = `Please fill in the following required fields: ${missing.join(', ')}.`;
+      this.showErrorModal = true;
+      return;
+    }
 
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
     const newPassword = this.profileForm.get('newPassword')?.value;
 
     const body: any = {
-      firstName: this.profileForm.get('firstName')?.value,
+      firstName,
       middleName: this.profileForm.get('middleName')?.value,
-      lastName: this.profileForm.get('lastName')?.value,
-      address: this.profileForm.get('address')?.value,
-      contactNo: this.profileForm.get('contactNo')?.value
+      lastName,
+      address,
+      contactNo
     };
 
-    // Only send password if user actually typed one
     if (newPassword && newPassword.trim() !== '') {
       body.newPassword = newPassword;
     }
@@ -140,16 +175,18 @@ export class AccountComponent implements OnInit {
         next: () => {
           const wasFirstLogin = this.isFirstLogin;
 
-          // Mark details as completed in localStorage
           const storedUser = localStorage.getItem('user');
+          let userRole = 0;
           if (storedUser) {
             const user = JSON.parse(storedUser);
             user.detailsCompleted = true;
+            userRole = user.role;
             localStorage.setItem('user', JSON.stringify(user));
           }
 
           this.isFirstLogin = false;
           this.editMode = false;
+          this.showPasswordField = false;
 
           Object.keys(this.profileForm.controls).forEach(key => {
             this.profileForm.get(key)?.disable();
@@ -158,20 +195,23 @@ export class AccountComponent implements OnInit {
           this.loadAccountData();
 
           if (wasFirstLogin) {
-            // Redirect home after completing first-time profile setup
-            this.router.navigate(['/']);
+            if (userRole === 2) {
+              this.router.navigate(['/home-staff']);
+            } else {
+              this.router.navigate(['/']);
+            }
           } else {
-            alert('Profile updated successfully!');
+            this.showSuccessModal = true;
           }
         },
         error: (err) => {
           console.error('Failed to update user details:', err);
-          alert('Failed to update profile. Please try again.');
+          this.errorModalMessage = 'Failed to update profile. Please try again.';
+          this.showErrorModal = true;
         }
       });
   }
 
-  // 🔹 Delete account
   deleteAccount(): void {
     const confirmDelete = confirm('Are you sure you want to delete your account? This cannot be undone.');
     if (!confirmDelete) return;

@@ -1,5 +1,5 @@
 import { Component, Inject, OnInit, OnDestroy, PLATFORM_ID } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
@@ -15,6 +15,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   isLoggedIn = false;
   private routerSub!: Subscription;
+  private authListener = () => this.checkAuth();
 
   hotlines = [
     {
@@ -57,19 +58,20 @@ export class HomeComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // Check immediately on load
     this.checkAuth();
 
-    // Re-check every time any navigation completes (including after logout)
+    // Re-check on navigation (handles coming from other pages)
     this.routerSub = this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
-    ).subscribe(() => {
-      this.checkAuth();
-    });
+    ).subscribe(() => this.checkAuth());
+
+    // Listen for logout event dispatched from app.component
+    window.addEventListener('auth-changed', this.authListener);
   }
 
   ngOnDestroy(): void {
     if (this.routerSub) this.routerSub.unsubscribe();
+    window.removeEventListener('auth-changed', this.authListener);
   }
 
   private checkAuth(): void {

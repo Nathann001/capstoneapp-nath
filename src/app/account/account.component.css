@@ -27,11 +27,6 @@
   animation: slideDown 0.4s ease;
 }
 
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
 .banner-icon {
   width: 42px;
   height: 42px;
@@ -341,6 +336,63 @@
   flex-shrink: 0;
 }
 
+/* ─── Password Toggle ─── */
+.password-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0;
+}
+
+.password-section-header .card-section-title {
+  margin-bottom: 4px;
+}
+
+.password-section-header .section-desc {
+  margin: 0;
+}
+
+.btn-toggle-password {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: 8px;
+  border: 1.5px solid #1a1a2e;
+  background: transparent;
+  color: #1a1a2e;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-toggle-password:hover {
+  background: #1a1a2e;
+  color: #fff;
+}
+
+.password-field-reveal {
+  margin-top: 20px;
+  animation: revealDown 0.2s ease;
+}
+
+/* ─── Animations ─── */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes revealDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* ─── Responsive ─── */
 @media (max-width: 768px) {
   .account-main {
@@ -369,5 +421,15 @@
   .page-header {
     flex-direction: column;
     gap: 16px;
+  }
+
+  .password-section-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .btn-toggle-password {
+    width: 100%;
+    justify-content: center;
   }
 }

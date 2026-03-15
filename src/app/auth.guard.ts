@@ -10,7 +10,6 @@ export const authGuard: CanActivateFn = (route, state) => {
 
   const currentUrl = state.url;
   console.log('Guard running:', { token, user, currentUrl });
-  // --- GUEST ACCESS ---
   // Always allow landing/login/register for guests
   if (!token || !user) {
     if (['/', '/login', '/register'].includes(currentUrl)) return true;

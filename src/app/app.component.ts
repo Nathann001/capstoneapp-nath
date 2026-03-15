@@ -1,4 +1,4 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { RouterOutlet, RouterModule, Router, NavigationEnd } from '@angular/router';
 import { NgIf, NgClass, CommonModule } from '@angular/common';
 import { filter } from 'rxjs/operators';
@@ -26,7 +26,7 @@ export const appConfig = {
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent {
+export class AppComponent implements OnInit, OnDestroy {
   title = 'Angeles City DRT';
   showSidebar = false;
   isLoggedIn = false;
@@ -34,36 +34,56 @@ export class AppComponent {
   isStaff = false;
   isMobileSidebarOpen = false;
 
+  // 🔹 Modal state
+  showProfileIncompleteModal = false;
+
   constructor(private router: Router) {
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
 
-        // Check if user is logged in
         const token = localStorage.getItem('token');
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         this.isLoggedIn = !!token;
         this.isAdmin = user.role === 1;
         this.isStaff = user.role === 2;
 
-        // Show sidebar only if logged in
         this.showSidebar = this.isLoggedIn;
-
-        // Close mobile sidebar on navigation
         this.isMobileSidebarOpen = false;
 
-        // Redirect logged-in users from "/" to their dashboard
         if (event.urlAfterRedirects === '/' && this.isLoggedIn) {
           if (this.isAdmin) this.router.navigate(['/admin']);
           else if (this.isStaff) this.router.navigate(['/home-staff']);
         }
 
-        // Redirect logged-out users away from protected pages
         const publicRoutes = ['/', '/login', '/register', '/otpverify', '/reset-password'];
         if (!this.isLoggedIn && !publicRoutes.includes(event.urlAfterRedirects)) {
           this.router.navigate(['/']);
         }
       });
+  }
+
+  ngOnInit(): void {
+    // 🔹 Listen for profile-incomplete event fired by profileGuard
+    window.addEventListener('profile-incomplete', this.onProfileIncomplete);
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('profile-incomplete', this.onProfileIncomplete);
+  }
+
+  // 🔹 Arrow function so `this` is preserved
+  onProfileIncomplete = (): void => {
+    this.showProfileIncompleteModal = true;
+  }
+
+  goToAccount(): void {
+    this.showProfileIncompleteModal = false;
+    this.router.navigate(['/account']);
+  }
+
+  closeProfileModal(): void {
+    this.showProfileIncompleteModal = false;
   }
 
   toggleMobileSidebar(): void {
@@ -80,6 +100,7 @@ export class AppComponent {
     this.isLoggedIn = false;
     this.showSidebar = false;
     this.isMobileSidebarOpen = false;
+    window.dispatchEvent(new Event('auth-changed'));
     this.router.navigate(['/']);
   }
 

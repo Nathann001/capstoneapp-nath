@@ -19,19 +19,22 @@ export class HomeStaffComponent implements OnInit {
   denied:       any[] = [];
   for_release:  any[] = [];
   released:     any[] = [];
+  showProfileModal = false;
 
-  stats = {
+  stats: Record<string, { today: number; week: number; month: number }> = {
     approved:     { today: 0, week: 0, month: 0 },
     denied:       { today: 0, week: 0, month: 0 },
     pending:      { today: 0, week: 0, month: 0 },
-    under_review: { today: 0, week: 0, month: 0 }
+    under_review: { today: 0, week: 0, month: 0 },
+    for_release:  { today: 0, week: 0, month: 0 },
+    released:     { today: 0, week: 0, month: 0 }
   };
 
-  selectedRow1: 'approved' | 'denied' | 'pending' | 'under_review' = 'approved';
-  selectedRow2: 'approved' | 'denied' | 'pending' | 'under_review' = 'pending';
+  selectedRow1: 'approved' | 'denied' | 'pending' | 'under_review' | 'for_release' | 'released' = 'approved';
+  selectedRow2: 'approved' | 'denied' | 'pending' | 'under_review' | 'for_release' | 'released' = 'pending';
 
   // ── Per-table pagination ──────────────────────────────────
-  itemsPerPage        = 5;
+  itemsPerPage          = 5;
   currentPagePending    = 1;
   currentPageReview     = 1;
   currentPageApproved   = 1;
@@ -63,6 +66,7 @@ export class HomeStaffComponent implements OnInit {
   constructor(private http: HttpClient, private router: Router) {}
 
   ngOnInit() {
+    this.checkStaffProfile();
     this.fetchDocumentRequests();
     this.fetchForReleaseRequests();
     this.fetchReleasedRequests();
@@ -118,16 +122,12 @@ export class HomeStaffComponent implements OnInit {
   closeResultModal() { this.showResultModal = false; }
 
   // ── Data loaders ──────────────────────────────────────────
-
-  //FEB26
   fetchDocumentRequests() {
     const token = localStorage.getItem('token');
     if (!token) return console.error('No token found.');
 
     this.http.get<any[]>(this.API, { headers: { Authorization: `Bearer ${token}` } }).subscribe({
       next: (data) => {
-        this.calculateStats(data);
-
         const active = data.filter(d => d.archived === 0);
         const asc = (a: any, b: any) =>
           new Date(a.updated_at || a.date_created).getTime() -
@@ -137,6 +137,9 @@ export class HomeStaffComponent implements OnInit {
         this.under_review = active.filter(d => d.status === 'under_review').sort(asc);
         this.approved     = active.filter(d => d.status === 'approved').sort(asc);
         this.denied       = active.filter(d => d.status === 'denied').sort(asc);
+
+        // ✅ Recalculate stats after all data is loaded
+        this.recalculateStats();
       },
       error: (err) => console.error('Failed to fetch document requests', err)
     });
@@ -146,8 +149,11 @@ export class HomeStaffComponent implements OnInit {
     const token = localStorage.getItem('token') || '';
     this.http.get<any[]>(`${this.API}/for_release`, { headers: { Authorization: `Bearer ${token}` } })
       .subscribe({
-        next:  (data) => { this.for_release = data; },
-        error: (err)  => console.error('Failed to fetch For Release requests', err)
+        next: (data) => {
+          this.for_release = data;
+          this.recalculateStats();
+        },
+        error: (err) => console.error('Failed to fetch For Release requests', err)
       });
   }
 
@@ -155,8 +161,11 @@ export class HomeStaffComponent implements OnInit {
     const token = localStorage.getItem('token') || '';
     this.http.get<any[]>(`${this.API}/released_list`, { headers: { Authorization: `Bearer ${token}` } })
       .subscribe({
-        next:  (data) => { this.released = data; },
-        error: (err)  => console.error('Failed to fetch Released requests', err)
+        next: (data) => {
+          this.released = data;
+          this.recalculateStats();
+        },
+        error: (err) => console.error('Failed to fetch Released requests', err)
       });
   }
 
@@ -201,7 +210,7 @@ export class HomeStaffComponent implements OnInit {
 
   // ── Appointments ──────────────────────────────────────────
   fetchAppointments() {
-    this.isLoadingAppts  = true;
+    this.isLoadingAppts   = true;
     this.currentPageAppts = 1;
     const token = localStorage.getItem('token') || '';
     const params: string[] = [];
@@ -237,16 +246,27 @@ export class HomeStaffComponent implements OnInit {
   }
 
   // ── Stats ─────────────────────────────────────────────────
-  calculateStats(data: any[]) {
+
+  // ✅ Recalculates stats from actual loaded arrays (includes for_release & released)
+  recalculateStats() {
     const now = new Date();
-    const count = (arr: any[], fn: (d: Date) => boolean) =>
+
+    const countArr = (arr: any[], fn: (d: Date) => boolean) =>
       arr.filter(d => fn(new Date(d.updated_at || d.date_created))).length;
 
-    for (const status of ['approved', 'denied', 'pending', 'under_review'] as const) {
-      const arr = data.filter(d => d.status === status);
-      this.stats[status].today = count(arr, d => this.isSameDay(d, now));
-      this.stats[status].week  = count(arr, d => this.isSameWeek(d, now));
-      this.stats[status].month = count(arr, d => this.isSameMonth(d, now));
+    const statusMap: { key: string; arr: any[] }[] = [
+      { key: 'pending',      arr: this.pending },
+      { key: 'under_review', arr: this.under_review },
+      { key: 'approved',     arr: this.approved },
+      { key: 'denied',       arr: this.denied },
+      { key: 'for_release',  arr: this.for_release },
+      { key: 'released',     arr: this.released }
+    ];
+
+    for (const { key, arr } of statusMap) {
+      this.stats[key].today = countArr(arr, d => this.isSameDay(d, now));
+      this.stats[key].week  = countArr(arr, d => this.isSameWeek(d, now));
+      this.stats[key].month = countArr(arr, d => this.isSameMonth(d, now));
     }
   }
 
@@ -255,8 +275,15 @@ export class HomeStaffComponent implements OnInit {
   isSameMonth(a: Date, b: Date) { return a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear(); }
 
   formatStatName(name: string): string {
-    return name === 'under_review' ? 'Under Review'
-      : name.charAt(0).toUpperCase() + name.slice(1);
+    const labels: Record<string, string> = {
+      under_review: 'Under Review',
+      for_release:  'For Release',
+      released:     'Released',
+      approved:     'Approved',
+      denied:       'Denied',
+      pending:      'Pending'
+    };
+    return labels[name] || name;
   }
 
   getDocumentLabel(type: string): string {
@@ -267,6 +294,29 @@ export class HomeStaffComponent implements OnInit {
     };
     return map[type] || type;
   }
+
+  checkStaffProfile(): void {
+  const storedUser = localStorage.getItem('user');
+  if (!storedUser) return;
+  const user = JSON.parse(storedUser);
+  if (user.role === 2 && !user.detailsCompleted) {
+    this.showProfileModal = true;
+  }
+}
+
+closeProfileModal(): void {
+  const storedUser = localStorage.getItem('user');
+  if (storedUser) {
+    const user = JSON.parse(storedUser);
+    if (user.detailsCompleted) {
+      this.showProfileModal = false;
+    }
+  }
+}
+
+goToProfile(): void {
+  this.router.navigate(['/account']);
+}
 
   viewRequestDetail(request: any)   { this.router.navigate(['/request-detail',  request.RequestID]); }
   viewInProcessDetail(request: any) { this.router.navigate(['/process-request', request.RequestID]); }
