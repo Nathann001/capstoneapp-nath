@@ -240,7 +240,7 @@
             (click)="selectTime(slot)">
             <span class="slot-time">{{ slot.label }}</span>
             <div class="slot-bar-wrap" *ngIf="!slot.full">
-              <div class="slot-bar" [style.width.%]="((20 - slot.available) / 20) * 100"></div>
+              <div class="slot-bar" [style.width.%]="((5 - slot.available) / 5) * 100"></div>
             </div>
             <span class="slot-count">
               <ng-container *ngIf="!slot.full">{{ slot.available }} spot{{ slot.available !== 1 ? 's' : '' }} left</ng-container>

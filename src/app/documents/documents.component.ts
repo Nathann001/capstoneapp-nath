@@ -24,22 +24,22 @@ export class DocumentsComponent {
     {
       name: 'Issuance of Certified True Copy of Birth Certificate',
       docType: 'birth',
-      applyRoute: '/registration-of-birth-on-time'
+      applyRoute: '/birth'
     },
     {
       name: 'Issuance of Certified True Copy of Death Certificate',
       docType: 'death',
-      applyRoute: '/registration-of-death-on-time'
+      applyRoute: '/death'
     },
     {
       name: 'Issuance of Certified True Copy of Marriage Certificate',
       docType: 'marriage',
-      applyRoute: '/registration-of-marriage-on-time'
+      applyRoute: '/marriage'
     },
     {
       name: 'Issuance of Marriage License',
       docType: 'marriage-license',
-      applyRoute: '/issuance-of-married-license'
+      applyRoute: '/marriagelicense'
     },
     {
       name: 'Appointment Booking for Registration of Certificates',

@@ -13,6 +13,10 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./home-staff.component.css']
 })
 export class HomeStaffComponent implements OnInit {
+
+  private readonly API = 'https://drtbackend-2cw3.onrender.com';
+
+  // ── Document request lists ────────────────────────────────
   pending:      any[] = [];
   under_review: any[] = [];
   approved:     any[] = [];
@@ -21,6 +25,7 @@ export class HomeStaffComponent implements OnInit {
   released:     any[] = [];
   showProfileModal = false;
 
+  // ── Stats ─────────────────────────────────────────────────
   stats: Record<string, { today: number; week: number; month: number }> = {
     approved:     { today: 0, week: 0, month: 0 },
     denied:       { today: 0, week: 0, month: 0 },
@@ -33,7 +38,7 @@ export class HomeStaffComponent implements OnInit {
   selectedRow1: 'approved' | 'denied' | 'pending' | 'under_review' | 'for_release' | 'released' = 'approved';
   selectedRow2: 'approved' | 'denied' | 'pending' | 'under_review' | 'for_release' | 'released' = 'pending';
 
-  // ── Per-table pagination ──────────────────────────────────
+  // ── Pagination ────────────────────────────────────────────
   itemsPerPage          = 5;
   currentPagePending    = 1;
   currentPageReview     = 1;
@@ -51,7 +56,7 @@ export class HomeStaffComponent implements OnInit {
   apptFilterCertType  = '';
   apptFilterRegType   = '';
 
-  // ── Modals ────────────────────────────────────────────────
+  // ── Confirm / Result modals ───────────────────────────────
   showConfirmModal    = false;
   confirmModalTitle   = '';
   confirmModalMessage = '';
@@ -61,11 +66,35 @@ export class HomeStaffComponent implements OnInit {
   resultModalType: 'success' | 'error' = 'success';
   resultModalMessage  = '';
 
-  private API = 'https://drtbackend-2cw3.onrender.com/api/document_request';
+  // ── Staff: reschedule single appointment ──────────────────
+  staffRescheduleModalVisible  = false;
+  staffRescheduleTarget: any   = null;
+  staffRescheduleStep: 1 | 2   = 1;
+  staffRescheduleDate          = '';
+  staffRescheduleTime          = '';
+  staffRescheduleSlots: any[]  = [];
+  staffRescheduleLoadingSlots  = false;
+  staffRescheduleMinDate       = '';
+  staffRescheduleDateError     = '';
+  isStaffRescheduling          = false;
+
+  // ── Staff: reschedule entire day ──────────────────────────
+  rescheduleDayModalVisible    = false;
+  rescheduleDayStep: 1 | 2     = 1;
+  rescheduleDayFrom            = '';
+  rescheduleDayTo              = '';
+  rescheduleDayFromError       = '';
+  rescheduleDayToError         = '';
+  rescheduleDayFromCount: number | null = null;
+  isReschedulingDay            = false;
+
+  private get token(): string { return localStorage.getItem('token') || ''; }
+  private get authHeaders()   { return { Authorization: `Bearer ${this.token}` }; }
 
   constructor(private http: HttpClient, private router: Router) {}
 
   ngOnInit() {
+    this.staffRescheduleMinDate = new Date().toISOString().split('T')[0];
     this.checkStaffProfile();
     this.fetchDocumentRequests();
     this.fetchForReleaseRequests();
@@ -95,7 +124,7 @@ export class HomeStaffComponent implements OnInit {
       .fill(0).map((_, i) => i + 1);
   }
 
-  // ── Modal helpers ─────────────────────────────────────────
+  // ── Confirm modal ─────────────────────────────────────────
   openConfirm(title: string, message: string, action: () => void) {
     this.confirmModalTitle   = title;
     this.confirmModalMessage = message;
@@ -123,49 +152,38 @@ export class HomeStaffComponent implements OnInit {
 
   // ── Data loaders ──────────────────────────────────────────
   fetchDocumentRequests() {
-    const token = localStorage.getItem('token');
-    if (!token) return console.error('No token found.');
+    this.http.get<any[]>(`${this.API}/api/document_request`, { headers: this.authHeaders })
+      .subscribe({
+        next: (data) => {
+          const active = data.filter(d => d.archived === 0);
+          const asc = (a: any, b: any) =>
+            new Date(a.updated_at || a.date_created).getTime() -
+            new Date(b.updated_at || b.date_created).getTime();
 
-    this.http.get<any[]>(this.API, { headers: { Authorization: `Bearer ${token}` } }).subscribe({
-      next: (data) => {
-        const active = data.filter(d => d.archived === 0);
-        const asc = (a: any, b: any) =>
-          new Date(a.updated_at || a.date_created).getTime() -
-          new Date(b.updated_at || b.date_created).getTime();
+          this.pending      = active.filter(d => d.status === 'pending').sort(asc);
+          this.under_review = active.filter(d => d.status === 'under_review').sort(asc);
+          this.approved     = active.filter(d => d.status === 'approved').sort(asc);
+          this.denied       = active.filter(d => d.status === 'denied').sort(asc);
 
-        this.pending      = active.filter(d => d.status === 'pending').sort(asc);
-        this.under_review = active.filter(d => d.status === 'under_review').sort(asc);
-        this.approved     = active.filter(d => d.status === 'approved').sort(asc);
-        this.denied       = active.filter(d => d.status === 'denied').sort(asc);
-
-        // ✅ Recalculate stats after all data is loaded
-        this.recalculateStats();
-      },
-      error: (err) => console.error('Failed to fetch document requests', err)
-    });
+          this.recalculateStats();
+        },
+        error: (err) => console.error('Failed to fetch document requests', err)
+      });
   }
 
   fetchForReleaseRequests() {
-    const token = localStorage.getItem('token') || '';
-    this.http.get<any[]>(`${this.API}/for_release`, { headers: { Authorization: `Bearer ${token}` } })
+    this.http.get<any[]>(`${this.API}/api/document_request/for_release`, { headers: this.authHeaders })
       .subscribe({
-        next: (data) => {
-          this.for_release = data;
-          this.recalculateStats();
-        },
-        error: (err) => console.error('Failed to fetch For Release requests', err)
+        next: (data) => { this.for_release = data; this.recalculateStats(); },
+        error: (err)  => console.error('Failed to fetch For Release requests', err)
       });
   }
 
   fetchReleasedRequests() {
-    const token = localStorage.getItem('token') || '';
-    this.http.get<any[]>(`${this.API}/released_list`, { headers: { Authorization: `Bearer ${token}` } })
+    this.http.get<any[]>(`${this.API}/api/document_request/released_list`, { headers: this.authHeaders })
       .subscribe({
-        next: (data) => {
-          this.released = data;
-          this.recalculateStats();
-        },
-        error: (err) => console.error('Failed to fetch Released requests', err)
+        next: (data) => { this.released = data; this.recalculateStats(); },
+        error: (err)  => console.error('Failed to fetch Released requests', err)
       });
   }
 
@@ -175,8 +193,7 @@ export class HomeStaffComponent implements OnInit {
       'Mark as For Release',
       'Are you sure you want to mark this request as For Release?',
       () => {
-        const token = localStorage.getItem('token') || '';
-        this.http.put(`${this.API}/${requestId}/for_release`, {}, { headers: { Authorization: `Bearer ${token}` } })
+        this.http.put(`${this.API}/api/document_request/${requestId}/for_release`, {}, { headers: this.authHeaders })
           .subscribe({
             next: (res: any) => {
               this.approved = this.approved.filter(d => d.RequestID !== requestId);
@@ -194,8 +211,7 @@ export class HomeStaffComponent implements OnInit {
       'Mark as Released',
       'Are you sure you want to mark this request as Released?',
       () => {
-        const token = localStorage.getItem('token') || '';
-        this.http.put(`${this.API}/${requestId}/released`, {}, { headers: { Authorization: `Bearer ${token}` } })
+        this.http.put(`${this.API}/api/document_request/${requestId}/released`, {}, { headers: this.authHeaders })
           .subscribe({
             next: (res: any) => {
               this.for_release = this.for_release.filter(d => d.RequestID !== requestId);
@@ -212,17 +228,14 @@ export class HomeStaffComponent implements OnInit {
   fetchAppointments() {
     this.isLoadingAppts   = true;
     this.currentPageAppts = 1;
-    const token = localStorage.getItem('token') || '';
     const params: string[] = [];
     if (this.apptFilterDate)     params.push(`date=${this.apptFilterDate}`);
     if (this.apptFilterStatus)   params.push(`status=${this.apptFilterStatus}`);
     if (this.apptFilterCertType) params.push(`certificate_type=${this.apptFilterCertType}`);
     if (this.apptFilterRegType)  params.push(`registration_type=${encodeURIComponent(this.apptFilterRegType)}`);
 
-    const url = 'https://drtbackend-2cw3.onrender.com/api/staff/appointments' +
-                (params.length ? '?' + params.join('&') : '');
-
-    this.http.get<any[]>(url, { headers: { Authorization: `Bearer ${token}` } })
+    const url = `${this.API}/api/staff/appointments` + (params.length ? '?' + params.join('&') : '');
+    this.http.get<any[]>(url, { headers: this.authHeaders })
       .subscribe({
         next:  (data) => { this.appointments = data; this.isLoadingAppts = false; },
         error: (err)  => { console.error('Failed to fetch appointments', err); this.isLoadingAppts = false; }
@@ -246,11 +259,8 @@ export class HomeStaffComponent implements OnInit {
   }
 
   // ── Stats ─────────────────────────────────────────────────
-
-  // ✅ Recalculates stats from actual loaded arrays (includes for_release & released)
   recalculateStats() {
     const now = new Date();
-
     const countArr = (arr: any[], fn: (d: Date) => boolean) =>
       arr.filter(d => fn(new Date(d.updated_at || d.date_created))).length;
 
@@ -276,12 +286,9 @@ export class HomeStaffComponent implements OnInit {
 
   formatStatName(name: string): string {
     const labels: Record<string, string> = {
-      under_review: 'Under Review',
-      for_release:  'For Release',
-      released:     'Released',
-      approved:     'Approved',
-      denied:       'Denied',
-      pending:      'Pending'
+      under_review: 'Under Review', for_release: 'For Release',
+      released: 'Released', approved: 'Approved',
+      denied: 'Denied', pending: 'Pending'
     };
     return labels[name] || name;
   }
@@ -295,29 +302,180 @@ export class HomeStaffComponent implements OnInit {
     return map[type] || type;
   }
 
+  // ── Profile check ─────────────────────────────────────────
   checkStaffProfile(): void {
-  const storedUser = localStorage.getItem('user');
-  if (!storedUser) return;
-  const user = JSON.parse(storedUser);
-  if (user.role === 2 && !user.detailsCompleted) {
-    this.showProfileModal = true;
-  }
-}
-
-closeProfileModal(): void {
-  const storedUser = localStorage.getItem('user');
-  if (storedUser) {
+    const storedUser = localStorage.getItem('user');
+    if (!storedUser) return;
     const user = JSON.parse(storedUser);
-    if (user.detailsCompleted) {
-      this.showProfileModal = false;
+    if (user.role === 2 && !user.detailsCompleted) {
+      this.showProfileModal = true;
     }
   }
-}
 
-goToProfile(): void {
-  this.router.navigate(['/account']);
-}
+  closeProfileModal(): void {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      if (user.detailsCompleted) this.showProfileModal = false;
+    }
+  }
+
+  goToProfile(): void { this.router.navigate(['/account']); }
 
   viewRequestDetail(request: any)   { this.router.navigate(['/request-detail',  request.RequestID]); }
   viewInProcessDetail(request: any) { this.router.navigate(['/process-request', request.RequestID]); }
+
+  // ── Helpers shared by reschedule ──────────────────────────
+  private isWeekend(dateStr: string): boolean {
+    const d = new Date(dateStr);
+    const day = d.getUTCDay();
+    return day === 0 || day === 6;
+  }
+
+  // ================================================================
+  // STAFF: RESCHEDULE SINGLE APPOINTMENT
+  // ================================================================
+  openStaffRescheduleModal(appt: any) {
+    this.staffRescheduleTarget       = appt;
+    this.staffRescheduleDate         = '';
+    this.staffRescheduleTime         = '';
+    this.staffRescheduleSlots        = [];
+    this.staffRescheduleStep         = 1;
+    this.staffRescheduleDateError    = '';
+    this.isStaffRescheduling         = false;
+    this.staffRescheduleLoadingSlots = false;
+    this.staffRescheduleMinDate      = new Date().toISOString().split('T')[0];
+    this.staffRescheduleModalVisible = true;
+  }
+
+  closeStaffRescheduleModal() {
+    this.staffRescheduleModalVisible = false;
+    this.staffRescheduleTarget = null;
+  }
+
+  onStaffRescheduleDateChange() {
+    this.staffRescheduleTime      = '';
+    this.staffRescheduleSlots     = [];
+    this.staffRescheduleDateError = '';
+    if (!this.staffRescheduleDate) return;
+
+    if (this.isWeekend(this.staffRescheduleDate)) {
+      this.staffRescheduleDateError = 'Appointments are only available Monday to Friday.';
+      return;
+    }
+    this.fetchStaffRescheduleSlots();
+  }
+
+  fetchStaffRescheduleSlots() {
+    this.staffRescheduleLoadingSlots = true;
+    this.http.get<any[]>(`${this.API}/api/appointments/slots?date=${this.staffRescheduleDate}`)
+      .subscribe({
+        next: (slots) => { this.staffRescheduleSlots = slots; this.staffRescheduleLoadingSlots = false; },
+        error: () => {
+          this.staffRescheduleLoadingSlots = false;
+          this.staffRescheduleDateError = 'Failed to load slots. Please try again.';
+        }
+      });
+  }
+
+  confirmStaffReschedule() {
+    if (!this.staffRescheduleDate || !this.staffRescheduleTime || !this.staffRescheduleTarget) return;
+    this.isStaffRescheduling = true;
+    this.http.put(
+      `${this.API}/api/staff/appointments/${this.staffRescheduleTarget.id}/reschedule`,
+      { appt_date: this.staffRescheduleDate, appt_time: this.staffRescheduleTime },
+      { headers: this.authHeaders }
+    ).subscribe({
+      next: (res: any) => {
+        this.isStaffRescheduling = false;
+        this.closeStaffRescheduleModal();
+        this.fetchAppointments();
+        this.showResult('success', res.message || 'Appointment rescheduled successfully.');
+      },
+      error: (err) => {
+        this.isStaffRescheduling = false;
+        this.showResult('error', err.error?.message || 'Failed to reschedule appointment.');
+      }
+    });
+  }
+
+  // ================================================================
+  // STAFF: RESCHEDULE ENTIRE DAY
+  // ================================================================
+  openRescheduleDayModal() {
+    this.rescheduleDayFrom        = '';
+    this.rescheduleDayTo          = '';
+    this.rescheduleDayFromError   = '';
+    this.rescheduleDayToError     = '';
+    this.rescheduleDayFromCount   = null;
+    this.rescheduleDayStep        = 1;
+    this.isReschedulingDay        = false;
+    this.staffRescheduleMinDate   = new Date().toISOString().split('T')[0];
+    this.rescheduleDayModalVisible = true;
+  }
+
+  closeRescheduleDayModal() {
+    this.rescheduleDayModalVisible = false;
+  }
+
+  onRescheduleDayFromChange() {
+    this.rescheduleDayFromError = '';
+    this.rescheduleDayFromCount = null;
+    if (!this.rescheduleDayFrom) return;
+
+    if (this.isWeekend(this.rescheduleDayFrom)) {
+      this.rescheduleDayFromError = 'Selected day must be a weekday.';
+      return;
+    }
+
+    // Fetch count of confirmed appointments on that day
+    this.http.get<any[]>(
+      `${this.API}/api/staff/appointments?date=${this.rescheduleDayFrom}&status=confirmed`,
+      { headers: this.authHeaders }
+    ).subscribe({
+      next: (data) => {
+        this.rescheduleDayFromCount = data.length;
+        if (data.length === 0) {
+          this.rescheduleDayFromError = 'No confirmed appointments found on this day.';
+        }
+      },
+      error: () => {
+        this.rescheduleDayFromError = 'Failed to check appointments. Try again.';
+      }
+    });
+  }
+
+  onRescheduleDayToChange() {
+    this.rescheduleDayToError = '';
+    if (!this.rescheduleDayTo) return;
+
+    if (this.isWeekend(this.rescheduleDayTo)) {
+      this.rescheduleDayToError = 'New day must be a weekday.';
+      return;
+    }
+    if (this.rescheduleDayTo === this.rescheduleDayFrom) {
+      this.rescheduleDayToError = 'New day must be different from the original day.';
+    }
+  }
+
+  confirmRescheduleDay() {
+    if (!this.rescheduleDayFrom || !this.rescheduleDayTo) return;
+    this.isReschedulingDay = true;
+    this.http.put(
+      `${this.API}/api/staff/appointments/reschedule-day`,
+      { from_date: this.rescheduleDayFrom, to_date: this.rescheduleDayTo },
+      { headers: this.authHeaders }
+    ).subscribe({
+      next: (res: any) => {
+        this.isReschedulingDay = false;
+        this.closeRescheduleDayModal();
+        this.fetchAppointments();
+        this.showResult('success', res.message || 'Day rescheduled successfully.');
+      },
+      error: (err) => {
+        this.isReschedulingDay = false;
+        this.showResult('error', err.error?.message || 'Failed to reschedule day.');
+      }
+    });
+  }
 }

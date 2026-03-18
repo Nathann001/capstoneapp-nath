@@ -1,29 +1,38 @@
-    <!-- birth html -->
+<!-- birth html -->
 
 <div class="form-panel">
   <h2>Birth Certificate Request</h2>
 
   <form [formGroup]="documentForm" (ngSubmit)="submitDocumentRequest()">
 
-    <!-- FEB24 -->
     <!-- INPUT DETAILS -->
     <div class="form-group">
+
       <label>First Name*</label>
       <input type="text" formControlName="First_Name" />
-      <div *ngIf="f['First_Name']?.invalid && f['First_Name']?.touched" class="error">
+      <div *ngIf="f['First_Name']?.errors?.['required'] && f['First_Name']?.touched" class="error">
         First Name is required!
+      </div>
+      <div *ngIf="f['First_Name']?.errors?.['invalidName'] && f['First_Name']?.touched" class="error">
+        First Name must contain letters only — no symbols or numbers allowed.
       </div>
 
       <label>Middle Name*</label>
       <input type="text" formControlName="Middle_Name" />
-      <div *ngIf="f['Middle_Name']?.invalid && f['Middle_Name']?.touched" class="error">
+      <div *ngIf="f['Middle_Name']?.errors?.['required'] && f['Middle_Name']?.touched" class="error">
         Middle Name is required!
+      </div>
+      <div *ngIf="f['Middle_Name']?.errors?.['invalidName'] && f['Middle_Name']?.touched" class="error">
+        Middle Name must contain letters only — no symbols or numbers allowed.
       </div>
 
       <label>Last Name*</label>
       <input type="text" formControlName="Last_Name" />
-      <div *ngIf="f['Last_Name']?.invalid && f['Last_Name']?.touched" class="error">
-        Middle Name is required!
+      <div *ngIf="f['Last_Name']?.errors?.['required'] && f['Last_Name']?.touched" class="error">
+        Last Name is required!
+      </div>
+      <div *ngIf="f['Last_Name']?.errors?.['invalidName'] && f['Last_Name']?.touched" class="error">
+        Last Name must contain letters only — no symbols or numbers allowed.
       </div>
 
       <label>Date of Birth*</label>
@@ -32,17 +41,24 @@
         Date of Birth is required!
       </div>
 
-      <label>Fathers Name*</label>
+      <label>Father's Name*</label>
       <input type="text" formControlName="Fathers_Name" />
-      <div *ngIf="f['Fathers_Name']?.invalid && f['Fathers_Name']?.touched" class="error">
-        Fathers Name is required!
+      <div *ngIf="f['Fathers_Name']?.errors?.['required'] && f['Fathers_Name']?.touched" class="error">
+        Father's Name is required!
+      </div>
+      <div *ngIf="f['Fathers_Name']?.errors?.['invalidName'] && f['Fathers_Name']?.touched" class="error">
+        Father's Name must contain letters only — no symbols or numbers allowed.
       </div>
 
-      <label>Mothers Name*</label>
+      <label>Mother's Name*</label>
       <input type="text" formControlName="Mothers_Name" />
-      <div *ngIf="f['Mothers_Name']?.invalid && f['Mothers_Name']?.touched" class="error">
-        Mothers Name is required!
+      <div *ngIf="f['Mothers_Name']?.errors?.['required'] && f['Mothers_Name']?.touched" class="error">
+        Mother's Name is required!
       </div>
+      <div *ngIf="f['Mothers_Name']?.errors?.['invalidName'] && f['Mothers_Name']?.touched" class="error">
+        Mother's Name must contain letters only — no symbols or numbers allowed.
+      </div>
+
     </div>
 
     <!-- Valid ID -->
@@ -51,8 +67,21 @@
         VALID ID
         <span class="badge required">Required</span>
       </label>
-      <small>VALID ID</small>
-      <input type="file" (change)="onFileSelected($event, 1)" accept="image/*,.pdf" />
+
+      <!-- ID Type Dropdown -->
+      <label>ID Type*</label>
+      <select formControlName="Valid_ID_Type" class="id-type-select">
+        <option value="" disabled selected>— Select your ID type —</option>
+        <option *ngFor="let id of validIdTypes" [value]="id">{{ id }}</option>
+      </select>
+      <div *ngIf="f['Valid_ID_Type']?.errors?.['required'] && f['Valid_ID_Type']?.touched" class="error">
+        Please select your ID type.
+      </div>
+
+      <!-- File Upload -->
+      <label style="margin-top: 12px;">Upload ID File*</label>
+      <small>JPG, PNG, WEBP, or PDF only — GIFs and animated images are not accepted</small>
+      <input type="file" (change)="onFileSelected($event, 1)" accept=".jpg,.jpeg,.png,.webp,.pdf" />
       <div class="file-status" *ngIf="isFileSelected(1); else notUploaded1">
         <span class="success">✓ {{ getFileName(1) }}</span>
       </div>
@@ -88,7 +117,6 @@
 <div class="modal-overlay" *ngIf="modal.visible" (click)="closeModal()">
   <div class="modal-box" [ngClass]="modal.type" (click)="$event.stopPropagation()">
 
-    <!-- Icon -->
     <div class="modal-icon">
       <span *ngIf="modal.type === 'success'">✓</span>
       <span *ngIf="modal.type === 'error'">✕</span>
@@ -98,7 +126,6 @@
     <h3 class="modal-title">{{ modal.title }}</h3>
     <p class="modal-message">{{ modal.message }}</p>
 
-    <!-- Show Request ID on success -->
     <div class="modal-request-id" *ngIf="modal.type === 'success' && modal.requestId">
       <span>Request ID:</span>
       <strong>{{ modal.requestId }}</strong>
@@ -206,5 +233,24 @@
 
   .btn-secondary:hover {
     background-color: #5a6268;
+  }
+
+  .id-type-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    color: #495057;
+    background-color: #fff;
+    margin-top: 4px;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+
+  .id-type-select:focus {
+    outline: none;
+    border-color: #80bdff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
   }
 </style>

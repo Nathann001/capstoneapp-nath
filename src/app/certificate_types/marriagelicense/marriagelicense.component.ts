@@ -1,8 +1,25 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+
+function nameValidator(control: AbstractControl): ValidationErrors | null {
+  const value = control.value;
+  if (!value) return null;
+  const valid = /^[a-zA-ZÀ-ÖØ-öø-ÿ\s\-\.]+$/.test(value);
+  return valid ? null : { invalidName: true };
+}
+
+const ALLOWED_MIME_TYPES = [
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+  'application/pdf'
+];
+
+const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.pdf'];
 
 @Component({
   selector: 'app-marriagelicense',
@@ -17,16 +34,16 @@ export class MarriageLicenseComponent {
 
   // Files 1–7: required | Files 8–10: optional
   files: { [key: number]: File | null } = {
-    1: null,   // Valid ID — Groom
-    2: null,   // Valid ID — Bride
-    3: null,   // Certificate of Live Birth — Groom
-    4: null,   // Certificate of Live Birth — Bride
-    5: null,   // PSA CENOMAR — Groom
-    6: null,   // PSA CENOMAR — Bride
-    7: null,   // Responsible Parenthood Seminar Certificate
-    8: null,   // Parental Consent / Advice (optional)
-    9: null,   // Annulment Decree or Death Certificate (optional)
-    10: null,  // Certificate of Legal Capacity to Marry (optional)
+    1: null,
+    2: null,
+    3: null,
+    4: null,
+    5: null,
+    6: null,
+    7: null,
+    8: null,
+    9: null,
+    10: null,
   };
 
   modal: {
@@ -51,13 +68,13 @@ export class MarriageLicenseComponent {
     private router: Router
   ) {
     this.documentForm = this.fb.group({
-      Groom_First_Name:  ['', Validators.required],
-      Groom_Middle_Name: ['', Validators.required],
-      Groom_Last_Name:   ['', Validators.required],
+      Groom_First_Name:  ['', [Validators.required, nameValidator]],
+      Groom_Middle_Name: ['', [Validators.required, nameValidator]],
+      Groom_Last_Name:   ['', [Validators.required, nameValidator]],
       Groom_DOB:         ['', Validators.required],
-      Bride_First_Name:  ['', Validators.required],
-      Bride_Middle_Name: ['', Validators.required],
-      Bride_Last_Name:   ['', Validators.required],
+      Bride_First_Name:  ['', [Validators.required, nameValidator]],
+      Bride_Middle_Name: ['', [Validators.required, nameValidator]],
+      Bride_Last_Name:   ['', [Validators.required, nameValidator]],
       Bride_DOB:         ['', Validators.required],
     });
   }
@@ -67,9 +84,25 @@ export class MarriageLicenseComponent {
   }
 
   onFileSelected(event: any, fileNumber: number) {
-    if (event.target.files.length > 0) {
-      this.files[fileNumber] = event.target.files[0];
+    const file: File = event.target.files[0];
+    if (!file) return;
+
+    const extension = '.' + file.name.split('.').pop()?.toLowerCase();
+    const isValidMime = ALLOWED_MIME_TYPES.includes(file.type);
+    const isValidExt = ALLOWED_EXTENSIONS.includes(extension);
+
+    if (!isValidMime || !isValidExt) {
+      this.showModal(
+        'warning',
+        'Invalid File Type',
+        'Only JPG, PNG, WEBP, and PDF files are allowed. GIFs and other formats are not accepted.'
+      );
+      event.target.value = '';
+      this.files[fileNumber] = null;
+      return;
     }
+
+    this.files[fileNumber] = file;
   }
 
   isFileSelected(fileNumber: number): boolean {
@@ -80,12 +113,10 @@ export class MarriageLicenseComponent {
     return this.files[fileNumber]?.name || 'No file selected';
   }
 
-  /** Count how many of the 7 required files are uploaded. */
   uploadedRequiredCount(): number {
     return [1, 2, 3, 4, 5, 6, 7].filter(n => this.files[n] !== null).length;
   }
 
-  /** All 7 required files must be present. */
   areRequiredFilesSelected(): boolean {
     return this.uploadedRequiredCount() === 7;
   }
@@ -126,17 +157,16 @@ export class MarriageLicenseComponent {
     const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
 
     const formData = new FormData();
-    formData.append('document_type',    this.documentType);
-    formData.append('Groom_First_Name',  this.documentForm.value.Groom_First_Name);
-    formData.append('Groom_Middle_Name', this.documentForm.value.Groom_Middle_Name);
-    formData.append('Groom_Last_Name',   this.documentForm.value.Groom_Last_Name);
+    formData.append('document_type',     this.documentType);
+    formData.append('Groom_First_Name',  this.documentForm.value.Groom_First_Name.trim());
+    formData.append('Groom_Middle_Name', this.documentForm.value.Groom_Middle_Name.trim());
+    formData.append('Groom_Last_Name',   this.documentForm.value.Groom_Last_Name.trim());
     formData.append('Groom_DOB',         this.documentForm.value.Groom_DOB);
-    formData.append('Bride_First_Name',  this.documentForm.value.Bride_First_Name);
-    formData.append('Bride_Middle_Name', this.documentForm.value.Bride_Middle_Name);
-    formData.append('Bride_Last_Name',   this.documentForm.value.Bride_Last_Name);
+    formData.append('Bride_First_Name',  this.documentForm.value.Bride_First_Name.trim());
+    formData.append('Bride_Middle_Name', this.documentForm.value.Bride_Middle_Name.trim());
+    formData.append('Bride_Last_Name',   this.documentForm.value.Bride_Last_Name.trim());
     formData.append('Bride_DOB',         this.documentForm.value.Bride_DOB);
 
-    // Append all uploaded files (required + any optional ones provided)
     const fileLabels: { [key: number]: string } = {
       1:  'valid_id_groom',
       2:  'valid_id_bride',

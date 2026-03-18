@@ -506,6 +506,8 @@ html, body {
   cursor: default;
 }
 
+
+
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
   .admin-container { padding: 15px 12px; }

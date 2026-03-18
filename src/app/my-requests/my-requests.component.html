@@ -181,18 +181,198 @@
 
       <!-- Card Actions -->
       <div class="req-actions">
-        <button *ngIf="appt.status === 'confirmed'"
-                (click)="cancelAppointment(appt.id)"
-                class="btn-action btn-delete">
-          <i class="fa-solid fa-calendar-xmark"></i>
-          Cancel Appointment
-        </button>
+        <ng-container *ngIf="appt.status === 'confirmed'">
+          <button (click)="openRescheduleModal(appt)" class="btn-action btn-reschedule">
+            <i class="fa-solid fa-calendar-pen"></i>
+            Reschedule
+          </button>
+          <button (click)="cancelAppointment(appt.id)" class="btn-action btn-delete">
+            <i class="fa-solid fa-calendar-xmark"></i>
+            Cancel
+          </button>
+        </ng-container>
         <span *ngIf="appt.status === 'cancelled'" class="cancelled-note">
           <i class="fa-solid fa-circle-xmark"></i> This appointment was cancelled
         </span>
       </div>
 
     </div>
+
+  </div>
+</div>
+
+
+<!-- ================== RESCHEDULE MODAL ================== -->
+<div *ngIf="rescheduleModalVisible" class="modal-overlay reschedule-overlay" (click)="closeRescheduleModal()">
+  <div class="reschedule-modal" (click)="$event.stopPropagation()">
+
+    <!-- ── STEP 1: Pick date & time ── -->
+    <ng-container *ngIf="rescheduleStep === 1">
+
+      <div class="reschedule-header">
+        <div class="reschedule-header-icon">
+          <i class="fa-solid fa-calendar-pen"></i>
+        </div>
+        <div class="reschedule-header-text">
+          <h3 class="reschedule-title">Reschedule Appointment</h3>
+          <p class="reschedule-subtitle">Choose a new date and time slot</p>
+        </div>
+        <button class="reschedule-close" (click)="closeRescheduleModal()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="reschedule-body">
+
+        <!-- Current info -->
+        <div class="reschedule-current">
+          <span class="reschedule-current-label">Current Appointment</span>
+          <span class="reschedule-current-value">
+            <i class="fa-regular fa-calendar"></i>
+            {{ rescheduleTarget?.appt_date | date:'MMMM d, yyyy':'UTC' }}
+            &nbsp;at&nbsp;{{ formatApptTime(rescheduleTarget?.appt_time) }}
+          </span>
+        </div>
+
+        <!-- Date picker -->
+        <div class="reschedule-field">
+          <label class="reschedule-label">
+            <i class="fa-solid fa-calendar-days"></i> New Date
+          </label>
+          <input
+            type="date"
+            class="reschedule-date-input"
+            [(ngModel)]="rescheduleDate"
+            [min]="rescheduleMinDate"
+            [max]="rescheduleMaxDate"
+            (change)="onRescheduleDateChange()"
+          />
+          <span class="reschedule-hint" *ngIf="!rescheduleDate">
+            Select a weekday within the next month
+          </span>
+          <span class="reschedule-hint reschedule-hint--error" *ngIf="rescheduleDateError">
+            <i class="fa-solid fa-triangle-exclamation"></i> {{ rescheduleDateError }}
+          </span>
+        </div>
+
+        <!-- Time slots -->
+        <div class="reschedule-field" *ngIf="rescheduleDate && !rescheduleDateError">
+          <label class="reschedule-label">
+            <i class="fa-solid fa-clock"></i> New Time Slot
+          </label>
+
+          <div *ngIf="rescheduleLoadingSlots" class="reschedule-loading">
+            <i class="fa-solid fa-spinner fa-spin"></i> Loading available slots…
+          </div>
+
+          <div *ngIf="!rescheduleLoadingSlots && rescheduleSlots.length === 0" class="reschedule-empty">
+            <i class="fa-solid fa-calendar-xmark"></i> No slots available for this date.
+          </div>
+
+          <div *ngIf="!rescheduleLoadingSlots && rescheduleSlots.length > 0" class="reschedule-slot-grid">
+            <div
+              *ngFor="let slot of rescheduleSlots"
+              class="reschedule-slot"
+              [class.reschedule-slot--selected]="rescheduleTime === slot.time"
+              [class.reschedule-slot--full]="slot.full"
+              (click)="!slot.full && (rescheduleTime = slot.time)">
+              <span class="reschedule-slot-time">{{ slot.label }}</span>
+              <div class="reschedule-slot-bar-wrap" *ngIf="!slot.full">
+                <div class="reschedule-slot-bar" [style.width.%]="((5 - slot.available) / 5) * 100"></div>
+              </div>
+              <span class="reschedule-slot-count">
+                <ng-container *ngIf="!slot.full">{{ slot.available }} left</ng-container>
+                <ng-container *ngIf="slot.full">Full</ng-container>
+              </span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="reschedule-footer">
+        <button class="reschedule-btn reschedule-btn--cancel" (click)="closeRescheduleModal()">
+          Cancel
+        </button>
+        <button
+          class="reschedule-btn reschedule-btn--confirm"
+          [disabled]="!rescheduleDate || !rescheduleTime || !!rescheduleDateError"
+          (click)="rescheduleStep = 2">
+          <i class="fa-solid fa-arrow-right"></i> Continue
+        </button>
+      </div>
+
+    </ng-container>
+
+    <!-- ── STEP 2: Confirmation ── -->
+    <ng-container *ngIf="rescheduleStep === 2">
+
+      <div class="reschedule-header">
+        <div class="reschedule-header-icon reschedule-header-icon--warn">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div class="reschedule-header-text">
+          <h3 class="reschedule-title">Confirm Reschedule</h3>
+          <p class="reschedule-subtitle">Please review before confirming</p>
+        </div>
+        <button class="reschedule-close" (click)="closeRescheduleModal()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="reschedule-body">
+        <div class="reschedule-confirm-card">
+          <div class="reschedule-confirm-row">
+            <span class="reschedule-confirm-key">
+              <i class="fa-solid fa-file-certificate"></i> Certificate
+            </span>
+            <span class="reschedule-confirm-val">
+              {{ rescheduleTarget?.certificate_type }} ({{ rescheduleTarget?.registration_type }})
+            </span>
+          </div>
+          <div class="reschedule-confirm-row reschedule-confirm-row--from">
+            <span class="reschedule-confirm-key">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i> From
+            </span>
+            <span class="reschedule-confirm-val">
+              {{ rescheduleTarget?.appt_date | date:'MMMM d, yyyy':'UTC' }}
+              &nbsp;at&nbsp;{{ formatApptTime(rescheduleTarget?.appt_time) }}
+            </span>
+          </div>
+          <div class="reschedule-confirm-row reschedule-confirm-row--to">
+            <span class="reschedule-confirm-key">
+              <i class="fa-solid fa-arrow-right-to-bracket"></i> To
+            </span>
+            <span class="reschedule-confirm-val">
+              {{ rescheduleDate | date:'MMMM d, yyyy' }}
+              &nbsp;at&nbsp;{{ formatApptTime(rescheduleTime) }}
+            </span>
+          </div>
+          <p class="reschedule-confirm-warning">
+            <i class="fa-solid fa-circle-info"></i>
+            You are rescheduling this appointment. A confirmation email will be sent to your registered email address.
+          </p>
+        </div>
+      </div>
+
+      <div class="reschedule-footer">
+        <button class="reschedule-btn reschedule-btn--cancel" (click)="rescheduleStep = 1">
+          <i class="fa-solid fa-arrow-left"></i> Back
+        </button>
+        <button
+          class="reschedule-btn reschedule-btn--confirm"
+          [disabled]="isRescheduling"
+          (click)="confirmReschedule()">
+          <span *ngIf="!isRescheduling">
+            <i class="fa-solid fa-calendar-check"></i> Confirm Reschedule
+          </span>
+          <span *ngIf="isRescheduling">
+            <i class="fa-solid fa-spinner fa-spin"></i> Rescheduling…
+          </span>
+        </button>
+      </div>
+
+    </ng-container>
 
   </div>
 </div>

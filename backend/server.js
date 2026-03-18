@@ -253,7 +253,11 @@ const upload = multer({ storage: multer.memoryStorage() });
 const uploadToCloudinary = (fileBuffer, folder) => {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      { folder, timeout: 60000 },
+      {
+        folder,
+        timeout: 60000,
+        access_mode: 'public',
+      },
       (error, result) => {
         if (error) { console.error('Cloudinary upload error:', error); reject(error); }
         else resolve(result);
@@ -1354,7 +1358,7 @@ const ALL_SLOTS = [
   '12:00:00', '13:00:00', '14:00:00', '15:00:00',
   '16:00:00', '17:00:00'
 ];
-const MAX_PER_SLOT = 20;
+const MAX_PER_SLOT = 5;
 const VALID_CERT_TYPES = ['Birth', 'Death', 'Marriage'];
 const VALID_REG_TYPES = ['On Time', 'Delayed'];
 
@@ -1512,6 +1516,313 @@ app.delete('/api/my/appointments/:id', verifyToken, checkRoles([3]), (req, res) 
     }
   );
 });
+
+app.put('/api/my/appointments/:id/reschedule', verifyToken, checkRoles([3]), async (req, res) => {
+  const { appt_date, appt_time } = req.body;
+  const userId = req.user.id;
+  const apptId = req.params.id;
+
+  if (!appt_date || !appt_time) {
+    return res.status(400).json({ message: 'New date and time are required' });
+  }
+  if (!ALL_SLOTS.includes(appt_time)) {
+    return res.status(400).json({ message: 'Invalid time slot' });
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (new Date(appt_date) < today) {
+    return res.status(400).json({ message: 'Cannot reschedule to a past date' });
+  }
+
+  try {
+    // Verify the appointment belongs to this user and is confirmed
+    const apptRow = await new Promise((resolve, reject) => {
+      db.query(
+        `SELECT * FROM appointments WHERE id = ? AND user_id = ? AND status = 'confirmed'`,
+        [apptId, userId],
+        (err, r) => err ? reject(err) : resolve(r[0])
+      );
+    });
+    if (!apptRow) {
+      return res.status(404).json({ message: 'Appointment not found or not reschedulable' });
+    }
+
+    // Check slot capacity (excluding this appointment)
+    const [[countRow]] = await new Promise((resolve, reject) => {
+      db.query(
+        `SELECT COUNT(*) AS booked FROM appointments
+         WHERE appt_date = ? AND appt_time = ? AND status = 'confirmed' AND id != ?`,
+        [appt_date, appt_time, apptId],
+        (err, r) => err ? reject(err) : resolve([r])
+      );
+    });
+    if (countRow.booked >= MAX_PER_SLOT) {
+      return res.status(409).json({ message: 'This time slot is already full. Please choose another.' });
+    }
+
+    // Check user doesn't already have a confirmed appointment on the new date (excluding this one)
+    const existing = await new Promise((resolve, reject) => {
+      db.query(
+        `SELECT id FROM appointments WHERE user_id = ? AND appt_date = ? AND status = 'confirmed' AND id != ?`,
+        [userId, appt_date, apptId],
+        (err, r) => err ? reject(err) : resolve(r[0])
+      );
+    });
+    if (existing) {
+      return res.status(409).json({ message: 'You already have an appointment on this date.' });
+    }
+
+    // Get user info for email
+    const userRow = await new Promise((resolve, reject) => {
+      db.query(
+        `SELECT u.email, ud.User_FName, ud.User_LName
+         FROM users u LEFT JOIN user_details ud ON u.id = ud.UserID WHERE u.id = ?`,
+        [userId],
+        (err, r) => err ? reject(err) : resolve(r[0])
+      );
+    });
+
+    // Update the appointment
+    await new Promise((resolve, reject) => {
+      db.query(
+        `UPDATE appointments SET appt_date = ?, appt_time = ? WHERE id = ?`,
+        [appt_date, appt_time, apptId],
+        (err, r) => err ? reject(err) : resolve(r)
+      );
+    });
+
+    // Send confirmation email
+    if (userRow && userRow.email) {
+      const fullName = `${userRow.User_FName || ''} ${userRow.User_LName || ''}`.trim() || userRow.email;
+      const formattedDate = new Date(appt_date).toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC'
+      });
+      const formattedTime = formatTimeSlot(appt_time);
+
+      const msg = {
+        to: userRow.email,
+        from: process.env.SENDGRID_FROM,
+        subject: 'Appointment Rescheduled – Angeles City DRT',
+        html: `
+          <p>Dear <b>${fullName}</b>,</p>
+          <p>Your appointment has been successfully <b>rescheduled</b>. Here are your new details:</p>
+          <table style="border-collapse:collapse; margin:16px 0;">
+            <tr>
+              <td style="padding:6px 16px 6px 0; font-weight:600; color:#555;">New Date:</td>
+              <td style="padding:6px 0; color:#333;">${formattedDate}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 16px 6px 0; font-weight:600; color:#555;">New Time:</td>
+              <td style="padding:6px 0; color:#333;">${formattedTime}</td>
+            </tr>
+          </table>
+          <p>Please make sure to arrive on time and bring any required documents.</p>
+          <br/>
+          <p>Sincerely,<br/><b>Angeles City DRT</b></p>
+        `
+      };
+      sgMail.send(msg).catch(e => console.error('Failed to send reschedule email:', e.message));
+    }
+
+    res.json({ message: 'Appointment rescheduled successfully' });
+
+  } catch (err) {
+    console.error('Reschedule error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// PUT /api/staff/appointments/reschedule-day — Staff reschedules ALL appointments on a day (roles 1, 2)
+app.put('/api/staff/appointments/reschedule-day', verifyToken, checkRoles([1, 2]), async (req, res) => {
+  const { from_date, to_date } = req.body;
+
+  if (!from_date || !to_date) {
+    return res.status(400).json({ message: 'Both from_date and to_date are required' });
+  }
+  if (from_date === to_date) {
+    return res.status(400).json({ message: 'New date must be different from the original date' });
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (new Date(to_date) < today) {
+    return res.status(400).json({ message: 'Cannot reschedule to a past date' });
+  }
+
+  try {
+    // Check if there are confirmed appointments on from_date
+    const existing = await new Promise((resolve, reject) => {
+      db.query(
+        `SELECT COUNT(*) AS cnt FROM appointments WHERE appt_date = ? AND status = 'confirmed'`,
+        [from_date],
+        (err, r) => err ? reject(err) : resolve(r[0])
+      );
+    });
+    if (existing.cnt === 0) {
+      return res.status(404).json({ message: 'No confirmed appointments found on this date' });
+    }
+
+    // Check if to_date already has appointments (warn but allow — slots are per time)
+    // Fetch all appointments on from_date to send emails
+    const appointments = await new Promise((resolve, reject) => {
+      db.query(
+        `SELECT a.id, a.email, a.full_name, a.appt_time
+         FROM appointments a
+         WHERE a.appt_date = ? AND a.status = 'confirmed'`,
+        [from_date],
+        (err, r) => err ? reject(err) : resolve(r)
+      );
+    });
+
+    // Move all appointments to to_date (keep same time slots)
+    await new Promise((resolve, reject) => {
+      db.query(
+        `UPDATE appointments SET appt_date = ?
+          WHERE appt_date = ? AND status = 'confirmed'`,
+        [to_date, from_date],
+        (err, r) => err ? reject(err) : resolve(r)
+      );
+    });
+
+    // Send reschedule emails to all affected users
+    const formattedFrom = new Date(from_date).toLocaleDateString('en-US', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC'
+    });
+    const formattedTo = new Date(to_date).toLocaleDateString('en-US', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC'
+    });
+
+    for (const appt of appointments) {
+      if (!appt.email) continue;
+      const msg = {
+        to: appt.email,
+        from: process.env.SENDGRID_FROM,
+        subject: 'Appointment Rescheduled by Office – Angeles City DRT',
+        html: `
+          <p>Dear <b>${appt.full_name}</b>,</p>
+          <p>We would like to inform you that your appointment originally scheduled on
+          <b>${formattedFrom}</b> has been <b>rescheduled</b> by our office.</p>
+          <table style="border-collapse:collapse; margin:16px 0;">
+            <tr>
+              <td style="padding:6px 16px 6px 0; font-weight:600; color:#555;">New Date:</td>
+              <td style="padding:6px 0; color:#333;">${formattedTo}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 16px 6px 0; font-weight:600; color:#555;">Time:</td>
+              <td style="padding:6px 0; color:#333;">${formatTimeSlot(appt.appt_time)} (unchanged)</td>
+            </tr>
+          </table>
+          <p>We apologize for any inconvenience. Please arrive on time and bring any required documents.</p>
+          <br/>
+          <p>Sincerely,<br/><b>Angeles City DRT Office</b></p>
+        `
+      };
+      sgMail.send(msg).catch(e => console.error(`Failed to send reschedule email to ${appt.email}:`, e.message));
+    }
+
+    res.json({
+      message: `Successfully rescheduled ${appointments.length} appointment(s) from ${from_date} to ${to_date}`,
+      count: appointments.length
+    });
+
+  } catch (err) {
+    console.error('Day reschedule error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// PUT /api/staff/appointments/:id/reschedule — Staff reschedules a single appointment (roles 1, 2)
+app.put('/api/staff/appointments/:id/reschedule', verifyToken, checkRoles([1, 2]), async (req, res) => {
+  const { appt_date, appt_time } = req.body;
+  const apptId = req.params.id;
+
+  if (!appt_date || !appt_time) {
+    return res.status(400).json({ message: 'New date and time are required' });
+  }
+  if (!ALL_SLOTS.includes(appt_time)) {
+    return res.status(400).json({ message: 'Invalid time slot' });
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (new Date(appt_date) < today) {
+    return res.status(400).json({ message: 'Cannot reschedule to a past date' });
+  }
+
+  try {
+    // Fetch appointment
+    const apptRow = await new Promise((resolve, reject) => {
+      db.query(
+        `SELECT * FROM appointments WHERE id = ? AND status = 'confirmed'`,
+        [apptId],
+        (err, r) => err ? reject(err) : resolve(r[0])
+      );
+    });
+    if (!apptRow) {
+      return res.status(404).json({ message: 'Appointment not found or not reschedulable' });
+    }
+
+    // Check capacity (excluding this appointment)
+    const [[countRow]] = await new Promise((resolve, reject) => {
+      db.query(
+        `SELECT COUNT(*) AS booked FROM appointments
+         WHERE appt_date = ? AND appt_time = ? AND status = 'confirmed' AND id != ?`,
+        [appt_date, appt_time, apptId],
+        (err, r) => err ? reject(err) : resolve([r])
+      );
+    });
+    if (countRow.booked >= MAX_PER_SLOT) {
+      return res.status(409).json({ message: 'This time slot is already full.' });
+    }
+
+    // Update
+    await new Promise((resolve, reject) => {
+      db.query(
+        `UPDATE appointments SET appt_date = ?, appt_time = ? WHERE id = ?`,
+        [appt_date, appt_time, apptId],
+        (err, r) => err ? reject(err) : resolve(r)
+      );
+    });
+
+    // Send email notification
+    if (apptRow.email) {
+      const formattedDate = new Date(appt_date).toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC'
+      });
+      const msg = {
+        to: apptRow.email,
+        from: process.env.SENDGRID_FROM,
+        subject: 'Appointment Rescheduled by Office – Angeles City DRT',
+        html: `
+          <p>Dear <b>${apptRow.full_name}</b>,</p>
+          <p>Your appointment has been <b>rescheduled</b> by our office. Here are your new details:</p>
+          <table style="border-collapse:collapse; margin:16px 0;">
+            <tr>
+              <td style="padding:6px 16px 6px 0; font-weight:600; color:#555;">New Date:</td>
+              <td style="padding:6px 0; color:#333;">${formattedDate}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 16px 6px 0; font-weight:600; color:#555;">New Time:</td>
+              <td style="padding:6px 0; color:#333;">${formatTimeSlot(appt_time)}</td>
+            </tr>
+          </table>
+          <p>We apologize for any inconvenience. Please arrive on time and bring any required documents.</p>
+          <br/>
+          <p>Sincerely,<br/><b>Angeles City DRT Office</b></p>
+        `
+      };
+      sgMail.send(msg).catch(e => console.error('Failed to send reschedule email:', e.message));
+    }
+
+    res.json({ message: 'Appointment rescheduled successfully' });
+
+  } catch (err) {
+    console.error('Staff reschedule error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 
 // GET /api/staff/appointments — Staff/Admin view (roles 1, 2)
 app.get('/api/staff/appointments', verifyToken, checkRoles([1, 2]), (req, res) => {

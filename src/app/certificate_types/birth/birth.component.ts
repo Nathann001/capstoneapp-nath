@@ -1,8 +1,25 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+
+function nameValidator(control: AbstractControl): ValidationErrors | null {
+  const value = control.value;
+  if (!value) return null;
+  const valid = /^[a-zA-ZÀ-ÖØ-öø-ÿ\s\-\.]+$/.test(value);
+  return valid ? null : { invalidName: true };
+}
+
+const ALLOWED_MIME_TYPES = [
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+  'application/pdf'
+];
+
+const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.pdf'];
 
 @Component({
   selector: 'app-birth',
@@ -15,7 +32,6 @@ export class BirthComponent {
 
   documentForm: FormGroup;
 
-  // ✅ ONE FILE ONLY (Valid ID)
   files: { [key: number]: File | null } = {
     1: null
   };
@@ -36,10 +52,30 @@ export class BirthComponent {
   isSubmitting = false;
 
   fileRequirements = [
-    { number: 1, label: 'Valid ID', hint: 'Upload one valid government ID', required: true }
+    { number: 1, label: 'Valid ID', hint: 'Upload one valid government ID (JPG, PNG, WEBP, or PDF only)', required: true }
   ];
 
   documentType = 'birth';
+
+  validIdTypes = [
+    'Philippine Passport',
+    'SSS / UMID Card',
+    'PhilHealth ID',
+    'Pag-IBIG / HDMF ID',
+    'Driver\'s License',
+    'Voter\'s ID / COMELEC ID',
+    'Philippine National ID (PhilSys)',
+    'Postal ID',
+    'PRC ID (Professional Regulation Commission)',
+    'Senior Citizen ID',
+    'PWD ID (Persons with Disability)',
+    'OFW ID / iDOLE Card',
+    'NBI Clearance',
+    'Police Clearance',
+    'Barangay ID',
+    'School ID (for minors)',
+    'TIN ID'
+  ];
 
   constructor(
     private fb: FormBuilder,
@@ -47,12 +83,13 @@ export class BirthComponent {
     private router: Router
   ) {
     this.documentForm = this.fb.group({
-      First_Name: ['', Validators.required],
-      Middle_Name: ['', Validators.required],
-      Last_Name: ['', Validators.required],
-      Doc_Date: ['', Validators.required],
-      Fathers_Name: ['', Validators.required],
-      Mothers_Name: ['', Validators.required],
+      First_Name:    ['', [Validators.required, nameValidator]],
+      Middle_Name:   ['', [Validators.required, nameValidator]],
+      Last_Name:     ['', [Validators.required, nameValidator]],
+      Doc_Date:      ['', Validators.required],
+      Fathers_Name:  ['', [Validators.required, nameValidator]],
+      Mothers_Name:  ['', [Validators.required, nameValidator]],
+      Valid_ID_Type: ['', Validators.required],
     });
   }
 
@@ -61,12 +98,27 @@ export class BirthComponent {
   }
 
   onFileSelected(event: any, fileNumber: number) {
-    if (event.target.files.length > 0) {
-      this.files[fileNumber] = event.target.files[0];
+    const file: File = event.target.files[0];
+    if (!file) return;
+
+    const extension = '.' + file.name.split('.').pop()?.toLowerCase();
+    const isValidMime = ALLOWED_MIME_TYPES.includes(file.type);
+    const isValidExt = ALLOWED_EXTENSIONS.includes(extension);
+
+    if (!isValidMime || !isValidExt) {
+      this.showModal(
+        'warning',
+        'Invalid File Type',
+        'Only JPG, PNG, WEBP, and PDF files are allowed. GIFs and other formats are not accepted.'
+      );
+      event.target.value = '';
+      this.files[fileNumber] = null;
+      return;
     }
+
+    this.files[fileNumber] = file;
   }
 
-  // ✅ Check only Valid ID
   areRequiredFilesSelected(): boolean {
     return this.files[1] !== null;
   }
@@ -119,14 +171,14 @@ export class BirthComponent {
 
     const formData = new FormData();
     formData.append('document_type', this.documentType);
-    formData.append('First_Name', this.documentForm.value.First_Name);
-    formData.append('Middle_Name', this.documentForm.value.Middle_Name);
-    formData.append('Last_Name', this.documentForm.value.Last_Name);
+    formData.append('First_Name', this.documentForm.value.First_Name.trim());
+    formData.append('Middle_Name', this.documentForm.value.Middle_Name.trim());
+    formData.append('Last_Name', this.documentForm.value.Last_Name.trim());
     formData.append('Doc_Date', this.documentForm.value.Doc_Date);
-    formData.append('Fathers_Name', this.documentForm.value.Fathers_Name);
-    formData.append('Mothers_Name', this.documentForm.value.Mothers_Name);
+    formData.append('Fathers_Name', this.documentForm.value.Fathers_Name.trim());
+    formData.append('Mothers_Name', this.documentForm.value.Mothers_Name.trim());
+    formData.append('Valid_ID_Type', this.documentForm.value.Valid_ID_Type);
 
-    // ✅ Append only ONE file
     if (this.files[1]) {
       formData.append('files', this.files[1], this.files[1]!.name);
     }

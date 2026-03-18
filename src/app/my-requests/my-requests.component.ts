@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
 
 @Component({
@@ -9,9 +10,11 @@ import { AuthService } from '../services/auth.service';
   standalone: true,
   templateUrl: './my-requests.component.html',
   styleUrls: ['./my-requests.component.css'],
-  imports: [CommonModule, RouterModule]
+  imports: [CommonModule, RouterModule, FormsModule]
 })
 export class MyRequestsComponent implements OnInit {
+
+  private readonly API = 'https://drtbackend-2cw3.onrender.com';
 
   // ── Document Requests ─────────────────────────────────────
   requests: any[] = [];
@@ -23,6 +26,19 @@ export class MyRequestsComponent implements OnInit {
   // ── Appointments ──────────────────────────────────────────
   appointments: any[] = [];
   isLoadingAppointments = true;
+
+  // ── Reschedule modal ──────────────────────────────────────
+  rescheduleModalVisible = false;
+  rescheduleTarget: any = null;
+  rescheduleStep: 1 | 2 = 1;
+  rescheduleDate = '';
+  rescheduleTime = '';
+  rescheduleSlots: any[] = [];
+  rescheduleLoadingSlots = false;
+  rescheduleMinDate = '';
+  rescheduleMaxDate = '';
+  rescheduleDateError = '';
+  isRescheduling = false;
 
   constructor(private authService: AuthService, private http: HttpClient) {}
 
@@ -82,7 +98,6 @@ export class MyRequestsComponent implements OnInit {
     return map[type] || type;
   }
 
-  /** Returns a contextual FA icon class based on document type */
   getDocIcon(type: string): string {
     const map: Record<string, string> = {
       birth:    'fa-solid fa-baby',
@@ -96,7 +111,7 @@ export class MyRequestsComponent implements OnInit {
   fetchAppointments() {
     this.isLoadingAppointments = true;
     const token = localStorage.getItem('token') || '';
-    this.http.get<any[]>('https://drtbackend-2cw3.onrender.com/api/my/appointments', {
+    this.http.get<any[]>(`${this.API}/api/my/appointments`, {
       headers: { Authorization: `Bearer ${token}` }
     }).subscribe({
       next:  (res) => { this.appointments = res; this.isLoadingAppointments = false; },
@@ -107,7 +122,7 @@ export class MyRequestsComponent implements OnInit {
   cancelAppointment(id: number) {
     if (!confirm('Are you sure you want to cancel this appointment?')) return;
     const token = localStorage.getItem('token') || '';
-    this.http.delete(`https://drtbackend-2cw3.onrender.com/api/my/appointments/${id}`, {
+    this.http.delete(`${this.API}/api/my/appointments/${id}`, {
       headers: { Authorization: `Bearer ${token}` }
     }).subscribe({
       next:  () => {
@@ -125,5 +140,87 @@ export class MyRequestsComponent implements OnInit {
     const period = h >= 12 ? 'PM' : 'AM';
     const hour   = h % 12 || 12;
     return `${hour}:${String(m).padStart(2, '0')} ${period}`;
+  }
+
+  // ── Reschedule ────────────────────────────────────────────
+  openRescheduleModal(appt: any) {
+    this.rescheduleTarget        = appt;
+    this.rescheduleDate          = '';
+    this.rescheduleTime          = '';
+    this.rescheduleSlots         = [];
+    this.rescheduleStep          = 1;
+    this.rescheduleDateError     = '';
+    this.isRescheduling          = false;
+    this.rescheduleLoadingSlots  = false;
+
+    const today = new Date();
+    this.rescheduleMinDate = today.toISOString().split('T')[0];
+    const maxD = new Date();
+    maxD.setMonth(maxD.getMonth() + 1);
+    this.rescheduleMaxDate = maxD.toISOString().split('T')[0];
+
+    this.rescheduleModalVisible = true;
+  }
+
+  closeRescheduleModal() {
+    this.rescheduleModalVisible = false;
+    this.rescheduleTarget = null;
+  }
+
+  private isWeekend(dateStr: string): boolean {
+    const d = new Date(dateStr);
+    const day = d.getUTCDay();
+    return day === 0 || day === 6;
+  }
+
+  onRescheduleDateChange() {
+    this.rescheduleTime      = '';
+    this.rescheduleSlots     = [];
+    this.rescheduleDateError = '';
+    if (!this.rescheduleDate) return;
+
+    if (this.isWeekend(this.rescheduleDate)) {
+      this.rescheduleDateError = 'Appointments are only available Monday to Friday.';
+      return;
+    }
+    this.fetchRescheduleSlots();
+  }
+
+  fetchRescheduleSlots() {
+    this.rescheduleLoadingSlots = true;
+    this.http.get<any[]>(`${this.API}/api/appointments/slots?date=${this.rescheduleDate}`)
+      .subscribe({
+        next: (slots) => { this.rescheduleSlots = slots; this.rescheduleLoadingSlots = false; },
+        error: () => {
+          this.rescheduleLoadingSlots = false;
+          this.rescheduleDateError = 'Failed to load slots. Please try again.';
+        }
+      });
+  }
+
+  confirmReschedule() {
+    if (!this.rescheduleDate || !this.rescheduleTime || !this.rescheduleTarget) return;
+    this.isRescheduling = true;
+    const token = localStorage.getItem('token') || '';
+    this.http.put(
+      `${this.API}/api/my/appointments/${this.rescheduleTarget.id}/reschedule`,
+      { appt_date: this.rescheduleDate, appt_time: this.rescheduleTime },
+      { headers: { Authorization: `Bearer ${token}` } }
+    ).subscribe({
+      next: () => {
+        const newDate = this.rescheduleDate;
+        const newTime = this.rescheduleTime;
+        const targetId = this.rescheduleTarget.id;
+        this.isRescheduling = false;
+        this.closeRescheduleModal();
+        this.appointments = this.appointments.map(a =>
+          a.id === targetId ? { ...a, appt_date: newDate, appt_time: newTime } : a
+        );
+      },
+      error: (err) => {
+        this.isRescheduling = false;
+        alert(err.error?.message || 'Failed to reschedule. Please try again.');
+      }
+    });
   }
 }

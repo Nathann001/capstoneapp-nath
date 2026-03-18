@@ -42,6 +42,18 @@
         </div>
       </div>
 
+      <!-- Logged-in CTA -->
+      <div class="hero-cta" *ngIf="isLoggedIn">
+        <p class="cta-note">
+          Welcome back, Angeleño! Request a document here.
+        </p>
+        <div class="cta-buttons">
+          <button class="btn-primary" (click)="navigateToDocuments()">
+            <i class="fas fa-file-alt"></i> Request a Document
+          </button>
+        </div>
+      </div>
+
       <div class="hero-wave">
         <svg viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M0,30 C360,60 1080,0 1440,30 L1440,60 L0,60 Z" fill="#f0eeee"/>

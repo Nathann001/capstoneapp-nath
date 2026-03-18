@@ -114,20 +114,20 @@ export class ProcessRequestComponent implements OnInit {
   }
 
   approveRequest() {
-    let headers: HttpHeaders;
-    try { headers = this.getAuthHeaders(); } catch { return; }
+  let headers: HttpHeaders;
+  try { headers = this.getAuthHeaders(); } catch { return; }
 
-    this.http.post(this.backendUrl + '/api/document_request/' + this.requestId + '/approved', {}, { headers })
-      .subscribe({
-        next: () => {
-          this.showModal('success', 'Request Approved', 'The request has been approved successfully.');
-        },
-        error: (err) => {
-          console.error('Failed to approve request:', err);
-          this.showModal('error', 'Approval Failed', 'Failed to approve the request. Please try again.');
-        }
-      });
-  }
+  this.http.post(this.backendUrl + '/api/document_request/' + this.requestId + '/approved', {}, { headers })
+    .subscribe({
+      next: () => {
+        this.router.navigate(['/home-staff']);
+      },
+      error: (err) => {
+        console.error('Failed to approve request:', err);
+        this.showModal('error', 'Approval Failed', 'Failed to approve the request. Please try again.');
+      }
+    });
+}
 
   denyRequest() {
     this.showDenyModal = true;

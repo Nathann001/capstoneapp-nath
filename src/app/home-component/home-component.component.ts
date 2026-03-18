@@ -60,12 +60,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.checkAuth();
 
-    // Re-check on navigation (handles coming from other pages)
     this.routerSub = this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe(() => this.checkAuth());
 
-    // Listen for logout event dispatched from app.component
     window.addEventListener('auth-changed', this.authListener);
   }
 
@@ -84,5 +82,9 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   navigateToRegister() {
     this.router.navigate(['/register']);
+  }
+
+  navigateToDocuments() {
+    this.router.navigate(['/documents']); // adjust to match your actual route
   }
 }
